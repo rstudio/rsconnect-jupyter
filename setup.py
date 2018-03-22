@@ -12,7 +12,7 @@ setup(name='rsconnect_python',
       url='http://github.com/rstudio/rsconnect-jupyter',
       author='Jonathan Curran',
       author_email='jonathan.curran@rstudio.com',
-      license='GPL-2',
+      license='GPL-2.0',
       packages=['rsconnect_jupyter'],
       install_requires=[
           'nbformat'
