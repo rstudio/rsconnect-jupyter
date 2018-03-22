@@ -179,7 +179,7 @@ define([
         handler: debounce(1000, onPublishClicked)
       },
       "publish",
-      "rsconnect_jupyter"
+      "rsconnect"
     );
     // add a button that invokes the action
     Jupyter.toolbar.add_buttons_group([actionName]);

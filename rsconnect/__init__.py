@@ -16,7 +16,7 @@ from tornado import web
 from tornado.log import app_log
 from ipython_genutils import text
 
-from rsconnect_jupyter.rsconnect import mk_manifest, deploy
+from rsconnect.rsconnect import mk_manifest, deploy
 
 
 __version__ = '0.1.0'
@@ -24,7 +24,7 @@ __version__ = '0.1.0'
 
 def _jupyter_server_extension_paths():
     return [{
-        "module": "rsconnect_jupyter"
+        "module": "rsconnect"
     }]
 
 
@@ -32,12 +32,12 @@ def _jupyter_server_extension_paths():
 def _jupyter_nbextension_paths():
     return [dict(
         section="notebook",
-        # the path is relative to the `rsconnect_jupyter` directory
+        # the path is relative to the `rsconnect` directory
         src="static",
         # directory in the `nbextension/` namespace
-        dest="rsconnect_jupyter",
+        dest="rsconnect",
         # _also_ in the `nbextension/` namespace
-        require="rsconnect_jupyter/index")]
+        require="rsconnect/index")]
 
 
 def get_exporter(**kwargs):
@@ -145,7 +145,7 @@ class EndpointHandler(APIHandler):
 
 
 def load_jupyter_server_extension(nb_app):
-    nb_app.log.info("rsconnect_jupyter enabled!")
+    nb_app.log.info("rsconnect enabled!")
     web_app = nb_app.web_app
     host_pattern = '.*$'
     route_pattern = url_path_join(web_app.settings['base_url'], '/rsconnect')

@@ -1,1 +1,2 @@
-include rsconnect_jupyter/static/*.js
+include README.md
+include rsconnect/static/*.js

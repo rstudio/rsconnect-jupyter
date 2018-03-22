@@ -6,14 +6,15 @@ def readme():
         return f.read()
 
 
-setup(name='rsconnect_python',
+setup(name='rsconnect',
       version='0.1.0',
       description='Jupyter Notebook integration with RStudio Connect',
+      long_description=readme(),
       url='http://github.com/rstudio/rsconnect-jupyter',
       author='Jonathan Curran',
       author_email='jonathan.curran@rstudio.com',
       license='GPL-2.0',
-      packages=['rsconnect_jupyter'],
+      packages=['rsconnect'],
       install_requires=[
           'nbformat'
       ],

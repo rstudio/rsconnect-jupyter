@@ -17,6 +17,6 @@ develop-setup:
 	python setup.py develop
 
 develop:
-	jupyter-nbextension install --symlink --user --py rsconnect_jupyter
-	jupyter-nbextension enable --py rsconnect_jupyter
-	jupyter-serverextension enable --py rsconnect_jupyter
+	jupyter-nbextension install --symlink --user --py rsconnect
+	jupyter-nbextension enable --py rsconnect
+	jupyter-serverextension enable --py rsconnect
