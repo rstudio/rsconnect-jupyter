@@ -11,6 +11,8 @@ endif
 PY3=continuumio/miniconda3:4.4.10
 PY2=continuumio/miniconda:4.4.10
 
+PY_VERSION=3
+
 pull:
 	docker pull $(PY3)
 	docker pull $(PY2)
@@ -25,13 +27,14 @@ launch:
 		-e NB_UID=${DOCKER_UID} \
 		-e NB_GID=${DOCKER_GID} \
 		-e NB_USER=${DOCKER_USER} \
+		-e PY_VERSION=${PY_VERSION} \
 		-p :9999:9999 \
 		$(DOCKER_IMAGE) \
 		/rsconnect/docker.sh $(TARGET)
 
 
 notebook2:
-	make DOCKER_IMAGE=$(PY2) TARGET=run launch
+	make DOCKER_IMAGE=$(PY2) PY_VERSION=2 TARGET=run launch
 
 notebook3:
 	make DOCKER_IMAGE=$(PY3) TARGET=run launch
