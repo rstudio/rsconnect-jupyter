@@ -90,7 +90,7 @@ try {
 
       try {
         stage('package') {
-          print "building python wheel package from build ${TRIGGERING_BUILD_NUMBER}"
+          print "building python wheel package"
           sh 'make package'
           archiveArtifacts artifacts: 'dist/*.whl'
         }
