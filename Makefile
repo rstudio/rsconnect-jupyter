@@ -1,4 +1,4 @@
-.PHONY: pull images image2 image3 launch notebook2 notebook3 package dist test dist run
+.PHONY: clean pull images image2 image3 launch notebook2 notebook3 package dist test dist run
 
 NB_USER=$(shell id -nu)
 NB_UID=$(shell id -u)
@@ -6,6 +6,9 @@ NB_GID=$(shell id -g)
 
 PY2=rstudio/rsconnect-jupyter-py2
 PY3=rstudio/rsconnect-jupyter-py3
+
+clean:
+	rm -rf build/ dist/ rsconnect.egg-info/
 
 pull:
 #	docker pull $(PY3)
@@ -69,7 +72,7 @@ dist:
 package:
 	make DOCKER_IMAGE=$(PY3) PY_VERSION=3 TARGET=dist launch
 
-run: develop
+run:
 # link python package
 	python setup.py develop
 # install rsconnect as a jupyter extension
