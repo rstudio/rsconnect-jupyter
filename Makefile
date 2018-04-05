@@ -1,4 +1,4 @@
-.PHONY: pull build-image image2 image3 launch notebook2 notebook3 package dist test dist run
+.PHONY: pull images image2 image3 launch notebook2 notebook3 package dist test dist run
 
 NB_USER=$(shell id -nu)
 NB_UID=$(shell id -u)
@@ -14,7 +14,7 @@ pull:
 #	docker pull python:3.6
 	docker pull node:6-slim
 
-build-image: image2 image3
+images: image2 image3
 
 image2:
 	docker build \
