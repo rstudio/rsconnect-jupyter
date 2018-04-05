@@ -12,9 +12,15 @@ Launch jupyter in a python 3 environment
 
     make notebook3
 
-
 > Note: notebooks in the `notebooks2` and `notebooks3` directories will be
 > available in respective python environments.
+
+## Seeing code changes
+
+When modifying JavaScript files simply refresh the browser window to see
+changes.
+
+When modifying Python files restart the jupyter process to see changes.
 
 # Packaging
 
