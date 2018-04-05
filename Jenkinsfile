@@ -74,9 +74,9 @@ try {
       // Looking up the author also demands being in a `node`.
       gitAuthor = sh(returnStdout: true, script: 'git --no-pager show -s --format="%aN" HEAD').trim()
 
-      def selenium
+      def dockerImage
       stage('prepare environment') {
-        selenium = pullBuildPush(
+        dockerImage = pullBuildPush(
             image_name: 'jenkins/rsconnect-jupyter',
             image_tag: 'python3',
             docker_context: './',
@@ -88,12 +88,11 @@ try {
             push: !isUserBranch)
       }
 
-      try {
-        stage('package') {
+      stage('package') {
           print "building python wheel package"
           sh 'make package'
           archiveArtifacts artifacts: 'dist/*.whl'
-        }
+      }
     }
   }
 
