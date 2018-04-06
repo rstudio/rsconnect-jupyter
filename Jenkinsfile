@@ -77,21 +77,24 @@ try {
       def dockerImage
       stage('prepare environment') {
         dockerImage = pullBuildPush(
-            image_name: 'jenkins/rsconnect-jupyter',
-            image_tag: 'python3',
-            docker_context: './',
-            build_arg_NB_UID: 'JENKINS_UID',
-            build_arg_NB_GID: 'JENKINS_GID',
-            build_arg_NB_USER: 'jenkins',
-            build_arg_PY_VERSION: '3',
-            build_arg_BASE_IMAGE: 'continuumio/miniconda3:4.4.10',
-            push: !isUserBranch)
+          image_name: 'jenkins/rsconnect-jupyter',
+          image_tag: 'python3',
+          docker_context: './',
+          build_arg_NB_UID: 'JENKINS_UID',
+          build_arg_NB_GID: 'JENKINS_GID',
+          build_arg_NB_USER: 'jenkins',
+          build_arg_PY_VERSION: '3',
+          build_arg_BASE_IMAGE: 'continuumio/miniconda3:4.4.10',
+          push: !isUserBranch
+        )
       }
 
-      stage('package') {
+      dockerImage.inside() {
+        stage('package') {
           print "building python wheel package"
-          sh 'make package'
+          sh 'make dist'
           archiveArtifacts artifacts: 'dist/*.whl'
+        }
       }
     }
   }
