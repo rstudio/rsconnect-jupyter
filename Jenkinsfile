@@ -56,6 +56,14 @@ if (isUserBranch) {
   nodename = 'connect-branches'
 }
 
+def build_args() {
+  def user = sh (script: 'id -nu jenkins', returnStdout: true).trim()
+  def uid = sh (script: 'id -u jenkins', returnStdout: true).trim()
+  def gid = sh (script: 'id -g jenkins', returnStdout: true).trim()
+  def image = 'continuumio/miniconda3:4.4.10'
+  return " --build-arg PY_VERSION=3 --build-arg BASE_IMAGE=${image} --build-arg NB_USER=${user} --build-arg NB_UID=${uid} --build-arg NB_GID=${gid} "
+}
+
 try {
   node(nodename) {
     timestamps {
@@ -79,12 +87,9 @@ try {
         dockerImage = pullBuildPush(
           image_name: 'jenkins/rsconnect-jupyter',
           image_tag: 'python3',
-          docker_context: './',
-          build_arg_NB_UID: 'JENKINS_UID',
-          build_arg_NB_GID: 'JENKINS_GID',
-          build_arg_NB_USER: 'jenkins',
-          build_arg_PY_VERSION: '3',
-          build_arg_BASE_IMAGE: 'continuumio/miniconda3:4.4.10',
+          build_arg_nb_uid: 'JENKINS_UID',
+          build_arg_nb_gid: 'JENKINS_GID',
+          build_args: build_args(),
           push: !isUserBranch
         )
       }
