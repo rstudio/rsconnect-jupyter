@@ -6,8 +6,8 @@ ARG NB_USER
 ARG NB_UID
 ARG NB_GID
 ARG PY_VERSION
-RUN apt-get update -qq
-RUN apt-get install -y make
+RUN apt-get update -qq \
+    && apt-get install -y make
 RUN useradd --password password \
     --create-home \
     --home-dir /home/${NB_USER} \
