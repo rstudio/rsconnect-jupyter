@@ -16,5 +16,5 @@ RUN useradd --password password \
     ${NB_USER}
 
 USER ${NB_UID}:${NB_GID}
-WORKDIR /home/${NB_USER}
-RUN conda create --yes --name py${PY_VERSION} jupyter
+RUN cd /home/${NB_USER} \
+    conda create --yes --name py${PY_VERSION} jupyter
