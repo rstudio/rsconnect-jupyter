@@ -57,11 +57,10 @@ if (isUserBranch) {
 }
 
 def build_args() {
-  def user = sh (script: 'id -nu jenkins', returnStdout: true).trim()
   def uid = sh (script: 'id -u jenkins', returnStdout: true).trim()
   def gid = sh (script: 'id -g jenkins', returnStdout: true).trim()
   def image = 'continuumio/miniconda3:4.4.10'
-  return " --build-arg PY_VERSION=3 --build-arg BASE_IMAGE=${image} --build-arg NB_USER=${user} --build-arg NB_UID=${uid} --build-arg NB_GID=${gid} "
+  return " --build-arg PY_VERSION=3 --build-arg BASE_IMAGE=${image} --build-arg NB_UID=${uid} --build-arg NB_GID=${gid} "
 }
 
 try {

@@ -1,6 +1,5 @@
 .PHONY: clean pull images image2 image3 launch notebook2 notebook3 package dist test dist run
 
-NB_USER=$(shell id -nu)
 NB_UID=$(shell id -u)
 NB_GID=$(shell id -g)
 
@@ -26,7 +25,6 @@ image2:
 		--build-arg BASE_IMAGE=continuumio/miniconda:4.4.10 \
 		--build-arg NB_UID=$(NB_UID) \
 		--build-arg NB_GID=$(NB_GID) \
-		--build-arg NB_USER=$(NB_USER) \
 		--build-arg PY_VERSION=2 \
 		.
 
@@ -37,7 +35,6 @@ image3:
 		--build-arg BASE_IMAGE=continuumio/miniconda3:4.4.10 \
 		--build-arg NB_UID=$(NB_UID) \
 		--build-arg NB_GID=$(NB_GID) \
-		--build-arg NB_USER=$(NB_USER) \
 		--build-arg PY_VERSION=3 \
 		.
 
@@ -47,7 +44,6 @@ launch:
 		-v $(CURDIR):/rsconnect \
 		-e NB_UID=$(NB_UID) \
 		-e NB_GID=$(NB_GID) \
-		-e NB_USER=$(NB_USER) \
 		-e PY_VERSION=$(PY_VERSION) \
 		-p :9999:9999 \
 		$(DOCKER_IMAGE) \
