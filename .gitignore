@@ -1,11 +1,10 @@
-# Compiled python modules.
 *.pyc
-
-# Setuptools distribution folder.
 /build/
 /dist/
-
-# Python egg metadata, regenerated from source files by setuptools.
+/.conda/
+/.jupyter/
+/.local/
+/node_modules/
 /*.egg-info
 /*.egg
 /*.eggs
