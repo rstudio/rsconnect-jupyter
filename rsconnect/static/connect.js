@@ -170,6 +170,22 @@ define([
 
   function onConfigReceived(config) {
     debug.info("config", config);
+
+    var sampleConfig = {
+      servers: {
+        "https://somewhere/": {
+          apiKey: "abcdefghij"
+        },
+        "https://elsewhere/": {
+          apiKey: "klmnopqrst"
+        }
+      },
+      content: {
+        "Title 123": { appId: 42, publishedOn: "https://somewhere/__api__/" },
+        "Title 456": { appId: 84, publishedOn: "https://elsewhere/__api__/" }
+      }
+    };
+
     var validConfig = "host" in config && "apiKey" in config;
     return;
 
