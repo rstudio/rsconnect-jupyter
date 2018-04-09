@@ -95,7 +95,7 @@ define([
   function xhrGetConfig() {
     notify.info("RSConnect: fetching config...", 0);
     // force cache invalidation with Math.random (tornado web framework caches aggressively)
-    return $.getJSON("/api/config/rsconnect-jupyter?t=" + Math.random())
+    return $.getJSON("/api/config/rsconnect_jupyter?t=" + Math.random())
       .fail(function(err) {
         showError("Error while retrieving config");
         debug.error(err);
@@ -108,7 +108,7 @@ define([
   function xhrSaveConfig(config) {
     notify.info("RSConnect: saving config...");
     return $.ajax({
-      url: "/api/config/rsconnect-jupyter",
+      url: "/api/config/rsconnect_jupyter",
       headers: {
         "X-XSRFToken": getXsrfToken(),
         "Content-Type": "application/json"
