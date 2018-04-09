@@ -6,6 +6,35 @@ define([
   "base/js/utils"
 ], function($, Jupyter, notification, dialog, utils) {
   /***********************************************************************
+   * Extension bootstrap (main)
+   ***********************************************************************/
+
+  function init() {
+    // create an action that can be invoked from many places (e.g. command
+    // palette, button click, keyboard shortcut, etc.)
+    var actionName = Jupyter.actions.register(
+      {
+        icon: "fa-cloud-upload",
+        help: "Publish to RStudio Connect",
+        help_index: "zz",
+        handler: debounce(1000, onPublishClicked)
+      },
+      "publish",
+      "rsconnect"
+    );
+    // add a button that invokes the action
+    Jupyter.toolbar.add_buttons_group([actionName]);
+
+    // re-style the toolbar button to have a custom icon
+    $('button[data-jupyter-action="' + actionName + '"] > i').addClass(
+      "rsconnect-icon"
+    );
+
+    // wire up notification widget
+    notify = Jupyter.notification_area.widget("rsconnect");
+  }
+
+  /***********************************************************************
    * Helpers
    ***********************************************************************/
 
@@ -27,7 +56,7 @@ define([
     }
   };
 
-  // this will be filled in by init()
+  // this will be filled in by `init()` (var is hoisted)
   var notify = null;
 
   function debounce(delay, fn) {
@@ -162,35 +191,6 @@ define([
         notify.warning("RSConnect: Failed to publish :(");
       }
     );
-  }
-
-  /***********************************************************************
-   * Extension bootstrap (main)
-   ***********************************************************************/
-
-  function init() {
-    // create an action that can be invoked from many places (e.g. command
-    // palette, button click, keyboard shortcut, etc.)
-    var actionName = Jupyter.actions.register(
-      {
-        icon: "fa-cloud-upload",
-        help: "Publish to RStudio Connect",
-        help_index: "zz",
-        handler: debounce(1000, onPublishClicked)
-      },
-      "publish",
-      "rsconnect"
-    );
-    // add a button that invokes the action
-    Jupyter.toolbar.add_buttons_group([actionName]);
-
-    // re-style the toolbar button to have a custom icon
-    $('button[data-jupyter-action="' + actionName + '"] > i').addClass(
-      "rsconnect-icon"
-    );
-
-    // wire up notification
-    notify = Jupyter.notification_area.widget("rsconnect");
   }
 
   return {
