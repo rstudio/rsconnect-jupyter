@@ -48,11 +48,6 @@ define([
       var args = [].slice.call(arguments);
       args.unshift("RSConnect:");
       console.error.apply(null, args);
-    },
-    log: function() {
-      var args = [].slice.call(arguments);
-      args.unshift("RSConnect:");
-      console.log.apply(null, args);
     }
   };
 
@@ -161,7 +156,7 @@ define([
       open: function() {
         // there is no _close_ event so let's improvise
         $("div[role=dialog]").on("hidden.bs.modal", function() {
-          console.log("closed");
+          debug.info("closed");
         });
 
         // take away the publish button's ability to trigger closing the
@@ -174,7 +169,7 @@ define([
   }
 
   function onConfigReceived(config) {
-    debug.log("config", config);
+    debug.info("config", config);
     var validConfig = "host" in config && "apiKey" in config;
 
     if (validConfig) {
@@ -188,7 +183,8 @@ define([
   }
 
   function onPublishClicked(env, event) {
-    // xhrGetConfig().then(onConfigReceived);
+    xhrGetConfig.then(onConfigReceived);
+    /*
     xhrPublish().then(
       function(app) {
         notify.info(
@@ -204,6 +200,7 @@ define([
         notify.warning("RSConnect: Failed to publish :(");
       }
     );
+    */
   }
 
   return {
