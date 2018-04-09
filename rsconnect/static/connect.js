@@ -96,7 +96,7 @@ define([
     notify.info("RSConnect: fetching config...", 0);
     // force cache invalidation with Math.random (tornado web framework caches aggressively)
     return $.getJSON("/api/config/rsconnect-jupyter?t=" + Math.random())
-      .catch(function(err) {
+      .fail(function(err) {
         showError("Error while retrieving config");
         debug.error(err);
       })
@@ -115,7 +115,7 @@ define([
       },
       data: JSON.stringify(config)
     })
-      .catch(function(err) {
+      .fail(function(err) {
         showError("RSConnect: failed to save config");
         debug.error(err);
       })
@@ -171,6 +171,7 @@ define([
   function onConfigReceived(config) {
     debug.info("config", config);
     var validConfig = "host" in config && "apiKey" in config;
+    return;
 
     if (validConfig) {
       // publish the notebook
@@ -183,7 +184,7 @@ define([
   }
 
   function onPublishClicked(env, event) {
-    xhrGetConfig.then(onConfigReceived);
+    xhrGetConfig().then(onConfigReceived);
     /*
     xhrPublish().then(
       function(app) {
