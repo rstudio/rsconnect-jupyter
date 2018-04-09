@@ -150,18 +150,57 @@ define([
     var dialogResult = $.Deferred();
 
     dialog.modal({
-      title: "RStudio Connect Server",
-      body: "<h2>Meow meow</h2><br><br>Hello!",
+      title: "Publish to RStudio Connect",
+      body: [
+        '<div class="form-group">',
+        '    <a href="#" class="pull-right">Add server...</a>',
+        "    <label>Publish to</label>",
+        '    <div class="list-group">',
+        '        <a href="#" class="list-group-item active">',
+        "            https://somewhere/",
+        '            <button type="button" class="pull-right btn btn-danger btn-xs">',
+        '                <i class="fa fa-remove"></i>',
+        "            </button>",
+        "        </a>",
+        '        <a href="#" class="list-group-item">',
+        "            https://elsewhere/",
+        '            <button type="button" class="pull-right btn btn-danger btn-xs">',
+        '                <i class="fa fa-remove"></i>',
+        "            </button>",
+        "        </a>",
+        "    </div>",
+        "</div>",
+        '<div class="form-group">',
+        "    <label>Title</label>",
+        '    <input class="form-control" name="title" type="text">',
+        "</div>"
+      ].join(""),
       sanitize: false,
       open: function() {
+        var modal = $("div[role=dialog]");
+
+        // TODO add ability to dismiss via escape key
+
         // there is no _close_ event so let's improvise
-        $("div[role=dialog]").on("hidden.bs.modal", function() {
+        modal.on("hidden.bs.modal", function() {
           debug.info("closed");
+          dialogResult.resolve("closed");
         });
 
-        // take away the publish button's ability to trigger closing the
-        // dialog until we have valid data
-        $("#rsconnect-publish-dialog-btn").removeAttr("data-dismiss");
+        // add footer buttons
+        modal
+          .find(".modal-footer")
+          .append(
+            '<a class="btn" data-dismiss="modal" aria-hidden="true">Cancel</a>'
+          )
+          .append(
+            '<a class="btn btn-primary" data-dismiss="modal" aria-hidden="true">Publish</a>'
+          );
+
+        // add default title
+        modal
+          .find("[name=title]")
+          .val(Jupyter.notebook.notebook_name.replace(".ipynb", ""));
       }
     });
 
@@ -186,7 +225,21 @@ define([
       }
     };
 
-    var validConfig = "host" in config && "apiKey" in config;
+    var emptyConfig = {
+      servers: {},
+      content: {}
+    };
+
+    if (Object.values(config).length === 0) {
+      // empty config
+    } else {
+      // some config
+    }
+
+    addServerConfig().then(function(data) {
+      debug.info(data);
+    });
+
     return;
 
     if (validConfig) {
