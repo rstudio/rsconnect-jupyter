@@ -83,12 +83,6 @@ define([
     return cookies["_xsrf"] || "";
   }
 
-  function identity(a) {
-    // sneaky side-effect
-    notify.hide();
-    return a;
-  }
-
   function showError(prefix) {
     return function(error) {
       var msg = prefix + ": " + error;
@@ -104,17 +98,36 @@ define([
    ***********************************************************************/
 
   function xhrGetConfig() {
-    // maybe use the settings endpoint here to persist data?
-    // https://github.com/jupyter/notebook/blob/5.2.2/notebook/services/config/handlers.py
     notify.info("RSConnect: fetching config...", 0);
     // force cache invalidation with Math.random (tornado web framework caches aggressively)
-    return $.getJSON("/api/config/rsconnect?t=" + Math.random()).then(
-      identity,
-      showError("Error while retrieving config")
-    );
+    return $.getJSON("/api/config/rsconnect-jupyter?t=" + Math.random())
+      .catch(function(err) {
+        showError("Error while retrieving config");
+        debug.error(err);
+      })
+      .always(function() {
+        notify.hide();
+      });
   }
 
-  function xhrSaveConfig() {}
+  function xhrSaveConfig(config) {
+    notify.info("RSConnect: saving config...");
+    return $.ajax({
+      url: "/api/config/rsconnect-jupyter",
+      headers: {
+        "X-XSRFToken": getXsrfToken(),
+        "Content-Type": "application/json"
+      },
+      data: JSON.stringify(config)
+    })
+      .catch(function(err) {
+        showError("RSConnect: failed to save config");
+        debug.error(err);
+      })
+      .always(function() {
+        notify.hide();
+      });
+  }
 
   function xhrPublish() {
     var notebookPath = utils.encode_uri_components(
