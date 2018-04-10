@@ -27,7 +27,7 @@ define([
 
     // re-style the toolbar button to have a custom icon
     $('button[data-jupyter-action="' + actionName + '"] > i').addClass(
-      "rsconnect-icon"
+      "rsc-icon"
     );
 
     // wire up notification widget
@@ -148,8 +148,9 @@ define([
 
   function addServerConfig() {
     var dialogResult = $.Deferred();
+    var notebookTitle = Jupyter.notebook.notebook_name.replace(".ipynb", "");
 
-    dialog.modal({
+    var publishModal = dialog.modal({
       title: "Publish to RStudio Connect",
       body: [
         '<div class="form-group">',
@@ -157,13 +158,13 @@ define([
         "    <label>Publish to</label>",
         '    <div class="list-group">',
         '        <a href="#" class="list-group-item active">',
-        "            https://somewhere/",
+        '            somewhere <small class="rsc-text-light">&mdash; https://somewhere/</small>',
         '            <button type="button" class="pull-right btn btn-danger btn-xs">',
         '                <i class="fa fa-remove"></i>',
         "            </button>",
         "        </a>",
         '        <a href="#" class="list-group-item">',
-        "            https://elsewhere/",
+        '            elsewhere <small class="rsc-text-light">&mdash; https://elsewhere/</small>',
         '            <button type="button" class="pull-right btn btn-danger btn-xs">',
         '                <i class="fa fa-remove"></i>',
         "            </button>",
@@ -177,18 +178,21 @@ define([
       ].join(""),
       sanitize: false,
       open: function() {
-        var modal = $("div[role=dialog]");
-
         // TODO add ability to dismiss via escape key
 
+        // clicking on links in the modal body prevents the default behavior (i.e. changing location.hash)
+        publishModal.find(".modal-body").on("click", function(e) {
+          e.preventDefault();
+        });
+
         // there is no _close_ event so let's improvise
-        modal.on("hidden.bs.modal", function() {
+        publishModal.on("hidden.bs.modal", function() {
           debug.info("closed");
           dialogResult.resolve("closed");
         });
 
         // add footer buttons
-        modal
+        publishModal
           .find(".modal-footer")
           .append(
             '<a class="btn" data-dismiss="modal" aria-hidden="true">Cancel</a>'
@@ -198,9 +202,7 @@ define([
           );
 
         // add default title
-        modal
-          .find("[name=title]")
-          .val(Jupyter.notebook.notebook_name.replace(".ipynb", ""));
+        publishModal.find("[name=title]").val(notebookTitle);
       }
     });
 
@@ -211,22 +213,34 @@ define([
     debug.info("config", config);
 
     var sampleConfig = {
-      servers: {
-        "https://somewhere/": {
+      servers: [
+        {
+          uri: "https://somewhere/",
+          name: "somewhere",
           apiKey: "abcdefghij"
         },
-        "https://elsewhere/": {
+        {
+          uri: "https://elsewhere/",
+          name: "elsewhere",
           apiKey: "klmnopqrst"
         }
-      },
+      ],
       content: {
-        "Title 123": { appId: 42, publishedOn: "https://somewhere/__api__/" },
-        "Title 456": { appId: 84, publishedOn: "https://elsewhere/__api__/" }
+        "/path/to/Title 123.ipynb": {
+          title: "Title 123",
+          appId: 42,
+          publishedTo: "somewhere"
+        },
+        "/path/to/Title 456.ipynb": {
+          title: "Title XYZ",
+          appId: 84,
+          publishedTo: "elsewhere"
+        }
       }
     };
 
     var emptyConfig = {
-      servers: {},
+      servers: [],
       content: {}
     };
 
