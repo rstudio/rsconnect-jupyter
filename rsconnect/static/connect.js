@@ -119,6 +119,7 @@ define([
     },
 
     addServer: function(uri, name, apiKey) {
+      // TODO check validity of server
       this.servers.push({ uri: uri, name: name, apiKey: apiKey });
       return this.save();
     },
@@ -142,6 +143,7 @@ define([
         headers: { "Content-Type": "application/json" },
         data: JSON.stringify({
           notebook_path: notebookPath,
+          notebook_title: title,
           server: server.uri,
           api_key: server.apiKey
         })
@@ -169,6 +171,21 @@ define([
       });
 
       return xhr;
+    },
+
+    getNotebookTitle: function() {
+      var nbTitle = Jupyter.notebook.notebook_name.replace(".ipynb", "");
+      var nbPath = Jupyter.notebook.notebookPath;
+
+      var idx = this.content.find(function(c) {
+        return c.notebookPath === nbPath;
+      });
+
+      if (idx > -1) {
+        return this.content[idx].title;
+      } else {
+        return nbTitle;
+      }
     }
   };
 
@@ -208,13 +225,12 @@ define([
 
   function showPublishDialog() {
     var dialogResult = $.Deferred();
-    var notebookTitle = Jupyter.notebook.notebook_name.replace(".ipynb", "");
 
     var publishModal = dialog.modal({
       title: "Publish to RStudio Connect",
       body: [
         '<div class="form-group">',
-        '    <a href="#" class="pull-right">Add server...</a>',
+        '    <a href="#" data-rsc-add-server class="pull-right">Add server...</a>',
         "    <label>Publish to</label>",
         '    <div class="list-group">',
         '        <a href="#" class="list-group-item active">',
@@ -236,7 +252,11 @@ define([
         '    <input class="form-control" name="title" type="text">',
         "</div>"
       ].join(""),
+
+      // allow raw html
       sanitize: false,
+
+      // triggered when dialog is visible (would be better if it was post-node creation but before being visible)
       open: function() {
         // TODO add ability to dismiss via escape key
 
@@ -246,23 +266,31 @@ define([
         });
 
         // there is no _close_ event so let's improvise
-        publishModal.on("hidden.bs.modal", function() {
-          debug.info("closed");
-          dialogResult.resolve("closed");
+        publishModal.on("hide.bs.modal", function() {
+          dialogResult.resolve("canceled");
         });
 
         // add footer buttons
+        var btnCancel = $(
+          '<a class="btn" data-dismiss="modal" aria-hidden="true">Cancel</a>'
+        );
+        btnCancel.on("click", function() {
+          dialogResult.resolve("canceled");
+        });
+        var btnPublish = $(
+          '<a class="btn btn-primary" data-dismiss="modal" aria-hidden="true">Publish</a>'
+        );
+        btnPublish.on("click", function() {
+          // TODO actually publish
+          dialogResult.resolve("publish");
+        });
         publishModal
           .find(".modal-footer")
-          .append(
-            '<a class="btn" data-dismiss="modal" aria-hidden="true">Cancel</a>'
-          )
-          .append(
-            '<a class="btn btn-primary" data-dismiss="modal" aria-hidden="true">Publish</a>'
-          );
+          .append(btnCancel)
+          .append(btnPublish);
 
         // add default title
-        publishModal.find("[name=title]").val(notebookTitle);
+        publishModal.find("[name=title]").val(config.getNotebookTitle());
       }
     });
 
