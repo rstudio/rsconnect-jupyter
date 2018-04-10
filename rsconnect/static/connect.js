@@ -75,7 +75,7 @@ define([
       object[key] = value;
       return object;
     }, {});
-    return cookies["_xsrf"] || "";
+    return cookies["_xsrf"];
   }
 
   function showError(prefix) {
@@ -146,7 +146,7 @@ define([
    * Event handlers
    ***********************************************************************/
 
-  function addServerConfig() {
+  function showPublishDialogP() {
     var dialogResult = $.Deferred();
     var notebookTitle = Jupyter.notebook.notebook_name.replace(".ipynb", "");
 
@@ -250,7 +250,7 @@ define([
       // some config
     }
 
-    addServerConfig().then(function(data) {
+    showPublishDialogP().then(function(data) {
       debug.info(data);
     });
 
@@ -261,7 +261,7 @@ define([
       return xhrPublish(config);
     }
 
-    return addServerConfig()
+    return showPublishDialogP()
       .then(xhrSaveConfig)
       .then(xhrPublish);
   }
