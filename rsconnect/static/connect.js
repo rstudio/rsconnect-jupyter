@@ -9,6 +9,10 @@ define([
    * Extension bootstrap (main)
    ***********************************************************************/
 
+  // these will be filled in by `init()`
+  var notify = null;
+  var config = null;
+
   function init() {
     // create an action that can be invoked from many places (e.g. command
     // palette, button click, keyboard shortcut, etc.)
@@ -22,17 +26,157 @@ define([
       "publish",
       "rsconnect"
     );
-    // add a button that invokes the action
-    Jupyter.toolbar.add_buttons_group([actionName]);
 
-    // re-style the toolbar button to have a custom icon
-    $('button[data-jupyter-action="' + actionName + '"] > i').addClass(
-      "rsc-icon"
-    );
-
-    // wire up notification widget
+    // construct notification widget
     notify = Jupyter.notification_area.widget("rsconnect");
+
+    RSConnect.get()
+      .then(function(c) {
+        config = c;
+
+        // add a button that invokes the action
+        Jupyter.toolbar.add_buttons_group([actionName]);
+
+        // re-style the toolbar button to have a custom icon
+        $('button[data-jupyter-action="' + actionName + '"] > i').addClass(
+          "rsc-icon"
+        );
+      })
+      .fail(function(err) {
+        notify.error("RSConnect: failed to retrieve config");
+        debug.error(err);
+      });
   }
+
+  var sampleConfig = {
+    servers: [
+      {
+        uri: "https://somewhere/",
+        name: "somewhere",
+        apiKey: "abcdefghij"
+      },
+      {
+        uri: "https://elsewhere/",
+        name: "elsewhere",
+        apiKey: "klmnopqrst"
+      }
+    ],
+    content: [
+      {
+        notebookPath: "/path/to/Title 123.ipynb",
+        title: "Title 123",
+        appId: 42,
+        publishedTo: "somewhere"
+      },
+      {
+        notebookPath: "/path/to/Title 456.ipynb",
+        title: "Title XYZ",
+        appId: 84,
+        publishedTo: "elsewhere"
+      }
+    ]
+  };
+
+  /***********************************************************************
+   * Server interop
+   ***********************************************************************/
+
+  function RSConnect(config) {
+    if (config.servers && config.content) {
+      this.servers = config.servers;
+      this.content = config.content;
+    } else {
+      this.servers = [];
+      this.content = [];
+    }
+  }
+
+  RSConnect.get = function() {
+    notify.info("RSConnect: fetching config...", 0);
+    // force cache invalidation with Math.random (tornado web framework caches aggressively)
+    return $.getJSON("/api/config/rsconnect_jupyter?t=" + Math.random())
+      .then(function(config) {
+        notify.hide();
+        return new RSConnect(config);
+      })
+      .fail(function(err) {
+        showError("Error while retrieving config");
+        debug.error(err);
+      });
+  };
+
+  RSConnect.prototype = {
+    save: function() {
+      notify.info("RSConnect: saving config...");
+
+      return utils
+        .ajax({
+          url: "/api/config/rsconnect_jupyter",
+          data: JSON.stringify(this)
+        })
+        .then(function(data) {
+          notify.hide();
+          return data;
+        })
+        .fail(function(err) {
+          showError("RSConnect: failed to save config");
+          debug.error(err);
+        });
+    },
+
+    addServer: function(uri, name, apiKey) {
+      this.servers.push({ uri: uri, name: name, apiKey: apiKey });
+      return this.save();
+    },
+
+    removeServer: function(uri) {
+      this.servers = this.servers.filter(function(s) {
+        return s.uri !== uri;
+      });
+      return this.save();
+    },
+
+    publishContent: function(title, server) {
+      // path to current notebook (TODO di this)
+      var notebookPath = utils.encode_uri_components(
+        Jupyter.notebook.notebook_path
+      );
+
+      var xhr = utils.ajax({
+        url: "/rsconnect",
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        data: JSON.stringify({
+          notebook_path: notebookPath,
+          server: server.uri,
+          api_key: server.apiKey
+        })
+      });
+
+      // save config
+      xhr.then(function(content) {
+        var index = this.content.find(function(c) {
+          return c.notebookPath === notebookPath;
+        });
+
+        if (index > -1) {
+          this.content[index].publishedTo = server.name;
+          this.content[index].appId = content.id;
+        } else {
+          this.content.push({
+            notebookPath: notebookPath,
+            title: title,
+            appId: content.id,
+            publishedTo: server.name
+          });
+        }
+
+        return content;
+      });
+
+      return xhr;
+    }
+  };
 
   /***********************************************************************
    * Helpers
@@ -51,9 +195,6 @@ define([
     }
   };
 
-  // this will be filled in by `init()` (var is hoisted)
-  var notify = null;
-
   function debounce(delay, fn) {
     var timeoutId = null;
     return function() {
@@ -67,17 +208,6 @@ define([
     };
   }
 
-  function getXsrfToken() {
-    var cookies = document.cookie.split("; ").reduce(function(object, s) {
-      var sepIdx = s.indexOf("=");
-      var key = s.substring(0, sepIdx);
-      var value = s.substring(sepIdx + 1);
-      object[key] = value;
-      return object;
-    }, {});
-    return cookies["_xsrf"];
-  }
-
   function showError(prefix) {
     return function(error) {
       var msg = prefix + ": " + error;
@@ -89,64 +219,10 @@ define([
   }
 
   /***********************************************************************
-   * XHR
-   ***********************************************************************/
-
-  function xhrGetConfig() {
-    notify.info("RSConnect: fetching config...", 0);
-    // force cache invalidation with Math.random (tornado web framework caches aggressively)
-    return $.getJSON("/api/config/rsconnect_jupyter?t=" + Math.random())
-      .fail(function(err) {
-        showError("Error while retrieving config");
-        debug.error(err);
-      })
-      .always(function() {
-        notify.hide();
-      });
-  }
-
-  function xhrSaveConfig(config) {
-    notify.info("RSConnect: saving config...");
-    return $.ajax({
-      url: "/api/config/rsconnect_jupyter",
-      headers: {
-        "X-XSRFToken": getXsrfToken(),
-        "Content-Type": "application/json"
-      },
-      data: JSON.stringify(config)
-    })
-      .fail(function(err) {
-        showError("RSConnect: failed to save config");
-        debug.error(err);
-      })
-      .always(function() {
-        notify.hide();
-      });
-  }
-
-  function xhrPublish() {
-    var notebookPath = utils.encode_uri_components(
-      Jupyter.notebook.notebook_path
-    );
-
-    return utils.ajax({
-      url: "/rsconnect",
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      data: JSON.stringify({
-        notebook_path: notebookPath,
-        server: "172.17.0.1",
-        port: 3939,
-        api_key: "tY3YklF1SQWuxoGVzhoI2rwPXun0q68w"
-      })
-    });
-  }
-
-  /***********************************************************************
    * Event handlers
    ***********************************************************************/
 
-  function showPublishDialogP() {
+  function showPublishDialog() {
     var dialogResult = $.Deferred();
     var notebookTitle = Jupyter.notebook.notebook_name.replace(".ipynb", "");
 
@@ -209,65 +285,12 @@ define([
     return dialogResult;
   }
 
-  function onConfigReceived(config) {
-    debug.info("config", config);
+  function onPublishClicked(env, event) {
+    if (!config) return;
 
-    var sampleConfig = {
-      servers: [
-        {
-          uri: "https://somewhere/",
-          name: "somewhere",
-          apiKey: "abcdefghij"
-        },
-        {
-          uri: "https://elsewhere/",
-          name: "elsewhere",
-          apiKey: "klmnopqrst"
-        }
-      ],
-      content: {
-        "/path/to/Title 123.ipynb": {
-          title: "Title 123",
-          appId: 42,
-          publishedTo: "somewhere"
-        },
-        "/path/to/Title 456.ipynb": {
-          title: "Title XYZ",
-          appId: 84,
-          publishedTo: "elsewhere"
-        }
-      }
-    };
-
-    var emptyConfig = {
-      servers: [],
-      content: {}
-    };
-
-    if (Object.values(config).length === 0) {
-      // empty config
-    } else {
-      // some config
-    }
-
-    showPublishDialogP().then(function(data) {
+    showPublishDialog().then(function(data) {
       debug.info(data);
     });
-
-    return;
-
-    if (validConfig) {
-      // publish the notebook
-      return xhrPublish(config);
-    }
-
-    return showPublishDialogP()
-      .then(xhrSaveConfig)
-      .then(xhrPublish);
-  }
-
-  function onPublishClicked(env, event) {
-    xhrGetConfig().then(onConfigReceived);
     /*
     xhrPublish().then(
       function(app) {
