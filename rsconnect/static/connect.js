@@ -29,22 +29,17 @@ define([
     // construct notification widget
     notify = Jupyter.notification_area.widget("rsconnect");
 
-    RSConnect.get()
-      .then(function(c) {
-        config = c;
+    RSConnect.get().then(function(c) {
+      config = c;
 
-        // add a button that invokes the action
-        Jupyter.toolbar.add_buttons_group([actionName]);
+      // add a button that invokes the action
+      Jupyter.toolbar.add_buttons_group([actionName]);
 
-        // re-style the toolbar button to have a custom icon
-        $('button[data-jupyter-action="' + actionName + '"] > i').addClass(
-          "rsc-icon"
-        );
-      })
-      .fail(function(err) {
-        notify.error("RSConnect: failed to retrieve config");
-        debug.error(err);
-      });
+      // re-style the toolbar button to have a custom icon
+      $('button[data-jupyter-action="' + actionName + '"] > i').addClass(
+        "rsc-icon"
+      );
+    });
   }
 
   var sampleConfig = {
@@ -91,7 +86,7 @@ define([
   }
 
   RSConnect.get = function() {
-    notify.info("RSConnect: fetching config...", 0);
+    notify.info("RSConnect: fetching config...");
     // force cache invalidation with Math.random (tornado web framework caches aggressively)
     return $.getJSON("/api/config/rsconnect_jupyter?t=" + Math.random())
       .then(function(config) {
@@ -99,7 +94,7 @@ define([
         return new RSConnect(config);
       })
       .fail(function(err) {
-        showError("Error while retrieving config");
+        notify.error("RSConnect: error while retrieving config");
         debug.error(err);
       });
   };
@@ -118,7 +113,7 @@ define([
           return data;
         })
         .fail(function(err) {
-          showError("RSConnect: failed to save config");
+          notify.error("RSConnect: failed to save configuration");
           debug.error(err);
         });
     },
@@ -204,16 +199,6 @@ define([
       timeoutId = setTimeout(function() {
         timeoutId = null;
       }, delay);
-    };
-  }
-
-  function showError(prefix) {
-    return function(error) {
-      var msg = prefix + ": " + error;
-      debug.error(msg);
-      notify.error("RSConnect: error", 0, alert.bind(null, msg), {
-        title: msg
-      });
     };
   }
 
