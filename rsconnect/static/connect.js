@@ -86,7 +86,7 @@ define([
   }
 
   RSConnect.get = function() {
-    notify.info("RSConnect: fetching config...");
+    notify.info("RSConnect: fetching configuration");
     // force cache invalidation with Math.random (tornado web framework caches aggressively)
     return $.getJSON("/api/config/rsconnect_jupyter?t=" + Math.random())
       .then(function(config) {
@@ -94,14 +94,14 @@ define([
         return new RSConnect(config);
       })
       .fail(function(err) {
-        notify.error("RSConnect: error while retrieving config");
+        notify.error("RSConnect: failed to retrieve configuration");
         debug.error(err);
       });
   };
 
   RSConnect.prototype = {
     save: function() {
-      notify.info("RSConnect: saving config...");
+      notify.info("RSConnect: saving configuration");
 
       return utils
         .ajax({
