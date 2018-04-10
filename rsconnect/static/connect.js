@@ -220,37 +220,110 @@ define([
   }
 
   /***********************************************************************
-   * Event handlers
+   * Dialogs
    ***********************************************************************/
+
+  function showAddServerDialog() {
+    var dialogResult = $.Deferred();
+
+    var serverModal = dialog.modal({
+      // pass the existing keyboard manager so all shortcuts are disabled while
+      // modal is active
+      keyboard_manager: Jupyter.notebook.keyboard_manager,
+
+      title: "Add RStudio Connect Server",
+      body: [
+        "<form>",
+        '    <div class="form-group">',
+        "        <label>Server Address</label>",
+        '        <input class="form-control" name="server" type="url" required>',
+        "    </div>",
+        '    <div class="form-group">',
+        "        <label>Server Name</label>",
+        '        <input class="form-control" name="name" type="text" required>',
+        "    </div>",
+        '    <div class="form-group">',
+        "        <label>API Key</label>",
+        '        <input class="form-control" name="apiKey" type="text" required>',
+        "    </div>",
+        '<input type="submit" hidden>',
+        "</form>"
+      ].join(""),
+
+      // allow raw html
+      sanitize: false,
+
+      open: function() {
+        // there is no _close_ event so let's improvise
+        serverModal.on("hide.bs.modal", function() {
+          dialogResult.resolve("canceled");
+        });
+
+        var form = serverModal.find("form").on("submit", function(e) {
+          debug.info("Todo");
+          e.preventDefault();
+        });
+
+        // add footer buttons
+        var btnCancel = $(
+          '<a class="btn" data-dismiss="modal" aria-hidden="true">Cancel</a>'
+        );
+        btnCancel.on("click", function() {
+          dialogResult.resolve("canceled");
+        });
+        var btnAdd = $(
+          '<a class="btn btn-primary" data-dismiss="modal" aria-hidden="true">Add Server</a>'
+        );
+        btnAdd.on("click", function() {
+          // TODO actually publish
+          form.trigger("submit");
+          dialogResult.resolve("add");
+        });
+        serverModal
+          .find(".modal-footer")
+          .append(btnCancel)
+          .append(btnAdd);
+      }
+    });
+
+    return dialogResult;
+  }
 
   function showPublishDialog() {
     var dialogResult = $.Deferred();
 
     var publishModal = dialog.modal({
+      // pass the existing keyboard manager so all shortcuts are disabled while
+      // modal is active
+      keyboard_manager: Jupyter.notebook.keyboard_manager,
+
       title: "Publish to RStudio Connect",
       body: [
-        '<div class="form-group">',
-        '    <a href="#" data-rsc-add-server class="pull-right">Add server...</a>',
-        "    <label>Publish to</label>",
-        '    <div class="list-group">',
-        '        <a href="#" class="list-group-item active">',
-        '            somewhere <small class="rsc-text-light">&mdash; https://somewhere/</small>',
-        '            <button type="button" class="pull-right btn btn-danger btn-xs">',
-        '                <i class="fa fa-remove"></i>',
-        "            </button>",
-        "        </a>",
-        '        <a href="#" class="list-group-item">',
-        '            elsewhere <small class="rsc-text-light">&mdash; https://elsewhere/</small>',
-        '            <button type="button" class="pull-right btn btn-danger btn-xs">',
-        '                <i class="fa fa-remove"></i>',
-        "            </button>",
-        "        </a>",
+        "<form>",
+        '    <div class="form-group">',
+        '        <a href="#" data-rsc-add-server class="pull-right">Add server...</a>',
+        "        <label>Publish to</label>",
+        '        <div class="list-group">',
+        '            <a href="#" class="list-group-item active">',
+        '                somewhere <small class="rsc-text-light">&mdash; https://somewhere/</small>',
+        '                <button type="button" class="pull-right btn btn-danger btn-xs">',
+        '                    <i class="fa fa-remove"></i>',
+        "                </button>",
+        "            </a>",
+        '            <a href="#" class="list-group-item">',
+        '                elsewhere <small class="rsc-text-light">&mdash; https://elsewhere/</small>',
+        '                <button type="button" class="pull-right btn btn-danger btn-xs">',
+        '                    <i class="fa fa-remove"></i>',
+        "                </button>",
+        "            </a>",
+        "        </div>",
         "    </div>",
-        "</div>",
-        '<div class="form-group">',
-        "    <label>Title</label>",
-        '    <input class="form-control" name="title" type="text">',
-        "</div>"
+        '    <div class="form-group">',
+        "        <label>Title</label>",
+        '        <input class="form-control" name="title" type="text">',
+        "    </div>",
+        '<input type="submit" hidden>',
+        "</form>"
       ].join(""),
 
       // allow raw html
@@ -300,26 +373,15 @@ define([
   function onPublishClicked(env, event) {
     if (!config) return;
 
-    showPublishDialog().then(function(data) {
-      debug.info(data);
-    });
-    /*
-    xhrPublish().then(
-      function(app) {
-        notify.info(
-          "  RSConnect: Published",
-          30 * 1000,
-          function() {
-            window.open(app.url);
-          },
-          { icon: "fa fa-link" }
-        );
-      },
-      function() {
-        notify.warning("RSConnect: Failed to publish :(");
-      }
-    );
-    */
+    if (config.servers.length === 0) {
+      showAddServerDialog().then(function(result) {
+        debug.info(result);
+      });
+    } else {
+      showPublishDialog().then(function(result) {
+        debug.info(result);
+      });
+    }
   }
 
   return {
