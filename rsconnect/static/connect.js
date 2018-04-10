@@ -1,10 +1,9 @@
 define([
   "jquery",
   "base/js/namespace",
-  "base/js/notificationarea",
   "base/js/dialog",
   "base/js/utils"
-], function($, Jupyter, notification, dialog, utils) {
+], function($, Jupyter, dialog, utils) {
   /***********************************************************************
    * Extension bootstrap (main)
    ***********************************************************************/
