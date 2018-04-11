@@ -10,3 +10,7 @@
 .rsc-text-light {
     opacity: 0.7;
 }
+
+.rsc-label {
+    font-weight: bold;
+}

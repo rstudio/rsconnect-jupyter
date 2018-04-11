@@ -3,7 +3,7 @@ define([
   "base/js/namespace",
   "base/js/dialog",
   "base/js/utils"
-], function($, Jupyter, dialog, utils) {
+], function($, Jupyter, Dialog, Utils) {
   /***********************************************************************
    * Extension bootstrap (main)
    ***********************************************************************/
@@ -29,17 +29,24 @@ define([
     // construct notification widget
     notify = Jupyter.notification_area.widget("rsconnect");
 
-    RSConnect.get().then(function(c) {
-      config = c;
+    notify.info("RSConnect: fetching configuration");
+    RSConnect.get()
+      .then(function(c) {
+        config = c;
+        notify.hide();
 
-      // add a button that invokes the action
-      Jupyter.toolbar.add_buttons_group([actionName]);
+        // add a button that invokes the action
+        Jupyter.toolbar.add_buttons_group([actionName]);
 
-      // re-style the toolbar button to have a custom icon
-      $('button[data-jupyter-action="' + actionName + '"] > i').addClass(
-        "rsc-icon"
-      );
-    });
+        // re-style the toolbar button to have a custom icon
+        $('button[data-jupyter-action="' + actionName + '"] > i').addClass(
+          "rsc-icon"
+        );
+      })
+      .fail(function() {
+        notify.error("RSConnect: failed to retrieve configuration");
+        debug.error(err);
+      });
   }
 
   var sampleConfig = {
@@ -75,8 +82,8 @@ define([
    * Server interop
    ***********************************************************************/
 
-  function RSConnect(config) {
-    if (config.servers && config.content) {
+  function RSConnect(c) {
+    if (c.servers && c.content) {
       this.servers = config.servers;
       this.content = config.content;
     } else {
@@ -86,40 +93,30 @@ define([
   }
 
   RSConnect.get = function() {
-    notify.info("RSConnect: fetching configuration");
     // force cache invalidation with Math.random (tornado web framework caches aggressively)
-    return $.getJSON("/api/config/rsconnect_jupyter?t=" + Math.random())
-      .then(function(config) {
-        notify.hide();
-        return new RSConnect(config);
-      })
-      .fail(function(err) {
-        notify.error("RSConnect: failed to retrieve configuration");
-        debug.error(err);
-      });
+    return $.getJSON("/api/config/rsconnect_jupyter?t=" + Math.random()).then(
+      function(c) {
+        return new RSConnect(c);
+      }
+    );
   };
 
   RSConnect.prototype = {
     save: function() {
-      notify.info("RSConnect: saving configuration");
-
-      return utils
-        .ajax({
-          url: "/api/config/rsconnect_jupyter",
-          data: JSON.stringify(this)
-        })
-        .then(function(data) {
-          notify.hide();
-          return data;
-        })
-        .fail(function(err) {
-          notify.error("RSConnect: failed to save configuration");
-          debug.error(err);
-        });
+      return Utils.ajax({
+        url: "/api/config/rsconnect_jupyter",
+        data: JSON.stringify(this)
+      });
     },
 
     addServer: function(uri, name, apiKey) {
+      if (!uri.endsWith("/")) {
+        uri += "/";
+      }
       // TODO check validity of server
+      debug.info("wheee");
+      return $.Deferred().reject("nope");
+
       this.servers.push({ uri: uri, name: name, apiKey: apiKey });
       return this.save();
     },
@@ -133,11 +130,11 @@ define([
 
     publishContent: function(title, server) {
       // path to current notebook (TODO di this)
-      var notebookPath = utils.encode_uri_components(
+      var notebookPath = Utils.encode_uri_components(
         Jupyter.notebook.notebook_path
       );
 
-      var xhr = utils.ajax({
+      var xhr = Utils.ajax({
         url: "/rsconnect",
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -226,7 +223,7 @@ define([
   function showAddServerDialog() {
     var dialogResult = $.Deferred();
 
-    var serverModal = dialog.modal({
+    var serverModal = Dialog.modal({
       // pass the existing keyboard manager so all shortcuts are disabled while
       // modal is active
       keyboard_manager: Jupyter.notebook.keyboard_manager,
@@ -235,49 +232,112 @@ define([
       body: [
         "<form>",
         '    <div class="form-group">',
-        "        <label>Server Address</label>",
-        '        <input class="form-control" name="server" type="url" required>',
+        '        <label class="rsc-label" for="rsc-server">Server Address</label>',
+        '        <input class="form-control" id="rsc-server" type="url" placeholder="https://connect.example.com/" required>',
+        '        <span class="help-block"></span>',
         "    </div>",
         '    <div class="form-group">',
-        "        <label>Server Name</label>",
-        '        <input class="form-control" name="name" type="text" required>',
+        '        <label class="rsc-label" for="rsc-servername">Server Name</label>',
+        '        <input class="form-control" id="rsc-servername" type="text" placeholder="server-nickname" minlength="1" required>',
+        '        <span class="help-block"></span>',
         "    </div>",
         '    <div class="form-group">',
-        "        <label>API Key</label>",
-        '        <input class="form-control" name="apiKey" type="text" required>',
+        '        <label class="rsc-label" for="rsc-apikey">API Key</label>',
+        '        <input class="form-control" id="rsc-apikey" type="text" placeholder="abcdefghijlmnopqrstuvwxyz1234567" minlength="32" maxlength="32" required>',
+        '        <span class="help-block"></span>',
         "    </div>",
-        '<input type="submit" hidden>',
+        '    <input type="submit" hidden>',
         "</form>"
       ].join(""),
+      // P5pSP4xgUCnfSwulFYwO5NJFL3bgHYFo
 
       // allow raw html
       sanitize: false,
 
       open: function() {
-        // there is no _close_ event so let's improvise
+        // there is no _close_ event so let's improvise.
         serverModal.on("hide.bs.modal", function() {
           dialogResult.resolve("canceled");
         });
 
+        var $txtServer = serverModal.find("#rsc-server");
+        var $txtServerName = serverModal.find("#rsc-servername");
+        var $txtApiKey = serverModal.find("#rsc-apikey");
         var form = serverModal.find("form").on("submit", function(e) {
-          debug.info("Todo");
           e.preventDefault();
+          serverModal.find(".form-group").removeClass("has-error");
+          serverModal.find(".help-block").text("");
+
+          var validServer = $txtServer.val().length > 0;
+          // if browser supports <input type=url> then use its checkValidity function
+          if ($txtServer.get(0).checkValidity) {
+            validServer &= $txtServer.get(0).checkValidity();
+          }
+          var validServerName = $txtServerName.val().length > 0;
+          var validApiKey = $txtApiKey.val().length === 32;
+
+          var addValidationMarkup = function(valid, $el, helpText) {
+            if (!valid) {
+              $el
+                .closest(".form-group")
+                .addClass("has-error")
+                .find(".help-block")
+                .text(helpText);
+            }
+          };
+
+          addValidationMarkup(
+            validServer,
+            $txtServer,
+            "This should be the location of RStudio Connect: e.g. https://connect.example.com/"
+          );
+          addValidationMarkup(
+            validServerName,
+            $txtServerName,
+            "This should not be empty"
+          );
+          addValidationMarkup(
+            validApiKey,
+            $txtApiKey,
+            "This should be 32 characters long"
+          );
+
+          if (validServer && validServerName && validApiKey) {
+            config
+              .addServer(
+                $txtServer.val(),
+                $txtServerName.val(),
+                $txtApiKey.val()
+              )
+              .then(function(x) {
+                debug.info(x);
+
+                dialogResult.resolve("done");
+                serverModal.modal("hide");
+              })
+              .fail(function(err) {
+                debug.error(err);
+
+                $txtServer.closest(".form-group").addClass("has-error");
+                $txtServer
+                  .siblings(".help-block")
+                  .text(
+                    "Failed to verify RSConnect Connect is running at " +
+                      $txtServer.val()
+                  );
+              });
+          }
         });
 
         // add footer buttons
         var btnCancel = $(
           '<a class="btn" data-dismiss="modal" aria-hidden="true">Cancel</a>'
         );
-        btnCancel.on("click", function() {
-          dialogResult.resolve("canceled");
-        });
         var btnAdd = $(
-          '<a class="btn btn-primary" data-dismiss="modal" aria-hidden="true">Add Server</a>'
+          '<a class="btn btn-primary" aria-hidden="true">Add Server</a>'
         );
-        btnAdd.on("click", function() {
-          // TODO actually publish
+        btnAdd.on("click", function(e) {
           form.trigger("submit");
-          dialogResult.resolve("add");
         });
         serverModal
           .find(".modal-footer")
@@ -292,7 +352,7 @@ define([
   function showPublishDialog() {
     var dialogResult = $.Deferred();
 
-    var publishModal = dialog.modal({
+    var publishModal = Dialog.modal({
       // pass the existing keyboard manager so all shortcuts are disabled while
       // modal is active
       keyboard_manager: Jupyter.notebook.keyboard_manager,
@@ -322,7 +382,7 @@ define([
         "        <label>Title</label>",
         '        <input class="form-control" name="title" type="text">',
         "    </div>",
-        '<input type="submit" hidden>',
+        '    <input type="submit" hidden>',
         "</form>"
       ].join(""),
 
