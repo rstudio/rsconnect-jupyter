@@ -54,12 +54,12 @@ define([
       {
         uri: "https://somewhere/",
         name: "somewhere",
-        apiKey: "abcdefghij"
+        api_key: "abcdefghij"
       },
       {
         uri: "https://elsewhere/",
         name: "elsewhere",
-        apiKey: "klmnopqrst"
+        api_key: "klmnopqrst"
       }
     ],
     content: [
@@ -84,8 +84,8 @@ define([
 
   function RSConnect(c) {
     if (c.servers && c.content) {
-      this.servers = config.servers;
-      this.content = config.content;
+      this.servers = c.servers;
+      this.content = c.content;
     } else {
       this.servers = [];
       this.content = [];
@@ -103,27 +103,43 @@ define([
 
   RSConnect.prototype = {
     save: function() {
+      var self = this;
       return Utils.ajax({
         url: "/api/config/rsconnect_jupyter",
-        data: JSON.stringify(this)
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        data: JSON.stringify(self)
+      });
+    },
+
+    verifyServer: function(uri, apiKey) {
+      return Utils.ajax({
+        url: "/rsconnect_jupyter/verify_server",
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        data: JSON.stringify({
+          uri: uri,
+          api_key: apiKey
+        })
       });
     },
 
     addServer: function(uri, name, apiKey) {
-      if (!uri.endsWith("/")) {
-        uri += "/";
-      }
-      // TODO check validity of server
-      debug.info("wheee");
-      return $.Deferred().reject("nope");
-
-      this.servers.push({ uri: uri, name: name, apiKey: apiKey });
-      return this.save();
+      // TODO check for duplicate name
+      var self = this;
+      return this.verifyServer(uri, apiKey)
+        .then(function() {
+          self.servers.push({ uri: uri, name: name, api_key: apiKey });
+        })
+        .then(self.save.bind(self))
+        .then(function() {
+          return name;
+        });
     },
 
-    removeServer: function(uri) {
+    removeServer: function(name) {
       this.servers = this.servers.filter(function(s) {
-        return s.uri !== uri;
+        return s.name !== name;
       });
       return this.save();
     },
@@ -135,7 +151,7 @@ define([
       );
 
       var xhr = Utils.ajax({
-        url: "/rsconnect",
+        url: "/rsconnect_jupyter",
         method: "POST",
         headers: { "Content-Type": "application/json" },
         data: JSON.stringify({
@@ -257,7 +273,7 @@ define([
       open: function() {
         // there is no _close_ event so let's improvise.
         serverModal.on("hide.bs.modal", function() {
-          dialogResult.resolve("canceled");
+          dialogResult.reject("canceled");
         });
 
         var $txtServer = serverModal.find("#rsc-server");
@@ -303,16 +319,20 @@ define([
           );
 
           if (validServer && validServerName && validApiKey) {
+            serverModal
+              .find(".modal-footer .btn:last")
+              .addClass("disabled")
+              .find("i.fa")
+              .removeClass("hidden");
+
             config
               .addServer(
                 $txtServer.val(),
                 $txtServerName.val(),
                 $txtApiKey.val()
               )
-              .then(function(x) {
-                debug.info(x);
-
-                dialogResult.resolve("done");
+              .then(function(serverName) {
+                dialogResult.resolve(serverName);
                 serverModal.modal("hide");
               })
               .fail(function(err) {
@@ -323,8 +343,16 @@ define([
                   .siblings(".help-block")
                   .text(
                     "Failed to verify RSConnect Connect is running at " +
-                      $txtServer.val()
+                      $txtServer.val() +
+                      ". Please ensure the server address and api key are valid."
                   );
+              })
+              .always(function() {
+                serverModal
+                  .find(".modal-footer .btn:last")
+                  .removeClass("disabled")
+                  .find("i.fa")
+                  .addClass("hidden");
               });
           }
         });
@@ -334,7 +362,7 @@ define([
           '<a class="btn" data-dismiss="modal" aria-hidden="true">Cancel</a>'
         );
         var btnAdd = $(
-          '<a class="btn btn-primary" aria-hidden="true">Add Server</a>'
+          '<a class="btn btn-primary" aria-hidden="true"><i class="fa fa-spinner fa-spin hidden"></i> Add Server</a>'
         );
         btnAdd.on("click", function(e) {
           form.trigger("submit");
@@ -349,8 +377,51 @@ define([
     return dialogResult;
   }
 
-  function showPublishDialog() {
+  function showPublishDialog(serverName) {
     var dialogResult = $.Deferred();
+
+    function mkServerItem(server, active) {
+      var btnRemove = $("<button></button>")
+        .addClass("pull-right btn btn-danger btn-xs")
+        .attr("type", "button")
+        .append($("<i></i>").addClass("fa fa-remove"))
+        .on("click", function(e) {
+          e.stopPropagation();
+
+          const $a = $(this).closest("a");
+          config
+            .removeServer(server.name)
+            .then(function() {
+              $a.remove();
+            })
+            .fail(function(err) {
+              debug.error(err);
+            });
+          // TODO check if empty list
+        });
+      var title = $("<small></small>")
+        .addClass("rsc-text-light")
+        .text("— " + server.uri);
+      var a = $("<a></a>")
+        .addClass("list-group-item")
+        .toggleClass("active", active)
+        .attr("href", "#")
+        .text(server.name)
+        .append(title)
+        .append(btnRemove)
+        .on("click", function() {
+          $(this)
+            .toggleClass("active")
+            .siblings()
+            .removeClass("active");
+        });
+
+      return a;
+    }
+
+    var serverItems = config.servers.map(function(s) {
+      return mkServerItem(s, s.name === serverName);
+    });
 
     var publishModal = Dialog.modal({
       // pass the existing keyboard manager so all shortcuts are disabled while
@@ -364,18 +435,6 @@ define([
         '        <a href="#" data-rsc-add-server class="pull-right">Add server...</a>',
         "        <label>Publish to</label>",
         '        <div class="list-group">',
-        '            <a href="#" class="list-group-item active">',
-        '                somewhere <small class="rsc-text-light">&mdash; https://somewhere/</small>',
-        '                <button type="button" class="pull-right btn btn-danger btn-xs">',
-        '                    <i class="fa fa-remove"></i>',
-        "                </button>",
-        "            </a>",
-        '            <a href="#" class="list-group-item">',
-        '                elsewhere <small class="rsc-text-light">&mdash; https://elsewhere/</small>',
-        '                <button type="button" class="pull-right btn btn-danger btn-xs">',
-        '                    <i class="fa fa-remove"></i>',
-        "                </button>",
-        "            </a>",
         "        </div>",
         "    </div>",
         '    <div class="form-group">',
@@ -400,22 +459,24 @@ define([
 
         // there is no _close_ event so let's improvise
         publishModal.on("hide.bs.modal", function() {
-          dialogResult.resolve("canceled");
+          dialogResult.reject("canceled");
         });
+
+        publishModal.find(".list-group").append(serverItems);
 
         // add footer buttons
         var btnCancel = $(
           '<a class="btn" data-dismiss="modal" aria-hidden="true">Cancel</a>'
         );
         btnCancel.on("click", function() {
-          dialogResult.resolve("canceled");
+          dialogResult.reject("canceled");
         });
         var btnPublish = $(
           '<a class="btn btn-primary" data-dismiss="modal" aria-hidden="true">Publish</a>'
         );
         btnPublish.on("click", function() {
           // TODO actually publish
-          dialogResult.resolve("publish");
+          dialogResult.reject("TODO publish");
         });
         publishModal
           .find(".modal-footer")
@@ -434,8 +495,8 @@ define([
     if (!config) return;
 
     if (config.servers.length === 0) {
-      showAddServerDialog().then(function(result) {
-        debug.info(result);
+      showAddServerDialog().then(function(serverName) {
+        showPublishDialog(serverName);
       });
     } else {
       showPublishDialog().then(function(result) {

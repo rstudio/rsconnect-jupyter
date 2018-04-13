@@ -1,4 +1,5 @@
 import json
+import socket
 import time
 
 try:
@@ -9,9 +10,10 @@ except ImportError:
 
 try:
     # python3
-    import urllib.parse as urllib
+    from urllib.parse import urlparse, urlencode
 except ImportError:
-    import urllib
+    from urllib import urlparse, urlencode
+
 
 class RSConnectException(Exception):
     pass
@@ -33,13 +35,33 @@ def wait_until(predicate, timeout, period=0.1):
     return False
 
 
+def verify_server(uri, api_key):
+    r = urlparse(uri)
+    conn = None
+    try:
+        if r.scheme == 'http':
+            conn = http.HTTPConnection(r.hostname, port=(r.port or http.HTTP_PORT), timeout=10)
+        else:
+            conn = http.HTTPSConnection(r.hostname, port=(r.port or http.HTTPS_PORT), timeout=10)
+        conn.request('GET', '/__api__/me', None, {'Authorization': 'Key %s' % api_key})
+        response = conn.getresponse()
+        if response.status >= 400:
+            return False
+    except (http.HTTPException, OSError, socket.error):
+        return False
+    finally:
+        if conn is not None:
+            conn.close()
+    return True
+
+
 class RSConnect:
     def __init__(self, scheme, host, api_key, port=3939):
         self.api_key = api_key
         self.conn = None
-        self.mk_conn = lambda: http.HTTPConnection(host, port=port)
+        self.mk_conn = lambda: http.HTTPConnection(host, port=port, timeout=10)
         if scheme == 'https':
-            self.mk_conn = lambda: http.HTTPSConnection(host, port=port)
+            self.mk_conn = lambda: http.HTTPSConnection(host, port=port, timeout=10)
         self.http_headers = {
             'Authorization': 'Key %s' % self.api_key,
         }
@@ -67,8 +89,12 @@ class RSConnect:
             raise RSConnectException('Unexpected response: %d: %s' % (response.status, str(raw)))
         return data
 
+    def whoami(self):
+        self.conn.request('GET', '/__api__/me')
+        return self.json_response()
+
     def app_find(self, name):
-        params = urllib.urlencode({'search': name, 'count': 1})
+        params = urlencode({'search': name, 'count': 1})
         self.conn.request('GET', '/__api__/applications?' + params, None, self.http_headers)
         data = self.json_response()
         if data['count'] > 0:

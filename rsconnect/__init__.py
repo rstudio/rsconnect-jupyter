@@ -16,7 +16,7 @@ from tornado import web
 from tornado.log import app_log
 from ipython_genutils import text
 
-from rsconnect.rsconnect import mk_manifest, deploy
+from rsconnect.rsconnect import mk_manifest, deploy, verify_server
 
 
 __version__ = '0.1.0'
@@ -65,12 +65,19 @@ def get_exporter(**kwargs):
 class EndpointHandler(APIHandler):
 
     @web.authenticated
-    def get(self):
-        user = self.get_current_user()
-        self.finish(json.dumps({'hello': user.decode()}))
+    def post(self, action):
+        if action == 'verify_server':
+            data = self.get_json_body() or {}
+            if 'uri' in data and 'api_key' in data:
+                if verify_server(data['uri'], data['api_key']):
+                    self.finish(json.dumps({'status': 'Provided server is running RStudio Connect'}))
+                else:
+                    raise web.HTTPError(400, u'Unable to verify the provided server is running RStudio Connect')
+            else:
+                raise web.HTTPError(400, u'Request must contain "uri" and "api_key"')
+            return
 
-    @web.authenticated
-    def post(self):
+
         data = self.get_json_body()
         server, port, api_key, notebook_path = data['server'], data['port'], data['api_key'], data['notebook_path']
         exporter = get_exporter(config=self.config, log=self.log)
@@ -148,5 +155,6 @@ def load_jupyter_server_extension(nb_app):
     nb_app.log.info("rsconnect enabled!")
     web_app = nb_app.web_app
     host_pattern = '.*$'
-    route_pattern = url_path_join(web_app.settings['base_url'], '/rsconnect')
+    action_pattern = r'(?P<action>\w+)'
+    route_pattern = url_path_join(web_app.settings['base_url'], r'/rsconnect_jupyter/%s' % action_pattern)
     web_app.add_handlers(host_pattern, [(route_pattern, EndpointHandler)])
