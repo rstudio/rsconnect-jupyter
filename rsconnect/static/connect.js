@@ -232,11 +232,23 @@ define([
     };
   }
 
+  // Disable the keyboard shortcut manager if it is enabled. This
+  // function should be called at the beginning of every modal open so
+  // input events are received in text boxes and not hijacked by the
+  // keyboard shortcut manager. (This function works around a
+  // race-condition around disabling the keyboard shortcut manager
+  // when presenting dialogs sequentially - related to promises and
+  // the event loop).
+  function disableKeyboardManagerIfNeeded() {
+    if (Jupyter.keyboard_manager.enabled) {
+      Jupyter.keyboard_manager.disable();
+    }
+  }
   /***********************************************************************
    * Dialogs
    ***********************************************************************/
 
-  function showAddServerDialog() {
+  function showAddServerDialog(cancelToPublishDialog) {
     var dialogResult = $.Deferred();
 
     var serverModal = Dialog.modal({
@@ -271,14 +283,20 @@ define([
       sanitize: false,
 
       open: function() {
+        disableKeyboardManagerIfNeeded();
+
         // there is no _close_ event so let's improvise.
         serverModal.on("hide.bs.modal", function() {
           dialogResult.reject("canceled");
+          if (cancelToPublishDialog) {
+            showPublishDialog();
+          }
         });
 
         var $txtServer = serverModal.find("#rsc-server");
         var $txtServerName = serverModal.find("#rsc-servername");
         var $txtApiKey = serverModal.find("#rsc-apikey");
+
         var form = serverModal.find("form").on("submit", function(e) {
           e.preventDefault();
           serverModal.find(".form-group").removeClass("has-error");
@@ -432,7 +450,7 @@ define([
       body: [
         "<form>",
         '    <div class="form-group">',
-        '        <a href="#" data-rsc-add-server class="pull-right">Add server...</a>',
+        '        <a href="#" id="rsc-add-server" class="pull-right">Add server...</a>',
         "        <label>Publish to</label>",
         '        <div class="list-group">',
         "        </div>",
@@ -450,6 +468,7 @@ define([
 
       // triggered when dialog is visible (would be better if it was post-node creation but before being visible)
       open: function() {
+        disableKeyboardManagerIfNeeded();
         // TODO add ability to dismiss via escape key
 
         // clicking on links in the modal body prevents the default behavior (i.e. changing location.hash)
@@ -460,6 +479,11 @@ define([
         // there is no _close_ event so let's improvise
         publishModal.on("hide.bs.modal", function() {
           dialogResult.reject("canceled");
+        });
+
+        publishModal.find("#rsc-add-server").on("click", function() {
+          publishModal.modal("hide");
+          showAddServerDialog(true);
         });
 
         publishModal.find(".list-group").append(serverItems);
@@ -495,7 +519,7 @@ define([
     if (!config) return;
 
     if (config.servers.length === 0) {
-      showAddServerDialog().then(function(serverName) {
+      showAddServerDialog(false).then(function(serverName) {
         showPublishDialog(serverName);
       });
     } else {
