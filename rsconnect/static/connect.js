@@ -411,6 +411,10 @@ define([
           e.stopPropagation();
 
           const $a = $(this).closest("a");
+          // if active server is removed, disable publish button
+          if ($a.hasClass("active")) {
+            btnPublish.addClass("disabled");
+          }
           config
             .removeServer(server.name)
             .then(function() {
@@ -432,10 +436,15 @@ define([
         .append(title)
         .append(btnRemove)
         .on("click", function() {
-          $(this)
+          var $this = $(this);
+          $this
             .toggleClass("active")
             .siblings()
             .removeClass("active");
+
+          // toggle publish button disable state based on whether
+          // there is a selected server
+          btnPublish.toggleClass("disabled", !$this.hasClass("active"));
         });
 
       return a;
@@ -443,6 +452,21 @@ define([
 
     var serverItems = config.servers.map(function(s) {
       return mkServerItem(s, s.name === serverName);
+    });
+
+    // add footer buttons
+    var btnCancel = $(
+      '<a class="btn" data-dismiss="modal" aria-hidden="true">Cancel</a>'
+    );
+    btnCancel.on("click", function() {
+      dialogResult.reject("canceled");
+    });
+    var btnPublish = $(
+      '<a class="btn btn-primary disabled" data-dismiss="modal" aria-hidden="true">Publish</a>'
+    );
+    btnPublish.on("click", function() {
+      // TODO actually publish
+      dialogResult.reject("TODO publish");
     });
 
     var publishModal = Dialog.modal({
@@ -470,12 +494,14 @@ define([
       // allow raw html
       sanitize: false,
 
-      // triggered when dialog is visible (would be better if it was post-node creation but before being visible)
+      // triggered when dialog is visible (would be better if it was
+      // post-node creation but before being visible)
       open: function() {
         disableKeyboardManagerIfNeeded();
         // TODO add ability to dismiss via escape key
 
-        // clicking on links in the modal body prevents the default behavior (i.e. changing location.hash)
+        // clicking on links in the modal body prevents the default
+        // behavior (i.e. changing location.hash)
         publishModal.find(".modal-body").on("click", function(e) {
           e.preventDefault();
         });
@@ -492,20 +518,6 @@ define([
 
         publishModal.find(".list-group").append(serverItems);
 
-        // add footer buttons
-        var btnCancel = $(
-          '<a class="btn" data-dismiss="modal" aria-hidden="true">Cancel</a>'
-        );
-        btnCancel.on("click", function() {
-          dialogResult.reject("canceled");
-        });
-        var btnPublish = $(
-          '<a class="btn btn-primary" data-dismiss="modal" aria-hidden="true">Publish</a>'
-        );
-        btnPublish.on("click", function() {
-          // TODO actually publish
-          dialogResult.reject("TODO publish");
-        });
         publishModal
           .find(".modal-footer")
           .append(btnCancel)
