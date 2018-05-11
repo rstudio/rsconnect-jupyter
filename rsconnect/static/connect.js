@@ -259,22 +259,24 @@ define([
       title: "Add RStudio Connect Server",
       body: [
         "<form>",
-        '    <div class="form-group">',
-        '        <label class="rsc-label" for="rsc-server">Server Address</label>',
-        '        <input class="form-control" id="rsc-server" type="url" placeholder="https://connect.example.com/" required>',
-        '        <span class="help-block"></span>',
-        "    </div>",
-        '    <div class="form-group">',
-        '        <label class="rsc-label" for="rsc-servername">Server Name</label>',
-        '        <input class="form-control" id="rsc-servername" type="text" placeholder="server-nickname" minlength="1" required>',
-        '        <span class="help-block"></span>',
-        "    </div>",
-        '    <div class="form-group">',
-        '        <label class="rsc-label" for="rsc-apikey">API Key</label>',
-        '        <input class="form-control" id="rsc-apikey" type="text" placeholder="abcdefghijlmnopqrstuvwxyz1234567" minlength="32" maxlength="32" required>',
-        '        <span class="help-block"></span>',
-        "    </div>",
-        '    <input type="submit" hidden>',
+        "    <fieldset>",
+        '        <div class="form-group">',
+        '            <label class="rsc-label" for="rsc-server">Server Address</label>',
+        '            <input class="form-control" id="rsc-server" type="url" placeholder="https://connect.example.com/" required>',
+        '            <span class="help-block"></span>',
+        "        </div>",
+        '        <div class="form-group">',
+        '            <label class="rsc-label" for="rsc-servername">Server Name</label>',
+        '            <input class="form-control" id="rsc-servername" type="text" placeholder="server-nickname" minlength="1" required>',
+        '            <span class="help-block"></span>',
+        "        </div>",
+        '        <div class="form-group">',
+        '            <label class="rsc-label" for="rsc-apikey">API Key</label>',
+        '            <input class="form-control" id="rsc-apikey" type="text" placeholder="abcdefghijlmnopqrstuvwxyz1234567" minlength="32" maxlength="32" required>',
+        '            <span class="help-block"></span>',
+        "        </div>",
+        '        <input type="submit" hidden>',
+        "    </fieldset>",
         "</form>"
       ].join(""),
       // P5pSP4xgUCnfSwulFYwO5NJFL3bgHYFo
@@ -337,6 +339,7 @@ define([
           );
 
           if (validServer && validServerName && validApiKey) {
+            serverModal.find("fieldset").attr("disabled", true);
             serverModal
               .find(".modal-footer .btn:last")
               .addClass("disabled")
@@ -366,6 +369,7 @@ define([
                   );
               })
               .always(function() {
+                serverModal.find("fieldset").removeAttr("disabled");
                 serverModal
                   .find(".modal-footer .btn:last")
                   .removeClass("disabled")
