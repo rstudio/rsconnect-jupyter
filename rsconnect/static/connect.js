@@ -90,13 +90,23 @@ define([
       this.servers = [];
       this.content = [];
     }
+
+    this.save = this.save.bind(this);
+    this.verifyServer = this.verifyServer.bind(this);
+    this.addServer = this.addServer.bind(this);
+    this.removeServer = this.removeServer.bind(this);
+    this.publishContent = this.publishContent.bind(this);
+    this.getNotebookTitle = this.getNotebookTitle.bind(this);
   }
 
   RSConnect.get = function() {
     // force cache invalidation with Math.random (tornado web framework caches aggressively)
     return $.getJSON("/api/config/rsconnect_jupyter?t=" + Math.random()).then(
       function(c) {
-        return new RSConnect(c);
+        var x = new RSConnect(c);
+        // TODO remove
+        window.RSConnect = x;
+        return x;
       }
     );
   };
@@ -131,72 +141,85 @@ define([
         .then(function() {
           self.servers.push({ uri: uri, name: name, api_key: apiKey });
         })
-        .then(self.save.bind(self))
+        .then(self.save)
         .then(function() {
           return name;
         });
     },
 
     removeServer: function(name) {
-      this.servers = this.servers.filter(function(s) {
+      var self = this;
+      self.servers = self.servers.filter(function(s) {
         return s.name !== name;
       });
-      return this.save();
+      return self.save();
     },
 
-    publishContent: function(title, server) {
-      // path to current notebook (TODO di this)
-      var notebookPath = Utils.encode_uri_components(
-        Jupyter.notebook.notebook_path
-      );
+    publishContent: function(notebookInfo, server) {
+      var self = this;
+      var notebookPath = Utils.encode_uri_components(notebookInfo.notebookPath);
+      var notebookTitle = notebookInfo.title;
+      debug.info(server);
+
+      var contentIndex = self.content.findIndex(function(c) {
+        return c.notebookPath === notebookPath;
+      });
+      var content = null;
+      if (contentIndex < 0) {
+        content = {
+          notebookPath: notebookPath,
+          title: notebookTitle,
+          publishedTo: server.name
+        };
+        self.content.push(content);
+      } else {
+        content = self.content[contentIndex];
+        content.title = notebookTitle;
+        content.publishedTo = server.name;
+      }
 
       var xhr = Utils.ajax({
-        url: "/rsconnect_jupyter",
+        url: "/rsconnect_jupyter/deploy",
         method: "POST",
         headers: { "Content-Type": "application/json" },
         data: JSON.stringify({
           notebook_path: notebookPath,
-          notebook_title: title,
+          notebook_title: notebookTitle,
+          app_id: content.appId,
           server: server.uri,
-          api_key: server.apiKey
+          api_key: server.api_key
         })
       });
 
       // save config
       xhr.then(function(content) {
-        var index = this.content.find(function(c) {
+        var index = self.content.findIndex(function(c) {
           return c.notebookPath === notebookPath;
         });
-
-        if (index > -1) {
-          this.content[index].publishedTo = server.name;
-          this.content[index].appId = content.id;
-        } else {
-          this.content.push({
-            notebookPath: notebookPath,
-            title: title,
-            appId: content.id,
-            publishedTo: server.name
-          });
-        }
-
-        return content;
+        self.content[index].appId = content.app_id;
+        return self.save().then(function() {
+          return content;
+        });
       });
 
       return xhr;
     },
 
     getNotebookTitle: function() {
-      var nbTitle = Jupyter.notebook.notebook_name.replace(".ipynb", "");
-      var nbPath = Jupyter.notebook.notebookPath;
+      var self = this;
+      var nbTitle = Jupyter.notebook.get_notebook_name();
+      var nbPath = Utils.encode_uri_components(Jupyter.notebook.notebook_path);
 
-      var idx = this.content.find(function(c) {
+      // find item which has the current notebook via path
+      var idx = self.content.findIndex(function(c) {
         return c.notebookPath === nbPath;
       });
 
       if (idx > -1) {
-        return this.content[idx].title;
+        // reuse existing title
+        return self.content[idx].title;
       } else {
+        // return title from jupyter
         return nbTitle;
       }
     }
@@ -248,7 +271,7 @@ define([
    * Dialogs
    ***********************************************************************/
 
-  function showAddServerDialog(cancelToPublishDialog) {
+  function showAddServerDialog(cancelToPublishDialog, publishToServerName) {
     var dialogResult = $.Deferred();
 
     var serverModal = Dialog.modal({
@@ -291,7 +314,7 @@ define([
         serverModal.on("hide.bs.modal", function() {
           dialogResult.reject("canceled");
           if (cancelToPublishDialog) {
-            showPublishDialog();
+            showSelectServerDialog(publishToServerName);
           }
         });
 
@@ -399,8 +422,10 @@ define([
     return dialogResult;
   }
 
-  function showPublishDialog(serverName) {
+  function showSelectServerDialog(serverName) {
     var dialogResult = $.Deferred();
+    var selectedServer = null;
+    debug.info(serverName);
 
     function mkServerItem(server, active) {
       var btnRemove = $("<button></button>")
@@ -411,19 +436,19 @@ define([
           e.stopPropagation();
 
           const $a = $(this).closest("a");
-          // if active server is removed, disable publish button
-          if ($a.hasClass("active")) {
-            btnPublish.addClass("disabled");
-          }
           config
             .removeServer(server.name)
             .then(function() {
               $a.remove();
+              // if active server is removed, disable publish button
+              if ($a.hasClass("active")) {
+                btnPublish.addClass("disabled");
+              }
+              selectedServer = null;
             })
             .fail(function(err) {
               debug.error(err);
             });
-          // TODO check if empty list
         });
       var title = $("<small></small>")
         .addClass("rsc-text-light")
@@ -444,15 +469,28 @@ define([
 
           // toggle publish button disable state based on whether
           // there is a selected server
-          btnPublish.toggleClass("disabled", !$this.hasClass("active"));
+          if ($this.hasClass("active")) {
+            selectedServer = server;
+            btnPublish.removeClass("disabled");
+          } else {
+            selectedServer = null;
+            btnPublish.addClass("disabled");
+          }
         });
 
       return a;
     }
 
     var serverItems = config.servers.map(function(s) {
+      if (s.name === serverName) {
+        selectedServer = s;
+      }
       return mkServerItem(s, s.name === serverName);
     });
+
+    // title input (will be filled during dialog open)
+    // TODO validate title
+    var txtTitle = null;
 
     // add footer buttons
     var btnCancel = $(
@@ -461,12 +499,20 @@ define([
     btnCancel.on("click", function() {
       dialogResult.reject("canceled");
     });
+
     var btnPublish = $(
-      '<a class="btn btn-primary disabled" data-dismiss="modal" aria-hidden="true">Publish</a>'
-    );
+      '<a class="btn btn-primary" data-dismiss="modal" aria-hidden="true">Publish</a>'
+    ).toggleClass("disabled", selectedServer === null);
     btnPublish.on("click", function() {
-      // TODO actually publish
-      dialogResult.reject("TODO publish");
+      if (selectedServer !== null) {
+        var notebookInfo = {
+          notebookPath: Jupyter.notebook.notebook_path,
+          title: txtTitle.val()
+        };
+        dialogResult.resolve(notebookInfo, selectedServer);
+      } else {
+        dialogResult.reject("");
+      }
     });
 
     var publishModal = Dialog.modal({
@@ -513,7 +559,7 @@ define([
 
         publishModal.find("#rsc-add-server").on("click", function() {
           publishModal.modal("hide");
-          showAddServerDialog(true);
+          showAddServerDialog(true, serverName);
         });
 
         publishModal.find(".list-group").append(serverItems);
@@ -524,7 +570,8 @@ define([
           .append(btnPublish);
 
         // add default title
-        publishModal.find("[name=title]").val(config.getNotebookTitle());
+        txtTitle = publishModal.find("[name=title]");
+        txtTitle.val(config.getNotebookTitle());
       }
     });
 
@@ -535,13 +582,25 @@ define([
     if (!config) return;
 
     if (config.servers.length === 0) {
-      showAddServerDialog(false).then(function(serverName) {
-        showPublishDialog(serverName);
-      });
+      showAddServerDialog(false)
+        .then(showSelectServerDialog)
+        .then(config.publishContent)
+        .fail(function(err) {
+          debug.error(err);
+        });
     } else {
-      showPublishDialog().then(function(result) {
-        debug.info(result);
+      var content = config.content.find(function(c) {
+        return (c.notebookPath = Utils.encode_uri_components(
+          Jupyter.notebook.notebook_path
+        ));
       });
+      var previouslySelectedServer = (content || {}).publishedTo;
+
+      showSelectServerDialog(previouslySelectedServer)
+        .then(config.publishContent)
+        .fail(function(err) {
+          debug.error(err);
+        });
     }
   }
 

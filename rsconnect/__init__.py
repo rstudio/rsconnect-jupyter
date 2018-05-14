@@ -5,9 +5,9 @@ import tarfile
 
 try:
     # python3
-    import urllib.parse as urllib
+    from urllib.parse import unquote_plus, urlparse
 except ImportError:
-    import urllib
+    from urllib import unquote_plus, urlparse
 
 from notebook.base.handlers import APIHandler
 from notebook.utils import url_path_join
@@ -66,89 +66,78 @@ class EndpointHandler(APIHandler):
 
     @web.authenticated
     def post(self, action):
+        data = self.get_json_body()
+
         if action == 'verify_server':
-            data = self.get_json_body() or {}
-            if 'uri' in data and 'api_key' in data:
-                if verify_server(data['uri'], data['api_key']):
-                    self.finish(json.dumps({'status': 'Provided server is running RStudio Connect'}))
-                else:
-                    raise web.HTTPError(400, u'Unable to verify the provided server is running RStudio Connect')
+            if verify_server(data['uri'], data['api_key']):
+                self.finish(json.dumps({'status': 'Provided server is running RStudio Connect'}))
             else:
-                raise web.HTTPError(400, u'Request must contain "uri" and "api_key"')
+                raise web.HTTPError(400, u'Unable to verify the provided server is running RStudio Connect')
             return
 
+        if action == 'deploy':
+            uri = urlparse(data['server'])
+            app_id = data['app_id'] if 'app_id' in data else None
+            nb_title = data['notebook_title']
+            nb_path = unquote_plus(data['notebook_path'].strip('/'))
+            api_key = data['api_key']
 
-        data = self.get_json_body()
-        server, port, api_key, notebook_path = data['server'], data['port'], data['api_key'], data['notebook_path']
-        exporter = get_exporter(config=self.config, log=self.log)
+            # If the notebook relates to a real file (default contents manager),
+            # give its path to nbconvert.
+            if hasattr(self.contents_manager, '_get_os_path'):
+                os_path = self.contents_manager._get_os_path(nb_path)
+                ext_resources_dir, _ = os.path.split(os_path)
+            else:
+                ext_resources_dir = None
 
-        path = urllib.unquote_plus(notebook_path.strip('/'))
+            model = self.contents_manager.get(path=nb_path)
+            if model['type'] != 'notebook':
+                # not a notebook
+                raise web.HTTPError(400, u"Not a notebook: %s" % notebook_path)
 
-        # If the notebook relates to a real file (default contents manager),
-        # give its path to nbconvert.
-        if hasattr(self.contents_manager, '_get_os_path'):
-            os_path = self.contents_manager._get_os_path(path)
-            ext_resources_dir, basename = os.path.split(os_path)
-        else:
-            ext_resources_dir = None
-        print('file working directory: %s' %ext_resources_dir)
+            # create resources dictionary
+            resource_dict = {
+                "metadata": {
+                    "name": nb_title,
+                    "modified_date": model['last_modified'].strftime(text.date_format)
+                },
+                "config_dir": self.application.settings['config_dir']
+            }
+            # TODO handle zip file? (not sure what this is yet)
+            if ext_resources_dir:
+                resource_dict['metadata']['path'] = ext_resources_dir
 
-        model = self.contents_manager.get(path=path)
-        name = model['name']
-        if model['type'] != 'notebook':
-            # not a notebook
-            raise web.HTTPError(400, u"Not a notebook: %s" % notebook_path)
+            exporter = get_exporter(config=self.config, log=self.log)
+            notebook = model['content']
+            try:
+                output, resources = exporter.from_notebook_node(notebook, resources=resource_dict)
+            except Exception as e:
+                self.log.exception("nbconvert failed: %s", e)
+                raise web.HTTPError(500, "nbconvert failed: %s" % e)
 
-        nb = model['content']
-        # create resources dictionary
-        mod_date = model['last_modified'].strftime(text.date_format)
-        nb_title = os.path.splitext(name)[0]
+            filename = os.path.splitext(model['name'])[0] + resources['output_extension']
+            self.log.info('filename = %s' % filename)
 
-        resource_dict = {
-            "metadata": {
-                "name": nb_title,
-                "modified_date": mod_date
-            },
-            "config_dir": self.application.settings['config_dir']
-        }
+            published_app = {}
+            with io.BytesIO() as bundle:
+                with tarfile.open(mode='w:gz', fileobj=bundle) as tar:
+                    buf = io.BytesIO(output.encode())
+                    fileinfo = tarfile.TarInfo(filename)
+                    fileinfo.size = len(buf.getvalue())
+                    tar.addfile(fileinfo, buf)
 
-        if ext_resources_dir:
-            resource_dict['metadata']['path'] = ext_resources_dir
+                    # manifest
+                    buf = io.BytesIO(mk_manifest(filename).encode())
+                    fileinfo = tarfile.TarInfo('manifest.json')
+                    fileinfo.size = len(buf.getvalue())
+                    tar.addfile(fileinfo, buf)
 
-        # TODO handle zip file?
+                # rewind file pointer
+                bundle.seek(0)
+                published_app = deploy(uri.scheme, uri.hostname, uri.port, api_key, app_id, nb_title, bundle)
 
-        try:
-            output, resources = exporter.from_notebook_node(
-                nb,
-                resources=resource_dict
-            )
-        except Exception as e:
-            self.log.exception("nbconvert failed: %s", e)
-            raise web.HTTPError(500, "nbconvert failed: %s" % e)
-        filename = os.path.splitext(name)[0] + resources['output_extension']
-        self.log.info('filename = %s' % filename)
-
-        published_app = {}
-        with io.BytesIO() as bundle:
-            app_name = name.replace('.', '_').replace(' ', '_')
-
-            with tarfile.open(mode='w:gz', fileobj=bundle) as tar:
-                buf = io.BytesIO(output.encode())
-                fileinfo = tarfile.TarInfo(filename)
-                fileinfo.size = len(buf.getvalue())
-                tar.addfile(fileinfo, buf)
-
-                # manifest
-                buf = io.BytesIO(mk_manifest(filename).encode())
-                fileinfo = tarfile.TarInfo('manifest.json')
-                fileinfo.size = len(buf.getvalue())
-                tar.addfile(fileinfo, buf)
-
-            # reset fp
-            bundle.seek(0)
-            published_app = deploy('http', '192.168.42.1', 'tY3YklF1SQWuxoGVzhoI2rwPXun0q68w', app_name, bundle)
-
-        self.finish(json.dumps(published_app))
+            self.finish(json.dumps({'app_id': published_app['id']}))
+            return
 
 
 def load_jupyter_server_extension(nb_app):

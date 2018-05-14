@@ -89,6 +89,7 @@ class RSConnect:
             raise RSConnectException('Unexpected response: %d: %s' % (response.status, str(raw)))
         return data
 
+
     def whoami(self):
         self.conn.request('GET', '/__api__/me')
         return self.json_response()
@@ -149,7 +150,8 @@ def mk_manifest(file_name):
     })
 
 
-def deploy(scheme, host, api_key, app_name, tarball, port=3939):
+def deploy(scheme, host, port, api_key, app_id, app_name, tarball):
+    # TODO deal with app_id?
     with RSConnect(scheme, host, api_key, port) as api:
         app = api.app_find(app_name)
 
