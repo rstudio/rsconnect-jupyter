@@ -8,11 +8,16 @@ define([
    * Extension bootstrap (main)
    ***********************************************************************/
 
-  // these will be filled in by `init()`
+  // this will be filled in by `init()`
   var notify = null;
+
+  // this will be filled in lazily
   var config = null;
 
   function init() {
+    // construct notification widget
+    notify = Jupyter.notification_area.widget("rsconnect");
+
     // create an action that can be invoked from many places (e.g. command
     // palette, button click, keyboard shortcut, etc.)
     var actionName = Jupyter.actions.register(
@@ -26,72 +31,42 @@ define([
       "rsconnect"
     );
 
-    // construct notification widget
-    notify = Jupyter.notification_area.widget("rsconnect");
+    // add a button that invokes the action
+    Jupyter.toolbar.add_buttons_group([actionName]);
 
-    notify.info("RSConnect: fetching configuration");
-    RSConnect.get()
-      .then(function(c) {
-        config = c;
-        notify.hide();
-
-        // add a button that invokes the action
-        Jupyter.toolbar.add_buttons_group([actionName]);
-
-        // re-style the toolbar button to have a custom icon
-        $('button[data-jupyter-action="' + actionName + '"] > i').addClass(
-          "rsc-icon"
-        );
-      })
-      .fail(function() {
-        notify.error("RSConnect: failed to retrieve configuration");
-        debug.error(err);
-      });
+    // re-style the toolbar button to have a custom icon
+    $('button[data-jupyter-action="' + actionName + '"] > i').addClass(
+      "rsc-icon"
+    );
   }
-
-  var sampleConfig = {
-    servers: [
-      {
-        uri: "https://somewhere/",
-        name: "somewhere",
-        api_key: "abcdefghij"
-      },
-      {
-        uri: "https://elsewhere/",
-        name: "elsewhere",
-        api_key: "klmnopqrst"
-      }
-    ],
-    content: [
-      {
-        notebookPath: "/path/to/Title 123.ipynb",
-        title: "Title 123",
-        appId: 42,
-        publishedTo: "somewhere"
-      },
-      {
-        notebookPath: "/path/to/Title 456.ipynb",
-        title: "Title XYZ",
-        appId: 84,
-        publishedTo: "elsewhere"
-      }
-    ]
-  };
 
   /***********************************************************************
    * Server interop
    ***********************************************************************/
 
   function RSConnect(c) {
-    if (c.servers && c.content) {
-      this.servers = c.servers;
-      this.content = c.content;
-    } else {
-      this.servers = [];
-      this.content = [];
+    /* sample value of `Jupyter.notebook.metadata`:
+       { previousServerId: "abc-def-ghi-jkl"
+         servers: [
+           {id: "xyz-uvw", server: "http://172.0.0.3:3939/", serverName: "dev"}
+           {id: "rst-opq", server: "http://somewhere/connect/", serverName: "prod", notebookTitle:"Meow", appId: 42}
+         ]
+       }
+    */
+
+    this.previousServerId = null;
+    this.servers = [];
+
+    // TODO more rigorous checking
+    var metadata = JSON.parse(JSON.stringify(Jupyter.notebook.metadata));
+    if (metadata.rsconnect && metadata.rsconnect.servers) {
+      // make a copy
+      this.servers = metadata.rsconnect.servers;
+      this.previousServerId = metadata.rsconnect.previousServerId;
     }
 
     this.save = this.save.bind(this);
+    this.updateServer = this.updateServer.bind(this);
     this.verifyServer = this.verifyServer.bind(this);
     this.addServer = this.addServer.bind(this);
     this.removeServer = this.removeServer.bind(this);
@@ -99,83 +74,74 @@ define([
     this.getNotebookTitle = this.getNotebookTitle.bind(this);
   }
 
-  RSConnect.get = function() {
-    // force cache invalidation with Math.random (tornado web framework caches aggressively)
-    return $.getJSON("/api/config/rsconnect_jupyter?t=" + Math.random()).then(
-      function(c) {
-        var x = new RSConnect(c);
-        // TODO remove
-        window.RSConnect = x;
-        return x;
-      }
-    );
-  };
-
   RSConnect.prototype = {
     save: function() {
-      var self = this;
-      return Utils.ajax({
-        url: "/api/config/rsconnect_jupyter",
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        data: JSON.stringify(self)
-      });
+      Jupyter.notebook.metadata.rsconnect = {
+        previousServerId: this.previousServerId,
+        servers: this.servers
+      };
+      return Jupyter.notebook.save_notebook();
     },
 
-    verifyServer: function(uri, apiKey) {
+    verifyServer: function(server) {
       return Utils.ajax({
         url: "/rsconnect_jupyter/verify_server",
         method: "POST",
         headers: { "Content-Type": "application/json" },
         data: JSON.stringify({
-          uri: uri,
-          api_key: apiKey
+          server_address: server
         })
       });
     },
 
-    addServer: function(uri, name, apiKey) {
-      // TODO check for duplicate name
+    addServer: function(server, serverName) {
       var self = this;
-      return this.verifyServer(uri, apiKey)
+      var id = uuidv4();
+      return this.verifyServer(server)
         .then(function() {
-          self.servers.push({ uri: uri, name: name, api_key: apiKey });
+          self.servers.push({
+            id: id,
+            server: server,
+            serverName: serverName
+          });
+          return self.save();
         })
-        .then(self.save)
         .then(function() {
-          return name;
+          return id;
         });
     },
 
-    removeServer: function(name) {
-      var self = this;
-      self.servers = self.servers.filter(function(s) {
-        return s.name !== name;
+    updateServer: function(id, appId, notebookTitle) {
+      debug.info(this);
+      var idx = this.servers.findIndex(function(s) {
+        return s.id === id;
       });
-      return self.save();
+      if (idx < 0) {
+        return $.Deferred().reject("Server (" + id + ") not found");
+      }
+      this.servers[idx].appId = appId;
+      this.servers[idx].notebookTitle = notebookTitle;
+      return this.save();
     },
 
-    publishContent: function(notebookInfo, server) {
-      var self = this;
-      var notebookPath = Utils.encode_uri_components(notebookInfo.notebookPath);
-      var notebookTitle = notebookInfo.title;
-      debug.info(server);
-
-      var contentIndex = self.content.findIndex(function(c) {
-        return c.notebookPath === notebookPath;
+    removeServer: function(id) {
+      this.servers = this.servers.filter(function(s) {
+        return s.id !== id;
       });
-      var content = null;
-      if (contentIndex < 0) {
-        content = {
-          notebookPath: notebookPath,
-          title: notebookTitle,
-          publishedTo: server.name
-        };
-        self.content.push(content);
-      } else {
-        content = self.content[contentIndex];
-        content.title = notebookTitle;
-        content.publishedTo = server.name;
+      return this.save();
+    },
+
+    publishContent: function(id, apiKey, notebookTitle) {
+      var self = this;
+      var notebookPath = Utils.encode_uri_components(
+        Jupyter.notebook.notebook_path
+      );
+
+      var server = this.servers.find(function(s) {
+        return s.id === id;
+      });
+      if (!server) {
+        return new $.Deferred().reject("Server (" + id + ") not found");
       }
 
       var xhr = Utils.ajax({
@@ -185,43 +151,38 @@ define([
         data: JSON.stringify({
           notebook_path: notebookPath,
           notebook_title: notebookTitle,
-          app_id: content.appId,
-          server: server.uri,
-          api_key: server.api_key
+          app_id: server.appId,
+          server_address: server.server,
+          api_key: apiKey
         })
       });
 
-      // save config
-      xhr.then(function(content) {
-        var index = self.content.findIndex(function(c) {
-          return c.notebookPath === notebookPath;
-        });
-        self.content[index].appId = content.app_id;
-        return self.save().then(function() {
-          return content;
-        });
+      // update config
+      xhr.then(function(app) {
+        self.previousServerId = server.id;
+        return self.updateServer(id, app.Id, notebookTitle);
       });
 
       return xhr;
     },
 
-    getNotebookTitle: function() {
-      var self = this;
-      var nbTitle = Jupyter.notebook.get_notebook_name();
-      var nbPath = Utils.encode_uri_components(Jupyter.notebook.notebook_path);
-
-      // find item which has the current notebook via path
-      var idx = self.content.findIndex(function(c) {
-        return c.notebookPath === nbPath;
-      });
-
-      if (idx > -1) {
-        // reuse existing title
-        return self.content[idx].title;
-      } else {
-        // return title from jupyter
-        return nbTitle;
+    getNotebookTitle: function(entry) {
+      if (entry) {
+        var e = this.servers.find(function(s) {
+          return s.id === entry.id;
+        });
+        return e.notebookTitle;
       }
+      // massage the title so it validates
+      var title = Jupyter.notebook
+        .get_notebook_name()
+        .split("")
+        .map(function(c) {
+          if (/[a-zA-Z0-9_-]/.test(c)) return c;
+          else return "_";
+        })
+        .join("");
+      return title;
     }
   };
 
@@ -255,6 +216,25 @@ define([
     };
   }
 
+  // source: https://stackoverflow.com/a/2117523
+  function uuidv4() {
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
+      var r = (Math.random() * 16) | 0,
+        v = c == "x" ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+  }
+
+  function addValidationMarkup(valid, $el, helpText) {
+    if (!valid) {
+      $el
+        .closest(".form-group")
+        .addClass("has-error")
+        .find(".help-block")
+        .text(helpText);
+    }
+  }
+
   // Disable the keyboard shortcut manager if it is enabled. This
   // function should be called at the beginning of every modal open so
   // input events are received in text boxes and not hijacked by the
@@ -271,7 +251,7 @@ define([
    * Dialogs
    ***********************************************************************/
 
-  function showAddServerDialog(cancelToPublishDialog, publishToServerName) {
+  function showAddServerDialog(cancelToPublishDialog, publishToServerId) {
     var dialogResult = $.Deferred();
 
     var serverModal = Dialog.modal({
@@ -293,16 +273,10 @@ define([
         '            <input class="form-control" id="rsc-servername" type="text" placeholder="server-nickname" minlength="1" required>',
         '            <span class="help-block"></span>',
         "        </div>",
-        '        <div class="form-group">',
-        '            <label class="rsc-label" for="rsc-apikey">API Key</label>',
-        '            <input class="form-control" id="rsc-apikey" type="text" placeholder="abcdefghijlmnopqrstuvwxyz1234567" minlength="32" maxlength="32" required>',
-        '            <span class="help-block"></span>',
-        "        </div>",
         '        <input type="submit" hidden>',
         "    </fieldset>",
         "</form>"
       ].join(""),
-      // P5pSP4xgUCnfSwulFYwO5NJFL3bgHYFo
 
       // allow raw html
       sanitize: false,
@@ -314,13 +288,12 @@ define([
         serverModal.on("hide.bs.modal", function() {
           dialogResult.reject("canceled");
           if (cancelToPublishDialog) {
-            showSelectServerDialog(publishToServerName);
+            showSelectServerDialog(publishToServerId);
           }
         });
 
         var $txtServer = serverModal.find("#rsc-server");
         var $txtServerName = serverModal.find("#rsc-servername");
-        var $txtApiKey = serverModal.find("#rsc-apikey");
 
         var form = serverModal.find("form").on("submit", function(e) {
           e.preventDefault();
@@ -333,17 +306,6 @@ define([
             validServer &= $txtServer.get(0).checkValidity();
           }
           var validServerName = $txtServerName.val().length > 0;
-          var validApiKey = $txtApiKey.val().length === 32;
-
-          var addValidationMarkup = function(valid, $el, helpText) {
-            if (!valid) {
-              $el
-                .closest(".form-group")
-                .addClass("has-error")
-                .find(".help-block")
-                .text(helpText);
-            }
-          };
 
           addValidationMarkup(
             validServer,
@@ -353,15 +315,10 @@ define([
           addValidationMarkup(
             validServerName,
             $txtServerName,
-            "This should not be empty"
-          );
-          addValidationMarkup(
-            validApiKey,
-            $txtApiKey,
-            "This should be 32 characters long"
+            "This should not be empty."
           );
 
-          if (validServer && validServerName && validApiKey) {
+          if (validServer && validServerName) {
             serverModal.find("fieldset").attr("disabled", true);
             serverModal
               .find(".modal-footer .btn:last")
@@ -370,13 +327,9 @@ define([
               .removeClass("hidden");
 
             config
-              .addServer(
-                $txtServer.val(),
-                $txtServerName.val(),
-                $txtApiKey.val()
-              )
-              .then(function(serverName) {
-                dialogResult.resolve(serverName);
+              .addServer($txtServer.val(), $txtServerName.val())
+              .then(function(id) {
+                dialogResult.resolve(id);
                 serverModal.modal("hide");
               })
               .fail(function(err) {
@@ -388,7 +341,7 @@ define([
                   .text(
                     "Failed to verify RSConnect Connect is running at " +
                       $txtServer.val() +
-                      ". Please ensure the server address and api key are valid."
+                      ". Please ensure the server address is valid."
                   );
               })
               .always(function() {
@@ -409,7 +362,7 @@ define([
         var btnAdd = $(
           '<a class="btn btn-primary" aria-hidden="true"><i class="fa fa-spinner fa-spin hidden"></i> Add Server</a>'
         );
-        btnAdd.on("click", function(e) {
+        btnAdd.on("click", function() {
           form.trigger("submit");
         });
         serverModal
@@ -422,10 +375,11 @@ define([
     return dialogResult;
   }
 
-  function showSelectServerDialog(serverName) {
+  function showSelectServerDialog(id) {
     var dialogResult = $.Deferred();
-    var selectedServer = null;
-    debug.info(serverName);
+    var selectedEntry = null;
+    // will be set during modal initialization
+    var btnPublish = null;
 
     function mkServerItem(server, active) {
       var btnRemove = $("<button></button>")
@@ -437,14 +391,14 @@ define([
 
           const $a = $(this).closest("a");
           config
-            .removeServer(server.name)
+            .removeServer(server.id)
             .then(function() {
               $a.remove();
               // if active server is removed, disable publish button
               if ($a.hasClass("active")) {
                 btnPublish.addClass("disabled");
               }
-              selectedServer = null;
+              selectedEntry = null;
             })
             .fail(function(err) {
               debug.error(err);
@@ -452,12 +406,12 @@ define([
         });
       var title = $("<small></small>")
         .addClass("rsc-text-light")
-        .text("— " + server.uri);
+        .text("— " + server.server);
       var a = $("<a></a>")
         .addClass("list-group-item")
         .toggleClass("active", active)
         .attr("href", "#")
-        .text(server.name)
+        .text(server.serverName)
         .append(title)
         .append(btnRemove)
         .on("click", function() {
@@ -470,10 +424,10 @@ define([
           // toggle publish button disable state based on whether
           // there is a selected server
           if ($this.hasClass("active")) {
-            selectedServer = server;
+            selectedEntry = server;
             btnPublish.removeClass("disabled");
           } else {
-            selectedServer = null;
+            selectedEntry = null;
             btnPublish.addClass("disabled");
           }
         });
@@ -482,38 +436,17 @@ define([
     }
 
     var serverItems = config.servers.map(function(s) {
-      if (s.name === serverName) {
-        selectedServer = s;
+      var matchingServer = s.id === id;
+      if (matchingServer) {
+        selectedEntry = s;
       }
-      return mkServerItem(s, s.name === serverName);
+      return mkServerItem(s, matchingServer);
     });
 
-    // title input (will be filled during dialog open)
+    // (will be filled during dialog open)
     // TODO validate title
+    var txtApiKey = null;
     var txtTitle = null;
-
-    // add footer buttons
-    var btnCancel = $(
-      '<a class="btn" data-dismiss="modal" aria-hidden="true">Cancel</a>'
-    );
-    btnCancel.on("click", function() {
-      dialogResult.reject("canceled");
-    });
-
-    var btnPublish = $(
-      '<a class="btn btn-primary" data-dismiss="modal" aria-hidden="true">Publish</a>'
-    ).toggleClass("disabled", selectedServer === null);
-    btnPublish.on("click", function() {
-      if (selectedServer !== null) {
-        var notebookInfo = {
-          notebookPath: Jupyter.notebook.notebook_path,
-          title: txtTitle.val()
-        };
-        dialogResult.resolve(notebookInfo, selectedServer);
-      } else {
-        dialogResult.reject("");
-      }
-    });
 
     var publishModal = Dialog.modal({
       // pass the existing keyboard manager so all shortcuts are disabled while
@@ -530,8 +463,14 @@ define([
         "        </div>",
         "    </div>",
         '    <div class="form-group">',
+        "        <label>API Key</label>",
+        '        <input class="form-control" name="api-key" type="text" maxlength="32" required>',
+        '        <span class="help-block"></span>',
+        "    </div>",
+        '    <div class="form-group">',
         "        <label>Title</label>",
-        '        <input class="form-control" name="title" type="text">',
+        '        <input class="form-control" name="title" type="text" minlength="3" maxlength="64" required>',
+        '        <span class="help-block"></span>',
         "    </div>",
         '    <input type="submit" hidden>',
         "</form>"
@@ -559,19 +498,74 @@ define([
 
         publishModal.find("#rsc-add-server").on("click", function() {
           publishModal.modal("hide");
-          showAddServerDialog(true, serverName);
+          showAddServerDialog(true, (selectedEntry || {}).id);
         });
 
         publishModal.find(".list-group").append(serverItems);
 
+        // add default title
+        txtTitle = publishModal.find("[name=title]");
+        txtTitle.val(config.getNotebookTitle(selectedEntry));
+
+        txtApiKey = publishModal.find("[name=api-key]");
+
+        var form = publishModal.find("form").on("submit", function(e) {
+          e.preventDefault();
+          publishModal.find(".form-group").removeClass("has-error");
+          publishModal.find(".help-block").text("");
+
+          var validApiKey = txtApiKey.val().length === 32;
+          var validTitle = /^[a-zA-Z0-9_-]{3,64}$/.test(txtTitle.val());
+
+          addValidationMarkup(
+            validApiKey,
+            txtApiKey,
+            "API Key must be 32 characters long."
+          );
+          addValidationMarkup(
+            validTitle,
+            txtTitle,
+            "Title must be between 3 and 64 alphanumeric characters, dashes, and underscores."
+          );
+
+          if (selectedEntry !== null && validApiKey && validTitle) {
+            btnPublish
+              .addClass("disabled")
+              .find("i.fa")
+              .removeClass("hidden");
+
+            config
+              .publishContent(selectedEntry.id, txtApiKey.val(), txtTitle.val())
+              .then(function() {
+                publishModal.modal("hide");
+              })
+              .fail(function(err) {
+                debug.error(err);
+              })
+              .always(function() {
+                btnPublish
+                  .removeClass("disabled")
+                  .find("i.fa")
+                  .addClass("hidden");
+              });
+          }
+        });
+
+        // add footer buttons
+        var btnCancel = $(
+          '<a class="btn" data-dismiss="modal" aria-hidden="true">Cancel</a>'
+        );
+        btnPublish = $(
+          '<a class="btn btn-primary" aria-hidden="true"><i class="fa fa-spinner fa-spin hidden"></i> Publish</a>'
+        );
+        btnPublish.toggleClass("disabled", id === null);
+        btnPublish.on("click", function() {
+          form.trigger("submit");
+        });
         publishModal
           .find(".modal-footer")
           .append(btnCancel)
           .append(btnPublish);
-
-        // add default title
-        txtTitle = publishModal.find("[name=title]");
-        txtTitle.val(config.getNotebookTitle());
       }
     });
 
@@ -579,28 +573,15 @@ define([
   }
 
   function onPublishClicked(env, event) {
-    if (!config) return;
+    if (!config) {
+      config = new RSConnect();
+      window.RSConnect = config;
+    }
 
     if (config.servers.length === 0) {
-      showAddServerDialog(false)
-        .then(showSelectServerDialog)
-        .then(config.publishContent)
-        .fail(function(err) {
-          debug.error(err);
-        });
+      showAddServerDialog(false).then(showSelectServerDialog);
     } else {
-      var content = config.content.find(function(c) {
-        return (c.notebookPath = Utils.encode_uri_components(
-          Jupyter.notebook.notebook_path
-        ));
-      });
-      var previouslySelectedServer = (content || {}).publishedTo;
-
-      showSelectServerDialog(previouslySelectedServer)
-        .then(config.publishContent)
-        .fail(function(err) {
-          debug.error(err);
-        });
+      showSelectServerDialog(config.previousServerId);
     }
   }
 

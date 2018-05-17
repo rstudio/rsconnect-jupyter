@@ -69,14 +69,14 @@ class EndpointHandler(APIHandler):
         data = self.get_json_body()
 
         if action == 'verify_server':
-            if verify_server(data['uri'], data['api_key']):
+            if verify_server(data['server_address']):
                 self.finish(json.dumps({'status': 'Provided server is running RStudio Connect'}))
             else:
                 raise web.HTTPError(400, u'Unable to verify the provided server is running RStudio Connect')
             return
 
         if action == 'deploy':
-            uri = urlparse(data['server'])
+            uri = urlparse(data['server_address'])
             app_id = data['app_id'] if 'app_id' in data else None
             nb_title = data['notebook_title']
             nb_path = unquote_plus(data['notebook_path'].strip('/'))

@@ -35,15 +35,15 @@ def wait_until(predicate, timeout, period=0.1):
     return False
 
 
-def verify_server(uri, api_key):
-    r = urlparse(uri)
+def verify_server(server_address):
+    r = urlparse(server_address)
     conn = None
     try:
         if r.scheme == 'http':
             conn = http.HTTPConnection(r.hostname, port=(r.port or http.HTTP_PORT), timeout=10)
         else:
             conn = http.HTTPSConnection(r.hostname, port=(r.port or http.HTTPS_PORT), timeout=10)
-        conn.request('GET', '/__api__/me', None, {'Authorization': 'Key %s' % api_key})
+        conn.request('GET', '/__api__/server_settings') # , None, {'Authorization': 'Key %s' % api_key})
         response = conn.getresponse()
         if response.status >= 400:
             return False
