@@ -135,6 +135,7 @@ class RSConnect:
 def mk_manifest(file_name):
     return json.dumps({
         "version": 1,
+         # unused for content without source
         "platform": "3.4.3",
         "metadata": {
             "appmode": "static",
@@ -146,6 +147,7 @@ def mk_manifest(file_name):
         "packages": None,
         "files": {
             file_name: {
+                # unused but some value is necessary
                 "checksum": "banana"
             }
         },

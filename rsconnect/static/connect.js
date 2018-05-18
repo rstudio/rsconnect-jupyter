@@ -77,6 +77,7 @@ define([
   RSConnect.prototype = {
     save: function() {
       var result = $.Deferred();
+      var self = this;
       // save_notebook returns a native Promise while the rest of
       // the code including parts of Jupyter return jQuery.Deferred
       Jupyter.notebook
@@ -85,13 +86,13 @@ define([
           // notebook is writable
           // overwrite metadata (user may have changed it)
           Jupyter.notebook.metadata.rsconnect = {
-            previousServerId: this.previousServerId,
-            servers: this.servers
+            previousServerId: self.previousServerId,
+            servers: self.servers
           };
 
           result.resolve();
         })
-        ["catch"](function() {
+        ["catch"](function(e) {
           // notebook is read-only (server details will likely not be persisted)
           result.resolve();
         });
@@ -175,9 +176,9 @@ define([
 
       // update server with title and appId and set recently selected
       // server
-      xhr.then(function(app) {
+      xhr.then(function(result) {
         self.previousServerId = server.id;
-        return self.updateServer(id, app.Id, notebookTitle);
+        return self.updateServer(id, result.app_id, notebookTitle);
       });
 
       return xhr;
@@ -419,6 +420,7 @@ define([
               selectedEntry = null;
             })
             .fail(function(err) {
+              // highly unlikely this will ever be triggered
               debug.error(err);
             });
         });
