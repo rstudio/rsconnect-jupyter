@@ -47,15 +47,15 @@ define([
   function RSConnect(c) {
     /* sample value of `Jupyter.notebook.metadata`:
        { previousServerId: "abc-def-ghi-jkl"
-         servers: [
-           {id: "xyz-uvw", server: "http://172.0.0.3:3939/", serverName: "dev"}
-           {id: "rst-opq", server: "http://somewhere/connect/", serverName: "prod", notebookTitle:"Meow", appId: 42}
-         ]
+         servers: {
+           "xyz-uvw": { server: "http://172.0.0.3:3939/", serverName: "dev" }
+           "rst-opq": { server: "http://somewhere/connect/", serverName: "prod", notebookTitle:"Meow", appId: 42 }
+         }
        }
     */
 
     this.previousServerId = null;
-    this.servers = [];
+    this.servers = {};
 
     // TODO more rigorous checking?
     var metadata = JSON.parse(JSON.stringify(Jupyter.notebook.metadata));
@@ -78,21 +78,22 @@ define([
     save: function() {
       var result = $.Deferred();
       var self = this;
+      // overwrite metadata (user may have changed it)
+      Jupyter.notebook.metadata.rsconnect = {
+        previousServerId: self.previousServerId,
+        servers: self.servers
+      };
+
       // save_notebook returns a native Promise while the rest of
       // the code including parts of Jupyter return jQuery.Deferred
       Jupyter.notebook
         .save_notebook()
         .then(function() {
           // notebook is writable
-          // overwrite metadata (user may have changed it)
-          Jupyter.notebook.metadata.rsconnect = {
-            previousServerId: self.previousServerId,
-            servers: self.servers
-          };
-
           result.resolve();
         })
         ["catch"](function(e) {
+          debug.error(e);
           // notebook is read-only (server details will likely not be persisted)
           result.resolve();
         });
@@ -117,11 +118,10 @@ define([
       // verify the server exists, then save
       return this.verifyServer(server)
         .then(function() {
-          self.servers.push({
-            id: id,
+          self.servers[id] = {
             server: server,
             serverName: serverName
-          });
+          };
           return self.save();
         })
         .then(function() {
@@ -130,21 +130,13 @@ define([
     },
 
     updateServer: function(id, appId, notebookTitle) {
-      var idx = this.servers.findIndex(function(s) {
-        return s.id === id;
-      });
-      if (idx < 0) {
-        return $.Deferred().reject("Server (" + id + ") not found");
-      }
-      this.servers[idx].appId = appId;
-      this.servers[idx].notebookTitle = notebookTitle;
+      this.servers[id].appId = appId;
+      this.servers[id].notebookTitle = notebookTitle;
       return this.save();
     },
 
     removeServer: function(id) {
-      this.servers = this.servers.filter(function(s) {
-        return s.id !== id;
-      });
+      delete this.servers[id];
       return this.save();
     },
 
@@ -154,12 +146,7 @@ define([
         Jupyter.notebook.notebook_path
       );
 
-      var server = this.servers.find(function(s) {
-        return s.id === id;
-      });
-      if (!server) {
-        return new $.Deferred().reject("Server (" + id + ") not found");
-      }
+      var entry = this.servers[id];
 
       var xhr = Utils.ajax({
         url: "/rsconnect_jupyter/deploy",
@@ -168,8 +155,8 @@ define([
         data: JSON.stringify({
           notebook_path: notebookPath,
           notebook_title: notebookTitle,
-          app_id: server.appId,
-          server_address: server.server,
+          app_id: entry.appId,
+          server_address: entry.server,
           api_key: apiKey
         })
       });
@@ -177,18 +164,33 @@ define([
       // update server with title and appId and set recently selected
       // server
       xhr.then(function(result) {
-        self.previousServerId = server.id;
+        notify.set_message(
+          " Successfully published content",
+          // timeout in milliseconds after which the notification
+          // should disappear
+          15 * 1000,
+          // click handler
+          function() {
+            window.open(result.url, "rsconnect");
+          },
+          // options
+          {
+            class: "info",
+            icon: "fa fa-link",
+            // tooltip
+            title: "Click to open published content on RStudio Connect"
+          }
+        );
+        self.previousServerId = id;
         return self.updateServer(id, result.app_id, notebookTitle);
       });
 
       return xhr;
     },
 
-    getNotebookTitle: function(entry) {
-      if (entry) {
-        var e = this.servers.find(function(s) {
-          return s.id === entry.id;
-        });
+    getNotebookTitle: function(id) {
+      if (id) {
+        var e = this.servers[id];
         // if title was saved then return it
         if (e.notebookTitle) {
           return e.notebookTitle;
@@ -394,13 +396,13 @@ define([
     return dialogResult;
   }
 
-  function showSelectServerDialog(id) {
+  function showSelectServerDialog(serverId) {
     var dialogResult = $.Deferred();
-    var selectedEntry = null;
+    var selectedEntryId = null;
     // will be set during modal initialization
     var btnPublish = null;
 
-    function mkServerItem(server, active) {
+    function mkServerItem(id, active) {
       var btnRemove = $("<button></button>")
         .addClass("pull-right btn btn-danger btn-xs")
         .attr("type", "button")
@@ -410,14 +412,14 @@ define([
 
           const $a = $(this).closest("a");
           config
-            .removeServer(server.id)
+            .removeServer(id)
             .then(function() {
               $a.remove();
               // if active server is removed, disable publish button
               if ($a.hasClass("active")) {
                 btnPublish.addClass("disabled");
+                selectedEntryId = null;
               }
-              selectedEntry = null;
             })
             .fail(function(err) {
               // highly unlikely this will ever be triggered
@@ -426,12 +428,12 @@ define([
         });
       var title = $("<small></small>")
         .addClass("rsc-text-light")
-        .text("— " + server.server);
+        .text("— " + config.servers[id].server);
       var a = $("<a></a>")
         .addClass("list-group-item")
         .toggleClass("active", active)
         .attr("href", "#")
-        .text(server.serverName)
+        .text(config.servers[id].serverName)
         .append(title)
         .append(btnRemove)
         .on("click", function() {
@@ -444,10 +446,10 @@ define([
           // toggle publish button disable state based on whether
           // there is a selected server
           if ($this.hasClass("active")) {
-            selectedEntry = server;
+            selectedEntryId = id;
             btnPublish.removeClass("disabled");
           } else {
-            selectedEntry = null;
+            selectedEntryId = null;
             btnPublish.addClass("disabled");
           }
         });
@@ -510,22 +512,19 @@ define([
         // add server button
         publishModal.find("#rsc-add-server").on("click", function() {
           publishModal.modal("hide");
-          showAddServerDialog(true, (selectedEntry || {}).id);
+          showAddServerDialog(true, selectedEntryId);
         });
 
         // generate server list
-        var serverItems = config.servers.map(function(s) {
-          var matchingServer = s.id === id;
-          if (matchingServer) {
-            selectedEntry = s;
-          }
-          return mkServerItem(s, matchingServer);
+        var serverItems = Object.keys(config.servers).map(function(id) {
+          var matchingServer = serverId === id;
+          return mkServerItem(id, matchingServer);
         });
         publishModal.find(".list-group").append(serverItems);
 
         // add default title
         txtTitle = publishModal.find("[name=title]");
-        txtTitle.val(config.getNotebookTitle(selectedEntry));
+        txtTitle.val(config.getNotebookTitle(selectedEntryId));
 
         txtApiKey = publishModal.find("[name=api-key]");
 
@@ -548,14 +547,14 @@ define([
             "Title must be between 3 and 64 alphanumeric characters, dashes, and underscores."
           );
 
-          if (selectedEntry !== null && validApiKey && validTitle) {
+          if (selectedEntryId !== null && validApiKey && validTitle) {
             btnPublish
               .addClass("disabled")
               .find("i.fa")
               .removeClass("hidden");
 
             config
-              .publishContent(selectedEntry.id, txtApiKey.val(), txtTitle.val())
+              .publishContent(selectedEntryId, txtApiKey.val(), txtTitle.val())
               .then(function() {
                 publishModal.modal("hide");
               })
@@ -581,7 +580,7 @@ define([
         btnPublish = $(
           '<a class="btn btn-primary" aria-hidden="true"><i class="fa fa-spinner fa-spin hidden"></i> Publish</a>'
         );
-        btnPublish.toggleClass("disabled", id === null);
+        btnPublish.toggleClass("disabled", serverId === null);
         btnPublish.on("click", function() {
           form.trigger("submit");
         });
@@ -603,7 +602,7 @@ define([
       window.RSConnect = config;
     }
 
-    if (config.servers.length === 0) {
+    if (Object.keys(config.servers).length === 0) {
       showAddServerDialog(false).then(showSelectServerDialog);
     } else {
       showSelectServerDialog(config.previousServerId);

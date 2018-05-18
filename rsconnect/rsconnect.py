@@ -84,14 +84,14 @@ class RSConnect:
     def json_response(self):
         response = self.conn.getresponse()
         raw = response.read()
-        if response.status >= 400:
-            try:
-                data = json.loads(raw)
-                raise RSConnectException(data['error'])
-            except:
-                raise RSConnectException('Unexpected response code: %d' % (response.status))
-        data = json.loads(raw)
-        return data
+        if response.status >= 500:
+            raise RSConnectException('Unexpected response code: %d' % (response.status))
+        elif response.status >= 400:
+            data = json.loads(raw)
+            raise RSConnectException(data['error'])
+        else:
+            data = json.loads(raw)
+            return data
 
     def whoami(self):
         self.conn.request('GET', '/__api__/me')
@@ -156,16 +156,18 @@ def mk_manifest(file_name):
 
 
 def deploy(scheme, host, port, api_key, app_id, app_name, tarball):
-    # TODO deal with app_id?
     with RSConnect(scheme, host, api_key, port) as api:
-        app = api.app_find(app_name)
-
-        if app is None:
-            app = api.app_create(app_name)
+        if app_id is None:
+            app = api.app_find(app_name)
+            if app is None:
+                app = api.app_create(app_name)
+        else:
+            app = {'id': app_id}
 
         app_bundle = api.app_upload(app['id'], tarball)
         task = api.app_deploy(app['id'], app_bundle['id'])
 
+        # 10 minute timeout
         timeout = 600
         def task_is_finished(task_id):
             return api.task_get(task_id)['finished']
@@ -178,4 +180,4 @@ def deploy(scheme, host, port, api_key, app_id, app_name, tarball):
                 return api.app_publish(app['id'], 'acl')
             else:
                 # app failed to deploy
-                print('Unsuccessful deployment :(')
+                raise RSConnectException('Failed to deploy successfully')
