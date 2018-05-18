@@ -398,7 +398,7 @@ define([
 
   function showSelectServerDialog(serverId) {
     var dialogResult = $.Deferred();
-    var selectedEntryId = null;
+    var selectedEntryId = serverId;
     // will be set during modal initialization
     var btnPublish = null;
 
@@ -408,6 +408,7 @@ define([
         .attr("type", "button")
         .append($("<i></i>").addClass("fa fa-remove"))
         .on("click", function(e) {
+          e.preventDefault();
           e.stopPropagation();
 
           const $a = $(this).closest("a");
