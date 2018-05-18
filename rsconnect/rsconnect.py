@@ -78,17 +78,20 @@ class RSConnect:
         response = self.conn.getresponse()
         raw = response.read()
         if response.status >= 400:
-            raise RSConnectException('Unexpected response: %d: %s' % (response.status, str(raw)))
+            raise RSConnectException('Unexpected response code: %d' % (response.status))
         return raw
 
     def json_response(self):
         response = self.conn.getresponse()
         raw = response.read()
-        data = json.loads(raw)
         if response.status >= 400:
-            raise RSConnectException('Unexpected response: %d: %s' % (response.status, str(raw)))
+            try:
+                data = json.loads(raw)
+                raise RSConnectException(data['error'])
+            except:
+                raise RSConnectException('Unexpected response code: %d' % (response.status))
+        data = json.loads(raw)
         return data
-
 
     def whoami(self):
         self.conn.request('GET', '/__api__/me')

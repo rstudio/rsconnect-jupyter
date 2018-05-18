@@ -57,7 +57,7 @@ define([
     this.previousServerId = null;
     this.servers = [];
 
-    // TODO more rigorous checking
+    // TODO more rigorous checking?
     var metadata = JSON.parse(JSON.stringify(Jupyter.notebook.metadata));
     if (metadata.rsconnect && metadata.rsconnect.servers) {
       // make a copy
@@ -76,11 +76,26 @@ define([
 
   RSConnect.prototype = {
     save: function() {
-      Jupyter.notebook.metadata.rsconnect = {
-        previousServerId: this.previousServerId,
-        servers: this.servers
-      };
-      return Jupyter.notebook.save_notebook();
+      var result = $.Deferred();
+      // save_notebook returns a native Promise while the rest of
+      // the code including parts of Jupyter return jQuery.Deferred
+      Jupyter.notebook
+        .save_notebook()
+        .then(function() {
+          // notebook is writable
+          // overwrite metadata (user may have changed it)
+          Jupyter.notebook.metadata.rsconnect = {
+            previousServerId: this.previousServerId,
+            servers: this.servers
+          };
+
+          result.resolve();
+        })
+        ["catch"](function() {
+          // notebook is read-only (server details will likely not be persisted)
+          result.resolve();
+        });
+      return result;
     },
 
     verifyServer: function(server) {
@@ -97,6 +112,8 @@ define([
     addServer: function(server, serverName) {
       var self = this;
       var id = uuidv4();
+
+      // verify the server exists, then save
       return this.verifyServer(server)
         .then(function() {
           self.servers.push({
@@ -112,7 +129,6 @@ define([
     },
 
     updateServer: function(id, appId, notebookTitle) {
-      debug.info(this);
       var idx = this.servers.findIndex(function(s) {
         return s.id === id;
       });
@@ -157,7 +173,8 @@ define([
         })
       });
 
-      // update config
+      // update server with title and appId and set recently selected
+      // server
       xhr.then(function(app) {
         self.previousServerId = server.id;
         return self.updateServer(id, app.Id, notebookTitle);
@@ -171,9 +188,12 @@ define([
         var e = this.servers.find(function(s) {
           return s.id === entry.id;
         });
-        return e.notebookTitle;
+        // if title was saved then return it
+        if (e.notebookTitle) {
+          return e.notebookTitle;
+        }
       }
-      // massage the title so it validates
+      // default title - massage the title so it validates
       var title = Jupyter.notebook
         .get_notebook_name()
         .split("")
@@ -332,9 +352,7 @@ define([
                 dialogResult.resolve(id);
                 serverModal.modal("hide");
               })
-              .fail(function(err) {
-                debug.error(err);
-
+              .fail(function(xhr) {
                 $txtServer.closest(".form-group").addClass("has-error");
                 $txtServer
                   .siblings(".help-block")
@@ -435,16 +453,7 @@ define([
       return a;
     }
 
-    var serverItems = config.servers.map(function(s) {
-      var matchingServer = s.id === id;
-      if (matchingServer) {
-        selectedEntry = s;
-      }
-      return mkServerItem(s, matchingServer);
-    });
-
-    // (will be filled during dialog open)
-    // TODO validate title
+    // will be filled during dialog open
     var txtApiKey = null;
     var txtTitle = null;
 
@@ -496,11 +505,20 @@ define([
           dialogResult.reject("canceled");
         });
 
+        // add server button
         publishModal.find("#rsc-add-server").on("click", function() {
           publishModal.modal("hide");
           showAddServerDialog(true, (selectedEntry || {}).id);
         });
 
+        // generate server list
+        var serverItems = config.servers.map(function(s) {
+          var matchingServer = s.id === id;
+          if (matchingServer) {
+            selectedEntry = s;
+          }
+          return mkServerItem(s, matchingServer);
+        });
         publishModal.find(".list-group").append(serverItems);
 
         // add default title
@@ -539,8 +557,11 @@ define([
               .then(function() {
                 publishModal.modal("hide");
               })
-              .fail(function(err) {
-                debug.error(err);
+              .fail(function(xhr) {
+                txtTitle.closest(".form-group").addClass("has-error");
+                txtTitle
+                  .siblings(".help-block")
+                  .text("Failed to publish. " + xhr.responseJSON.message);
               })
               .always(function() {
                 btnPublish
@@ -573,6 +594,8 @@ define([
   }
 
   function onPublishClicked(env, event) {
+    // lazily load the config when clicked since Jupyter's init
+    // function is racy w.r.t. loading of notebook metadata
     if (!config) {
       config = new RSConnect();
       window.RSConnect = config;

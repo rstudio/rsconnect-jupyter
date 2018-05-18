@@ -16,7 +16,7 @@ from tornado import web
 from tornado.log import app_log
 from ipython_genutils import text
 
-from rsconnect.rsconnect import mk_manifest, deploy, verify_server
+from rsconnect.rsconnect import mk_manifest, deploy, verify_server, RSConnectException
 
 
 __version__ = '0.1.0'
@@ -134,7 +134,10 @@ class EndpointHandler(APIHandler):
 
                 # rewind file pointer
                 bundle.seek(0)
-                published_app = deploy(uri.scheme, uri.hostname, uri.port, api_key, app_id, nb_title, bundle)
+                try:
+                    published_app = deploy(uri.scheme, uri.hostname, uri.port, api_key, app_id, nb_title, bundle)
+                except RSConnectException as exc:
+                    raise web.HTTPError(400, exc.args[0])
 
             self.finish(json.dumps({'app_id': published_app['id']}))
             return
