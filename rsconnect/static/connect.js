@@ -449,6 +449,7 @@ define([
           if ($this.hasClass("active")) {
             selectedEntryId = id;
             btnPublish.removeClass("disabled");
+            maybeDisableTitle();
           } else {
             selectedEntryId = null;
             btnPublish.addClass("disabled");
@@ -461,6 +462,16 @@ define([
     // will be filled during dialog open
     var txtApiKey = null;
     var txtTitle = null;
+
+    var maybeDisableTitle = function() {
+      var entry = config.servers[selectedEntryId];
+      // if title was already set for this notebook
+      if (entry && entry.notebookTitle) {
+        txtTitle.val(entry.notebookTitle).attr("disabled", "");
+      } else {
+        txtTitle.removeAttr("disabled");
+      }
+    };
 
     var publishModal = Dialog.modal({
       // pass the existing keyboard manager so all shortcuts are disabled while
@@ -526,6 +537,7 @@ define([
         // add default title
         txtTitle = publishModal.find("[name=title]");
         txtTitle.val(config.getNotebookTitle(selectedEntryId));
+        maybeDisableTitle();
 
         txtApiKey = publishModal.find("[name=api-key]");
 
