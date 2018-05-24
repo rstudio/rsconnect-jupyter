@@ -1,4 +1,4 @@
-.PHONY: clean images image2 image3 launch notebook2 notebook3 package dist test dist run bash
+.PHONY: clean images image2 image3 launch notebook2 notebook3 package dist test dist run shell shell2 shell3
 
 NB_UID=$(shell id -u)
 NB_GID=$(shell id -g)
@@ -75,3 +75,9 @@ run:
 
 shell:
 	bash
+
+shell2:
+	make DOCKER_IMAGE=$(PY2) PY_VERSION=2 TARGET=shell launch
+
+shell3:
+	make DOCKER_IMAGE=$(PY3) PY_VERSION=3 TARGET=shell launch
