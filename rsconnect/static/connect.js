@@ -489,7 +489,7 @@ define([
         "    </div>",
         '    <div class="form-group">',
         "        <label>API Key</label>",
-        '        <input class="form-control" name="api-key" type="text" maxlength="32" required>',
+        '        <input class="form-control" name="api-key" type="text" maxlength="32" autocomplete="off" required>',
         '        <span class="help-block"></span>',
         "    </div>",
         '    <div class="form-group">',
