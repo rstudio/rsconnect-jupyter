@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>rsconnect User Guide</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header>
+<h1 class="title">rsconnect User Guide</h1>
+</header>
+<p><a href="https://www.github.com/rstudio/rsconnect-jupyter/"><code>rsconnect</code></a> is a plugin for <a href="https://jupyter.org/">Jupyter Notebook</a> that enables publishing of notebooks to <a href="https://www.rstudio.com/products/connect/">RStudio Connect</a>.</p>
+<h1 id="requirements">Requirements</h1>
+<ul>
+<li>Python 2.7 or Python 3.4 and higher</li>
+<li>Jupyter Notebook 5.x</li>
+<li><code>pip</code></li>
+<li><a href="https://pypi.org/project/wheel/"><code>wheel</code></a></li>
+</ul>
+<p>If using <code>conda</code>, <code>pip</code> and <code>wheel</code> should already be installed.</p>
+<h1 id="installation">Installation</h1>
+<p>Download the <code>rsconnect</code> python package from <a href="https://github.com/rstudio/rsconnect-jupyter/releases">here</a> (packaged as a <a href="https://pythonwheels.com/">wheel</a> file).</p>
+<p>Install the <code>rsconnect</code> package with the following command:</p>
+<pre><code>pip install rsconnect-0.1.0-py2.py3-none-any.whl</code></pre>
+<p>Enable the <code>rsconnect</code> extension with the following commands:</p>
+<pre><code># Install `rsconnect` as a jupyter extension for your user. If you wish
+# to allow the extension to be available for all users who access
+# jupyter, remove the `--user` flag
+jupyter-nbextension install --user --py rsconnect
+
+# Enable JavaScript extension
+jupyter-nbextension enable --py rsconnect
+
+# Enable Python extension
+jupyter-serverextension enable --py rsconnect</code></pre>
+<h1 id="usage">Usage</h1>
+<p>Open a notebook and click the blue “Publish to RStudio Connect” icon to publish the current notebook to RStudio Connect.</p>
+<p><img alt="blue toolbar icon used for publishing the notebook" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAkCAYAAAD7PHgWAAACUUlEQVR42mNgGAWjYBSMVDDzPyvD9GfBDDOez2OY+fwikH4HxH8Ypj9/BRQ/CmR3MUx/ajgwjpv+PIFhxosnQEf8JwLvpZ9D59/nAFq4kkiHIePfQA/l09Zxq66wMcx4tosMxyHhl/q0jNYeHBbfAMo1MEx74QekHRhmvXABpsl4oPh0IP6AonbaSz0aOQ6YhmY8/4vmsG/AzJDOUP+fCae+ya+lgOqOAx38lGHmiwrahd6M55vQHPeTYdZz+wEqPp6HouDpz2LBxQeyA2c+L0XRAwrFGc/sgBkhl2H6iyRgdCvRMrQIJfabQAexwNXPeqIGFDuHpuYvMD1OA2cs+jvwWRpc7bznokCxx3jUz6O3A38wTHrLh1D7rI2A+n/UL1rwWTjz+UZUtS/OEwxx9PRKMZj2UBAnBtUkqBnqNhFpthGufvYLRSD/LhA/g9bdMPwaKn6YyqH9Yj1BB05/HoYUO+UE1D+ksgNfuhKw8BFD32NOJAdeoa8DIdFcj8Oyd8DawxxRGz1zJyI5PKRR4f7MDZyBIOnoCpA9mWHqU1nUhgZGWXkYGuUwXEfb6hBvUng2ASO0QI0KmoA5j4XAITTj+VpwriTURJv+bCKWqDxGy9CYg2TRB6AD2oEOdmSY+VoSWAwJQDzw1AgcXTOe38fiuO/A+lqHlg6kpNH6D9xdoHF/xAxo0RsyHAfsUD1LpU+in/1EBhitayB1LVGOuwqMdhv6505QEx6SCe5gcdRriCeeBTGs+s88CPrJ7/gZpj1VB+PZL8VHBw5GwSigEwAAO8Vb1WEAypEAAAAASUVORK5CYII="></p>
+<p>If this is your first time publishing this notebook, you will be prompted to enter the location and a nickname for the RStudio Connect server.</p>
+<p><img alt="initial dialog that prompts for the location of RStudio Connect" src="add-dialog.gif"></p>
+<p>You will then be prompted to enter your API Key which will be used to publish the notebook under your account to the selected RStudio Connect server.</p>
+<p>See the <a href="http://docs.rstudio.com/connect/user/api-keys.html">RStudio Connect User Guide</a> for instructions on generating API Keys for your user.</p>
+<p><img alt="publish dialog that prompts for an API key" src="manage.gif"></p>
+<p>Upon successful publishing of the document a notification will be shown in toolbar. Clicking the notification will open the published document in the RStudio Connect server you selected in the previous dialog.</p>
+<p><img alt="notification that shows the notebook was published successfully" src="published.gif"></p>
+</body>
+</html>
