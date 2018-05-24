@@ -1,2 +1,3 @@
 include README.md
 include rsconnect/static/*.js
+include rsconnect/static/main.css

@@ -1,4 +1,5 @@
 import json
+import socket
 import time
 
 try:
@@ -9,9 +10,10 @@ except ImportError:
 
 try:
     # python3
-    import urllib.parse as urllib
+    from urllib.parse import urlparse, urlencode
 except ImportError:
-    import urllib
+    from urllib import urlparse, urlencode
+
 
 class RSConnectException(Exception):
     pass
@@ -33,13 +35,33 @@ def wait_until(predicate, timeout, period=0.1):
     return False
 
 
+def verify_server(server_address):
+    r = urlparse(server_address)
+    conn = None
+    try:
+        if r.scheme == 'http':
+            conn = http.HTTPConnection(r.hostname, port=(r.port or http.HTTP_PORT), timeout=10)
+        else:
+            conn = http.HTTPSConnection(r.hostname, port=(r.port or http.HTTPS_PORT), timeout=10)
+        conn.request('GET', '/__api__/server_settings')
+        response = conn.getresponse()
+        if response.status >= 400:
+            return False
+    except (http.HTTPException, OSError, socket.error):
+        return False
+    finally:
+        if conn is not None:
+            conn.close()
+    return True
+
+
 class RSConnect:
     def __init__(self, scheme, host, api_key, port=3939):
         self.api_key = api_key
         self.conn = None
-        self.mk_conn = lambda: http.HTTPConnection(host, port=port)
+        self.mk_conn = lambda: http.HTTPConnection(host, port=port, timeout=10)
         if scheme == 'https':
-            self.mk_conn = lambda: http.HTTPSConnection(host, port=port)
+            self.mk_conn = lambda: http.HTTPSConnection(host, port=port, timeout=10)
         self.http_headers = {
             'Authorization': 'Key %s' % self.api_key,
         }
@@ -56,19 +78,27 @@ class RSConnect:
         response = self.conn.getresponse()
         raw = response.read()
         if response.status >= 400:
-            raise RSConnectException('Unexpected response: %d: %s' % (response.status, str(raw)))
+            raise RSConnectException('Unexpected response code: %d' % (response.status))
         return raw
 
     def json_response(self):
         response = self.conn.getresponse()
         raw = response.read()
-        data = json.loads(raw)
-        if response.status >= 400:
-            raise RSConnectException('Unexpected response: %d: %s' % (response.status, str(raw)))
-        return data
+        if response.status >= 500:
+            raise RSConnectException('Unexpected response code: %d' % (response.status))
+        elif response.status >= 400:
+            data = json.loads(raw)
+            raise RSConnectException(data['error'])
+        else:
+            data = json.loads(raw)
+            return data
+
+    def whoami(self):
+        self.conn.request('GET', '/__api__/me')
+        return self.json_response()
 
     def app_find(self, name):
-        params = urllib.urlencode({'search': name, 'count': 1})
+        params = urlencode({'search': name, 'count': 1})
         self.conn.request('GET', '/__api__/applications?' + params, None, self.http_headers)
         data = self.json_response()
         if data['count'] > 0:
@@ -105,6 +135,7 @@ class RSConnect:
 def mk_manifest(file_name):
     return json.dumps({
         "version": 1,
+         # unused for content without source
         "platform": "3.4.3",
         "metadata": {
             "appmode": "static",
@@ -116,6 +147,7 @@ def mk_manifest(file_name):
         "packages": None,
         "files": {
             file_name: {
+                # unused but some value is necessary
                 "checksum": "banana"
             }
         },
@@ -123,16 +155,19 @@ def mk_manifest(file_name):
     })
 
 
-def deploy(scheme, host, api_key, app_name, tarball, port=3939):
+def deploy(scheme, host, port, api_key, app_id, app_name, tarball):
     with RSConnect(scheme, host, api_key, port) as api:
-        app = api.app_find(app_name)
-
-        if app is None:
-            app = api.app_create(app_name)
+        if app_id is None:
+            app = api.app_find(app_name)
+            if app is None:
+                app = api.app_create(app_name)
+        else:
+            app = {'id': app_id}
 
         app_bundle = api.app_upload(app['id'], tarball)
         task = api.app_deploy(app['id'], app_bundle['id'])
 
+        # 10 minute timeout
         timeout = 600
         def task_is_finished(task_id):
             return api.task_get(task_id)['finished']
@@ -145,4 +180,4 @@ def deploy(scheme, host, api_key, app_name, tarball, port=3939):
                 return api.app_publish(app['id'], 'acl')
             else:
                 # app failed to deploy
-                print('Unsuccessful deployment :(')
+                raise RSConnectException('Failed to deploy successfully')
