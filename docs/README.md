@@ -1,7 +1,3 @@
----
-title: rsconnect User Guide
----
-
 [`rsconnect`](https://www.github.com/rstudio/rsconnect-jupyter/) is a
 plugin for [Jupyter Notebook](https://jupyter.org/) that enables
 publishing of notebooks to [RStudio
