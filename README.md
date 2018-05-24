@@ -1,6 +1,7 @@
 # User Guide
 
-User guides are available [here](rstudio.github.io/rsconnect-jupyter/).
+Installation and usage instructions are available
+[here](https://github.com/rstudio/rsconnect-jupyter/docs).
 
 # Developing `rsconnect`
 
