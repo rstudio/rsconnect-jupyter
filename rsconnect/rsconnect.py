@@ -43,7 +43,7 @@ def verify_server(server_address):
             conn = http.HTTPConnection(r.hostname, port=(r.port or http.HTTP_PORT), timeout=10)
         else:
             conn = http.HTTPSConnection(r.hostname, port=(r.port or http.HTTPS_PORT), timeout=10)
-        conn.request('GET', '/__api__/server_settings') # , None, {'Authorization': 'Key %s' % api_key})
+        conn.request('GET', '/__api__/server_settings')
         response = conn.getresponse()
         if response.status >= 400:
             return False

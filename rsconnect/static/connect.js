@@ -92,7 +92,7 @@ define([
           // notebook is writable
           result.resolve();
         })
-        ["catch"](function(e) {
+        .catch(function(e) {
           debug.error(e);
           // notebook is read-only (server details will likely not be persisted)
           result.resolve();
