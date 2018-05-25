@@ -12,7 +12,8 @@ try:
     # python3
     from urllib.parse import urlparse, urlencode
 except ImportError:
-    from urllib import urlparse, urlencode
+    from urllib import urlencode
+    from urlparse import urlparse
 
 
 class RSConnectException(Exception):

@@ -71,7 +71,7 @@ run:
 # enable python extension
 	jupyter-serverextension enable --py rsconnect
 # start notebook
-	jupyter-notebook -y --notebook-dir=/notebooks --ip='*' --port=9999 --no-browser
+	jupyter-notebook -y --notebook-dir=/notebooks --ip='*' --port=9999 --no-browser --NotebookApp.token=''
 
 shell:
 	bash

@@ -190,9 +190,10 @@ define([
 
     getNotebookTitle: function(id) {
       if (id) {
+        // it's possible the entry is gone
         var e = this.servers[id];
         // if title was saved then return it
-        if (e.notebookTitle) {
+        if (e && e.notebookTitle) {
           return e.notebookTitle;
         }
       }

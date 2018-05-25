@@ -2,12 +2,14 @@ import io
 import json
 import os
 import tarfile
+import tempfile
 
 try:
     # python3
     from urllib.parse import unquote_plus, urlparse
 except ImportError:
-    from urllib import unquote_plus, urlparse
+    from urllib import unquote_plus
+    from urlparse import urlparse
 
 from notebook.base.handlers import APIHandler
 from notebook.utils import url_path_join
@@ -16,8 +18,10 @@ from tornado import web
 from tornado.log import app_log
 from ipython_genutils import text
 
-from rsconnect.rsconnect import mk_manifest, deploy, verify_server, RSConnectException
-
+try:
+    from rsconnect import mk_manifest, deploy, verify_server, RSConnectException
+except:
+    from .rsconnect import mk_manifest, deploy, verify_server, RSConnectException
 
 __version__ = '0.1.0'
 
@@ -119,7 +123,7 @@ class EndpointHandler(APIHandler):
             self.log.info('filename = %s' % filename)
 
             published_app = {}
-            with io.BytesIO() as bundle:
+            with tempfile.TemporaryFile() as bundle:
                 with tarfile.open(mode='w:gz', fileobj=bundle) as tar:
                     buf = io.BytesIO(output.encode())
                     fileinfo = tarfile.TarInfo(filename)
@@ -135,7 +139,11 @@ class EndpointHandler(APIHandler):
                 # rewind file pointer
                 bundle.seek(0)
                 try:
-                    published_app = deploy(uri.scheme, uri.hostname, uri.port, api_key, app_id, nb_title, bundle)
+                    published_app = deploy(
+                        uri.scheme, uri.hostname, uri.port,
+                        api_key, app_id, nb_title,
+                        bundle
+                    )
                 except RSConnectException as exc:
                     raise web.HTTPError(400, exc.args[0])
 
