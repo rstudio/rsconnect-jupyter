@@ -16,6 +16,7 @@ setup(name='rsconnect',
       license='GPL-2.0',
       packages=['rsconnect'],
       install_requires=[
+          'notebook',
           'nbformat'
       ],
       include_package_data=True,

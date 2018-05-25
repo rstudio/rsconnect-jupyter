@@ -1,6 +1,6 @@
 [`rsconnect`](https://www.github.com/rstudio/rsconnect-jupyter/) is a
 plugin for [Jupyter Notebook](https://jupyter.org/) that enables
-publishing of notebooks to [RStudio
+publishing notebook renders (HTML) to [RStudio
 Connect](https://www.rstudio.com/products/connect/).
 
 # Requirements
@@ -29,7 +29,7 @@ Enable the `rsconnect` extension with the following commands:
 ```
 # Install `rsconnect` as a jupyter extension for your user. If you wish
 # to allow the extension to be available for all users who access
-# jupyter, remove the `--user` flag
+# Jupyter Notebooks, remove the `--user` flag
 jupyter-nbextension install --user --py rsconnect
 
 # Enable JavaScript extension
@@ -38,6 +38,32 @@ jupyter-nbextension enable --py rsconnect
 # Enable Python extension
 jupyter-serverextension enable --py rsconnect
 ```
+
+Note: the above commands only need to be run once when installing
+`rsconnect`.
+
+# Uninstalling
+
+First disable and remove the `rsconnect` notebook extension:
+
+```
+# Disable Python extensions found in `rsconnect`
+jupyter-serverextension disable --py rsconnect
+
+# Remove JavaScript extension
+jupyter-nbextension uninstall --py rsconnect
+```
+
+Finally, uninstall the `rsconnect` python package:
+
+```
+pip uninstall rsconnect
+```
+
+# Upgrading
+
+To upgrade `rsconnect`, first uninstall the extension and the
+re-install it.
 
 # Usage
 
