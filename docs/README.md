@@ -62,7 +62,7 @@ pip uninstall rsconnect
 
 # Upgrading
 
-To upgrade `rsconnect`, first uninstall the extension and the
+To upgrade `rsconnect`, first uninstall the extension and then
 re-install it.
 
 # Usage
