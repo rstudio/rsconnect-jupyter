@@ -91,16 +91,29 @@ class RSConnect:
             logger.error('IO/OS Error: %s' % e)
             raise RSConnectException(str(e))
 
+    def _update_cookie(self, response):
+        ### This is a hacky way of setting a cookie if we receive one
+        value = response.getheader('set-cookie', None)
+        if value is not None:
+            self.http_headers['Cookie'] = value
+        else:
+            if 'Cookie' in self.http_headers:
+                del self.http_headers['Cookie']
+
     def response(self):
         response = self.conn.getresponse()
+        self._update_cookie(response)
         raw = response.read()
+
         if response.status >= 400:
             raise RSConnectException('Unexpected response code: %d' % (response.status))
         return raw
 
     def json_response(self):
         response = self.conn.getresponse()
+        self._update_cookie(response)
         raw = response.read()
+
         if response.status >= 500:
             raise RSConnectException('Unexpected response code: %d' % (response.status))
         elif response.status >= 400:
@@ -109,10 +122,6 @@ class RSConnect:
         else:
             data = json.loads(raw)
             return data
-
-    def whoami(self):
-        self.request('GET', '/__api__/me')
-        return self.json_response()
 
     def app_find(self, name):
         params = urlencode({'search': name, 'count': 1})
