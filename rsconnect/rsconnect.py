@@ -1,4 +1,5 @@
 import json
+import logging
 import socket
 import time
 
@@ -15,9 +16,13 @@ except ImportError:
     from urllib import urlencode
     from urlparse import urlparse
 
-
 class RSConnectException(Exception):
-    pass
+    def __init__(self, message):
+        super(RSConnectException, self).__init__(message)
+        self.message = message
+
+
+logger = logging.getLogger('rsconnect')
 
 
 def wait_until(predicate, timeout, period=0.1):
@@ -75,16 +80,41 @@ class RSConnect:
         self.conn.close()
         self.conn = None
 
+    def request(self, method, path, *args, **kwargs):
+        # TODO cookie
+        logger.info('Performing: %s %s' % (method, path))
+        try:
+            self.conn.request(method, path, *args, **kwargs)
+        except http.HTTPException as e:
+            logger.error('HTTPException: %s' % e)
+            raise RSConnectException(str(e))
+        except (IOError, OSError) as e:
+            logger.error('IO/OS Error: %s' % e)
+            raise RSConnectException(str(e))
+
+    def _update_cookie(self, response):
+        ### This is a hacky way of setting a cookie if we receive one
+        value = response.getheader('set-cookie', None)
+        if value is not None:
+            self.http_headers['Cookie'] = value
+        else:
+            if 'Cookie' in self.http_headers:
+                del self.http_headers['Cookie']
+
     def response(self):
         response = self.conn.getresponse()
+        self._update_cookie(response)
         raw = response.read()
+
         if response.status >= 400:
             raise RSConnectException('Unexpected response code: %d' % (response.status))
         return raw
 
     def json_response(self):
         response = self.conn.getresponse()
+        self._update_cookie(response)
         raw = response.read()
+
         if response.status >= 500:
             raise RSConnectException('Unexpected response code: %d' % (response.status))
         elif response.status >= 400:
@@ -94,29 +124,25 @@ class RSConnect:
             data = json.loads(raw)
             return data
 
-    def whoami(self):
-        self.conn.request('GET', '/__api__/me')
-        return self.json_response()
-
     def app_find(self, name):
         params = urlencode({'search': name, 'count': 1})
-        self.conn.request('GET', '/__api__/applications?' + params, None, self.http_headers)
+        self.request('GET', '/__api__/applications?' + params, None, self.http_headers)
         data = self.json_response()
         if data['count'] > 0:
             return data['applications'][0]
 
     def app_create(self, name):
         params = json.dumps({'name': name})
-        self.conn.request('POST', '/__api__/applications', params, self.http_headers)
+        self.request('POST', '/__api__/applications', params, self.http_headers)
         return self.json_response()
 
     def app_upload(self, app_id, tarball):
-        self.conn.request('POST', '/__api__/applications/%d/upload' % app_id, tarball, self.http_headers)
+        self.request('POST', '/__api__/applications/%d/upload' % app_id, tarball, self.http_headers)
         return self.json_response()
 
     def app_deploy(self, app_id, bundle_id = None):
         params = json.dumps({'bundle': bundle_id})
-        self.conn.request('POST', '/__api__/applications/%d/deploy' % app_id, params, self.http_headers)
+        self.request('POST', '/__api__/applications/%d/deploy' % app_id, params, self.http_headers)
         return self.json_response()
 
     def app_publish(self, app_id, access):
@@ -125,11 +151,11 @@ class RSConnect:
             'id': app_id,
             'needs_config': False
         })
-        self.conn.request('POST', '/__api__/applications/%d' % app_id, params, self.http_headers)
+        self.request('POST', '/__api__/applications/%d' % app_id, params, self.http_headers)
         return self.json_response()
 
     def task_get(self, task_id):
-        self.conn.request('GET', '/__api__/tasks/%s' % task_id, None, self.http_headers)
+        self.request('GET', '/__api__/tasks/%s' % task_id, None, self.http_headers)
         return self.json_response()
 
 

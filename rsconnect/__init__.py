@@ -145,7 +145,7 @@ class EndpointHandler(APIHandler):
                         bundle
                     )
                 except RSConnectException as exc:
-                    raise web.HTTPError(400, exc.args[0])
+                    raise web.HTTPError(400, exc.message)
 
             self.finish(json.dumps({
                 'app_id': published_app['id'],
