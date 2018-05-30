@@ -17,8 +17,9 @@ except ImportError:
     from urlparse import urlparse
 
 class RSConnectException(Exception):
-    def __init__(self, *args, **kwargs):
-        Exception.__init__(self, *args, **kwargs)
+    def __init__(self, message):
+        super(RSConnectException, self).__init__(message)
+        self.message = message
 
 
 logger = logging.getLogger('rsconnect')
