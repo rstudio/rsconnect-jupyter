@@ -1,4 +1,4 @@
-.PHONY: clean pull images image2 image3 launch notebook2 notebook3 package dist test dist run
+.PHONY: clean images image2 image3 launch notebook2 notebook3 package dist test dist run shell shell2 shell3
 
 NB_UID=$(shell id -u)
 NB_GID=$(shell id -g)
@@ -8,13 +8,6 @@ PY3=rstudio/rsconnect-jupyter-py3
 
 clean:
 	rm -rf build/ dist/ rsconnect.egg-info/
-
-pull:
-#	docker pull $(PY3)
-#	docker pull $(PY2)
-#	docker pull python:2.7
-#	docker pull python:3.6
-	docker pull node:6-slim
 
 images: image2 image3
 
@@ -78,4 +71,13 @@ run:
 # enable python extension
 	jupyter-serverextension enable --py rsconnect
 # start notebook
-	jupyter-notebook -y --notebook-dir=/notebooks --ip='*' --port=9999 --no-browser
+	jupyter-notebook -y --notebook-dir=/notebooks --ip='*' --port=9999 --no-browser --NotebookApp.token=''
+
+shell:
+	bash
+
+shell2:
+	make DOCKER_IMAGE=$(PY2) PY_VERSION=2 TARGET=shell launch
+
+shell3:
+	make DOCKER_IMAGE=$(PY3) PY_VERSION=3 TARGET=shell launch

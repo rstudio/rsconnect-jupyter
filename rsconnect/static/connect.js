@@ -190,9 +190,10 @@ define([
 
     getNotebookTitle: function(id) {
       if (id) {
+        // it's possible the entry is gone
         var e = this.servers[id];
         // if title was saved then return it
-        if (e.notebookTitle) {
+        if (e && e.notebookTitle) {
           return e.notebookTitle;
         }
       }
@@ -489,7 +490,7 @@ define([
         "    </div>",
         '    <div class="form-group">',
         "        <label>API Key</label>",
-        '        <input class="form-control" name="api-key" type="text" maxlength="32" required>',
+        '        <input class="form-control" name="api-key" type="text" maxlength="32" autocomplete="off" required>',
         '        <span class="help-block"></span>',
         "    </div>",
         '    <div class="form-group">',

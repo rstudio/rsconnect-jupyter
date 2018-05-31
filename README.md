@@ -1,4 +1,9 @@
-# Development
+# User Guide
+
+Installation and usage instructions are available
+[here](https://github.com/rstudio/rsconnect-jupyter/tree/master/docs).
+
+# Developing `rsconnect`
 
 Need to run this after checkout and when modifying the docker images
 
