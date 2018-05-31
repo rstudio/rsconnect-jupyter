@@ -94,3 +94,10 @@ document in the RStudio Connect server you selected in the previous
 dialog.
 
 <img alt="notification that shows the notebook was published successfully" src="published.gif">
+
+# Collaboration
+
+To collaborate with others simply have them use a copy of the notebook
+file. In RStudio Connect, add them as a collaborator. During
+publishing they should provide their API key, but deployment will
+automatically update the existing content in RStudio Connect.
