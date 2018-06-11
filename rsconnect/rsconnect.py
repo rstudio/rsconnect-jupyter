@@ -101,22 +101,18 @@ class RSConnect:
             if 'Cookie' in self.http_headers:
                 del self.http_headers['Cookie']
 
-    def response(self):
-        response = self.conn.getresponse()
-        self._update_cookie(response)
-        raw = response.read()
-
-        if response.status >= 400:
-            raise RSConnectException('Unexpected response code: %d' % (response.status))
-        return raw
-
     def json_response(self):
         response = self.conn.getresponse()
         self._update_cookie(response)
         raw = response.read()
 
         if response.status >= 500:
-            raise RSConnectException('Unexpected response code: %d' % (response.status))
+            logger.error('Received HTTP 500: %s', raw)
+            try:
+                message = json.loads(raw)['error']
+            except:
+                message = 'Unexpected response code: %d' % (response.status)
+            raise RSConnectException(message)
         elif response.status >= 400:
             data = json.loads(raw)
             raise RSConnectException(data['error'])
