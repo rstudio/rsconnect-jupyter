@@ -163,22 +163,10 @@ def mk_manifest(file_name):
     return json.dumps({
         "version": 1,
          # unused for content without source
-        "platform": "3.4.3",
         "metadata": {
             "appmode": "static",
-            "content_category": "site",
-            "primary_rmd": None,
             "primary_html": file_name,
-            "has_parameters": False
         },
-        "packages": None,
-        "files": {
-            file_name: {
-                # unused but some value is necessary
-                "checksum": "banana"
-            }
-        },
-        "users": None
     })
 
 
