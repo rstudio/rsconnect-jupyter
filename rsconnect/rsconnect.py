@@ -154,6 +154,10 @@ class RSConnect:
         self.request('POST', '/__api__/applications/%d' % app_id, params, self.http_headers)
         return self.json_response()
 
+    def app_config(self, app_id):
+        self.request('GET', '/__api__/applications/%d/config' % app_id, None, self.http_headers)
+        return self.json_response()
+
     def task_get(self, task_id):
         self.request('GET', '/__api__/tasks/%s' % task_id, None, self.http_headers)
         return self.json_response()
@@ -192,7 +196,12 @@ def deploy(scheme, host, port, api_key, app_id, app_name, tarball):
         if task_finished:
             if task['code'] == 0:
                 # app deployed successfully
-                return api.app_publish(app['id'], 'acl')
+                api.app_publish(app['id'], 'acl')
+                config = api.app_config(app['id'])
+                return {
+                    'app_id': app['id'],
+                    'config': config,
+                }
             else:
                 # app failed to deploy
                 raise RSConnectException('Failed to deploy successfully')

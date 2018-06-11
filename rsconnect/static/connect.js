@@ -179,7 +179,8 @@ define([
           15 * 1000,
           // click handler
           function() {
-            window.open(result.url, "rsconnect");
+            // note: logs_url is included in result.config
+            window.open(result.config.config_url, "rsconnect");
           },
           // options
           {
