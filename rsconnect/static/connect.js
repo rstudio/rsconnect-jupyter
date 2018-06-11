@@ -119,6 +119,9 @@ define([
     addServer: function(server, serverName) {
       var self = this;
       var id = uuidv4();
+      if (server[server.length - 1] !== "/") {
+        server += "/";
+      }
 
       // verify the server exists, then save
       return this.verifyServer(server)
