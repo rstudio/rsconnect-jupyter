@@ -62,7 +62,12 @@ define([
     if (metadata.rsconnect && metadata.rsconnect.servers) {
       // make a copy
       this.servers = metadata.rsconnect.servers;
-      this.previousServerId = metadata.rsconnect.previousServerId;
+
+      // previousServer may have been removed
+      this.previousServerId =
+        metadata.rsconnect.previousServerId in this.servers
+          ? metadata.rsconnect.previousServerId
+          : null;
     }
 
     this.save = this.save.bind(this);
