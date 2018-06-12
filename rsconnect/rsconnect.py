@@ -120,8 +120,12 @@ class RSConnect:
             data = json.loads(raw)
             return data
 
-    def app_find(self, name):
-        params = urlencode({'search': name, 'count': 1})
+    def me(self):
+        self.request('GET', '/__api__/me', None, self.http_headers)
+        return self.json_response()
+
+    def app_find(self, filters = {}):
+        params = urlencode(filters)
         self.request('GET', '/__api__/applications?' + params, None, self.http_headers)
         data = self.json_response()
         if data['count'] > 0:
@@ -173,7 +177,12 @@ def mk_manifest(file_name):
 def deploy(scheme, host, port, api_key, app_id, app_name, tarball):
     with RSConnect(scheme, host, api_key, port) as api:
         if app_id is None:
-            app = api.app_find(app_name)
+            me = api.me()
+            filters = {'search': app_name,
+                       'count': 1,
+                       'filter': 'min_role:editor',
+                       'filter': 'account_id:%d' % me['id']}
+            app = api.app_find(filters)
             if app is None:
                 app = api.app_create(app_name)
         else:
