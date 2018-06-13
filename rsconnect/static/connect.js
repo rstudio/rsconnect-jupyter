@@ -137,9 +137,10 @@ define([
         });
     },
 
-    updateServer: function(id, appId, notebookTitle) {
+    updateServer: function(id, appId, notebookTitle, configUrl) {
       this.servers[id].appId = appId;
       this.servers[id].notebookTitle = notebookTitle;
+      this.servers[id].configUrl = configUrl;
       return this.save();
     },
 
@@ -191,7 +192,12 @@ define([
           }
         );
         self.previousServerId = id;
-        return self.updateServer(id, result.app_id, notebookTitle);
+        return self.updateServer(
+          id,
+          result.app_id,
+          notebookTitle,
+          result.config.config_url
+        );
       });
 
       return xhr;
