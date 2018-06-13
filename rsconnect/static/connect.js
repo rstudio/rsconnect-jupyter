@@ -466,6 +466,7 @@ define([
             selectedEntryId = id;
             btnPublish.removeClass("disabled");
             maybeDisableTitle();
+            maybeShowConfigUrl();
           } else {
             selectedEntryId = null;
             btnPublish.addClass("disabled");
@@ -486,6 +487,27 @@ define([
         txtTitle.val(entry.notebookTitle).attr("disabled", "");
       } else {
         txtTitle.removeAttr("disabled");
+      }
+    };
+
+    var maybeShowConfigUrl = function() {
+      var entry = config.servers[selectedEntryId];
+      if (entry && entry.configUrl) {
+        publishModal
+          .find("div[data-id=configUrl]")
+          .text("Currently published at: ")
+          .append(
+            $("<a></a>")
+              .attr("href", entry.configUrl)
+              .attr("target", "_rsconnect")
+              .text(entry.configUrl)
+          );
+      } else {
+        publishModal
+          .find("div[data-id=configUrl]")
+          .text("")
+          .find("a")
+          .remove();
       }
     };
 
@@ -513,6 +535,7 @@ define([
         '        <input class="form-control" name="title" type="text" minlength="3" maxlength="64" required>',
         '        <span class="help-block"></span>',
         "    </div>",
+        '    <div class="text-center" data-id="configUrl"></div>',
         '    <input type="submit" hidden>',
         "</form>"
       ].join(""),
@@ -529,7 +552,9 @@ define([
         // clicking on links in the modal body prevents the default
         // behavior (i.e. changing location.hash)
         publishModal.find(".modal-body").on("click", function(e) {
-          e.preventDefault();
+          if ($(e.target).attr("target") !== "_rsconnect") {
+            e.preventDefault();
+          }
         });
 
         // there is no _close_ event so let's improvise
@@ -554,6 +579,7 @@ define([
         txtTitle = publishModal.find("[name=title]");
         txtTitle.val(config.getNotebookTitle(selectedEntryId));
         maybeDisableTitle();
+        maybeShowConfigUrl();
 
         txtApiKey = publishModal.find("[name=api-key]");
 
