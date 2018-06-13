@@ -62,7 +62,12 @@ define([
     if (metadata.rsconnect && metadata.rsconnect.servers) {
       // make a copy
       this.servers = metadata.rsconnect.servers;
-      this.previousServerId = metadata.rsconnect.previousServerId;
+
+      // previousServer may have been removed
+      this.previousServerId =
+        metadata.rsconnect.previousServerId in this.servers
+          ? metadata.rsconnect.previousServerId
+          : null;
     }
 
     this.save = this.save.bind(this);
@@ -114,6 +119,9 @@ define([
     addServer: function(server, serverName) {
       var self = this;
       var id = uuidv4();
+      if (server[server.length - 1] !== "/") {
+        server += "/";
+      }
 
       // verify the server exists, then save
       return this.verifyServer(server)
@@ -171,7 +179,8 @@ define([
           15 * 1000,
           // click handler
           function() {
-            window.open(result.url, "rsconnect");
+            // note: logs_url is included in result.config
+            window.open(result.config.config_url, "rsconnect");
           },
           // options
           {

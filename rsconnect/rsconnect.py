@@ -101,22 +101,18 @@ class RSConnect:
             if 'Cookie' in self.http_headers:
                 del self.http_headers['Cookie']
 
-    def response(self):
-        response = self.conn.getresponse()
-        self._update_cookie(response)
-        raw = response.read()
-
-        if response.status >= 400:
-            raise RSConnectException('Unexpected response code: %d' % (response.status))
-        return raw
-
     def json_response(self):
         response = self.conn.getresponse()
         self._update_cookie(response)
         raw = response.read()
 
         if response.status >= 500:
-            raise RSConnectException('Unexpected response code: %d' % (response.status))
+            logger.error('Received HTTP 500: %s', raw)
+            try:
+                message = json.loads(raw)['error']
+            except:
+                message = 'Unexpected response code: %d' % (response.status)
+            raise RSConnectException(message)
         elif response.status >= 400:
             data = json.loads(raw)
             raise RSConnectException(data['error'])
@@ -124,8 +120,12 @@ class RSConnect:
             data = json.loads(raw)
             return data
 
-    def app_find(self, name):
-        params = urlencode({'search': name, 'count': 1})
+    def me(self):
+        self.request('GET', '/__api__/me', None, self.http_headers)
+        return self.json_response()
+
+    def app_find(self, filters = {}):
+        params = urlencode(filters)
         self.request('GET', '/__api__/applications?' + params, None, self.http_headers)
         data = self.json_response()
         if data['count'] > 0:
@@ -154,6 +154,10 @@ class RSConnect:
         self.request('POST', '/__api__/applications/%d' % app_id, params, self.http_headers)
         return self.json_response()
 
+    def app_config(self, app_id):
+        self.request('GET', '/__api__/applications/%d/config' % app_id, None, self.http_headers)
+        return self.json_response()
+
     def task_get(self, task_id):
         self.request('GET', '/__api__/tasks/%s' % task_id, None, self.http_headers)
         return self.json_response()
@@ -163,29 +167,22 @@ def mk_manifest(file_name):
     return json.dumps({
         "version": 1,
          # unused for content without source
-        "platform": "3.4.3",
         "metadata": {
             "appmode": "static",
-            "content_category": "site",
-            "primary_rmd": None,
             "primary_html": file_name,
-            "has_parameters": False
         },
-        "packages": None,
-        "files": {
-            file_name: {
-                # unused but some value is necessary
-                "checksum": "banana"
-            }
-        },
-        "users": None
     })
 
 
 def deploy(scheme, host, port, api_key, app_id, app_name, tarball):
     with RSConnect(scheme, host, api_key, port) as api:
         if app_id is None:
-            app = api.app_find(app_name)
+            me = api.me()
+            filters = {'search': app_name,
+                       'count': 1,
+                       'filter': 'min_role:editor',
+                       'filter': 'account_id:%d' % me['id']}
+            app = api.app_find(filters)
             if app is None:
                 app = api.app_create(app_name)
         else:
@@ -204,7 +201,12 @@ def deploy(scheme, host, port, api_key, app_id, app_name, tarball):
         if task_finished:
             if task['code'] == 0:
                 # app deployed successfully
-                return api.app_publish(app['id'], 'acl')
+                api.app_publish(app['id'], 'acl')
+                config = api.app_config(app['id'])
+                return {
+                    'app_id': app['id'],
+                    'config': config,
+                }
             else:
                 # app failed to deploy
                 raise RSConnectException('Failed to deploy successfully')
