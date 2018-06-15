@@ -480,7 +480,7 @@ define([
     var txtApiKey = null;
     var txtTitle = null;
 
-    var maybeDisableTitle = function() {
+    function maybeDisableTitle() {
       var entry = config.servers[selectedEntryId];
       // if title was already set for this notebook
       if (entry && entry.notebookTitle) {
@@ -488,9 +488,9 @@ define([
       } else {
         txtTitle.removeAttr("disabled");
       }
-    };
+    }
 
-    var maybeShowConfigUrl = function() {
+    function maybeShowConfigUrl() {
       var entry = config.servers[selectedEntryId];
       if (entry && entry.configUrl) {
         publishModal
@@ -509,7 +509,7 @@ define([
           .find("a")
           .remove();
       }
-    };
+    }
 
     var publishModal = Dialog.modal({
       // pass the existing keyboard manager so all shortcuts are disabled while
