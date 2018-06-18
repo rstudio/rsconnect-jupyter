@@ -81,7 +81,6 @@ class RSConnect:
         self.conn = None
 
     def request(self, method, path, *args, **kwargs):
-        # TODO cookie
         logger.info('Performing: %s %s' % (method, path))
         try:
             self.conn.request(method, path, *args, **kwargs)
@@ -129,7 +128,7 @@ class RSConnect:
         self.request('GET', '/__api__/applications?' + params, None, self.http_headers)
         data = self.json_response()
         if data['count'] > 0:
-            return data['applications'][0]
+            return data['applications']
 
     def app_create(self, name):
         params = json.dumps({'name': name})
@@ -174,18 +173,14 @@ def mk_manifest(file_name):
     })
 
 
-def deploy(scheme, host, port, api_key, app_id, app_name, tarball):
+def deploy(scheme, host, port, api_key, app_id, app_title, tarball):
     with RSConnect(scheme, host, api_key, port) as api:
         if app_id is None:
-            me = api.me()
-            filters = {'search': app_name,
-                       'count': 1,
-                       'filter': 'min_role:editor',
-                       'filter': 'account_id:%d' % me['id']}
-            app = api.app_find(filters)
-            if app is None:
-                app = api.app_create(app_name)
+            # create an app if id is not probided
+            app = api.app_create(app_title)
         else:
+            # assume app exists
+            # TODO what if app is deleted
             app = {'id': app_id}
 
         app_bundle = api.app_upload(app['id'], tarball)
@@ -210,3 +205,25 @@ def deploy(scheme, host, port, api_key, app_id, app_name, tarball):
             else:
                 # app failed to deploy
                 raise RSConnectException('Failed to deploy successfully')
+
+
+def app_search(scheme, host, port, api_key, app_title):
+    with RSConnect(scheme, host, api_key, port) as api:
+        me = api.me()
+        filters = {'count': 5,
+                   'filter': 'min_role:editor',
+                   'filter': 'account_id:%d' % me['id'],
+                   'search': app_title,
+                   }
+        apps = api.app_find(filters)
+        if apps is None:
+            return []
+
+        data = []
+        for app in apps:
+            data.append({
+                'id': app['id'],
+                'name': app['name'],
+                'config_url': api.app_config(app['id'])['config_url'],
+            })
+        return data

@@ -19,9 +19,9 @@ from tornado.log import app_log
 from ipython_genutils import text
 
 try:
-    from rsconnect import mk_manifest, deploy, verify_server, RSConnectException
+    from rsconnect import app_search, mk_manifest, deploy, verify_server, RSConnectException
 except:
-    from .rsconnect import mk_manifest, deploy, verify_server, RSConnectException
+    from .rsconnect import app_search, mk_manifest, deploy, verify_server, RSConnectException
 
 __version__ = '0.1.0'
 
@@ -77,6 +77,17 @@ class EndpointHandler(APIHandler):
                 self.finish(json.dumps({'status': 'Provided server is running RStudio Connect'}))
             else:
                 raise web.HTTPError(400, u'Unable to verify the provided server is running RStudio Connect')
+            return
+
+        if action == 'app_search':
+            uri = urlparse(data['server_address'])
+            api_key = data['api_key']
+            title = data['notebook_title']
+            try:
+                retval = app_search(uri.scheme, uri.hostname, uri.port, api_key, title)
+            except RSConnectException as exc:
+                raise web.HTTPError(400, exc.message)
+            self.finish(json.dumps(retval))
             return
 
         if action == 'deploy':
