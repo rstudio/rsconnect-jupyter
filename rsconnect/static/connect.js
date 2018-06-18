@@ -137,9 +137,10 @@ define([
         });
     },
 
-    updateServer: function(id, appId, notebookTitle) {
+    updateServer: function(id, appId, notebookTitle, configUrl) {
       this.servers[id].appId = appId;
       this.servers[id].notebookTitle = notebookTitle;
+      this.servers[id].configUrl = configUrl;
       return this.save();
     },
 
@@ -191,7 +192,12 @@ define([
           }
         );
         self.previousServerId = id;
-        return self.updateServer(id, result.app_id, notebookTitle);
+        return self.updateServer(
+          id,
+          result.app_id,
+          notebookTitle,
+          result.config.config_url
+        );
       });
 
       return xhr;
@@ -460,6 +466,7 @@ define([
             selectedEntryId = id;
             btnPublish.removeClass("disabled");
             maybeDisableTitle();
+            maybeShowConfigUrl();
           } else {
             selectedEntryId = null;
             btnPublish.addClass("disabled");
@@ -473,7 +480,7 @@ define([
     var txtApiKey = null;
     var txtTitle = null;
 
-    var maybeDisableTitle = function() {
+    function maybeDisableTitle() {
       var entry = config.servers[selectedEntryId];
       // if title was already set for this notebook
       if (entry && entry.notebookTitle) {
@@ -481,7 +488,28 @@ define([
       } else {
         txtTitle.removeAttr("disabled");
       }
-    };
+    }
+
+    function maybeShowConfigUrl() {
+      var entry = config.servers[selectedEntryId];
+      if (entry && entry.configUrl) {
+        publishModal
+          .find("div[data-id=configUrl]")
+          .text("Currently published at: ")
+          .append(
+            $("<a></a>")
+              .attr("href", entry.configUrl)
+              .attr("target", "_rsconnect")
+              .text(entry.configUrl)
+          );
+      } else {
+        publishModal
+          .find("div[data-id=configUrl]")
+          .text("")
+          .find("a")
+          .remove();
+      }
+    }
 
     var publishModal = Dialog.modal({
       // pass the existing keyboard manager so all shortcuts are disabled while
@@ -507,6 +535,7 @@ define([
         '        <input class="form-control" name="title" type="text" minlength="3" maxlength="64" required>',
         '        <span class="help-block"></span>',
         "    </div>",
+        '    <div class="text-center" data-id="configUrl"></div>',
         '    <input type="submit" hidden>',
         "</form>"
       ].join(""),
@@ -523,7 +552,9 @@ define([
         // clicking on links in the modal body prevents the default
         // behavior (i.e. changing location.hash)
         publishModal.find(".modal-body").on("click", function(e) {
-          e.preventDefault();
+          if ($(e.target).attr("target") !== "_rsconnect") {
+            e.preventDefault();
+          }
         });
 
         // there is no _close_ event so let's improvise
@@ -548,6 +579,7 @@ define([
         txtTitle = publishModal.find("[name=title]");
         txtTitle.val(config.getNotebookTitle(selectedEntryId));
         maybeDisableTitle();
+        maybeShowConfigUrl();
 
         txtApiKey = publishModal.find("[name=api-key]");
 
