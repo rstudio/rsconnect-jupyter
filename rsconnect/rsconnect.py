@@ -176,11 +176,11 @@ def mk_manifest(file_name):
 def deploy(scheme, host, port, api_key, app_id, app_title, tarball):
     with RSConnect(scheme, host, api_key, port) as api:
         if app_id is None:
-            # create an app if id is not probided
+            # create an app if id is not provided
             app = api.app_create(app_title)
         else:
-            # assume app exists
-            # TODO what if app is deleted
+            # assume app exists. if it was deleted then Connect will
+            # raise an error
             app = {'id': app_id}
 
         app_bundle = api.app_upload(app['id'], tarball)

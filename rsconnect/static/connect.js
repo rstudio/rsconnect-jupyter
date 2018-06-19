@@ -741,7 +741,7 @@ define([
           .append(btnPublish);
 
         // if we came back from content selection dialog we should
-        // take some action (non-null)
+        // take some action (if not canceled)
         if (selectedDeployLocation && selectedDeployLocation !== "canceled") {
           form.trigger("submit");
         }
