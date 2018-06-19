@@ -39,8 +39,15 @@ jupyter-nbextension enable --py rsconnect
 jupyter-serverextension enable --py rsconnect
 ```
 
-Note: the above commands only need to be run once when installing
+Note: The above commands only need to be run once when installing
 `rsconnect`.
+
+Note: If using multiple installations of Jupyter Notebook on a system, extension
+configuration information (available/enabled status) will be shared since
+Jupyter Notebook stores this data in the users `$HOME` directory. This is a
+known limitation of Jupyter Notebook.
+
+Note: If you run into an issue during installation please do let us know.
 
 # Uninstalling
 
@@ -70,34 +77,39 @@ re-install it.
 Open a notebook and click the blue "Publish to RStudio Connect" icon
 to publish the current notebook to RStudio Connect.
 
-<img alt="blue toolbar icon used for publishing the notebook" src="publish-icon.gif">
+![blue toolbar icon used for publishing the notebook](publish-icon.gif)
 
 If this is your first time publishing this notebook, you will be
 prompted to enter the location and a nickname for the RStudio Connect
 server.
 
-<img alt="initial dialog that prompts for the location of RStudio Connect" src="add-dialog.gif">
+![initial dialog that prompts for the location of RStudio Connect](add-dialog.gif)
 
-You will then be prompted to enter your API Key which will be used to
-publish the notebook under your account to the selected RStudio
-Connect server.
+You will then be prompted to enter your API Key which will be used to publish
+the notebook under your account to the selected RStudio Connect server.
 
 See the [RStudio Connect User
 Guide](http://docs.rstudio.com/connect/user/api-keys.html) for
 instructions on generating API Keys for your user.
 
-<img alt="publish dialog that prompts for an API key" src="manage.gif">
+![publish dialog that prompts for an API key](manage.gif)
+
+If content that matches your notebook's title is found on RStudio Connect, you
+may choose to overwrite the existing content or create new content.
+
+![dialog that prompts for overwriting or publishing new content](overwrite.png)
 
 Upon successful publishing of the document a notification will be
 shown in toolbar.  Clicking the notification will open the published
 document in the RStudio Connect server you selected in the previous
 dialog.
 
-<img alt="notification that shows the notebook was published successfully" src="published.gif">
+![notification that shows the notebook was published successfully](published.gif)
 
 # Collaboration
 
-To collaborate with others simply have them use a copy of the notebook
-file. In RStudio Connect, add them as a collaborator. During
-publishing they should provide their API key, but deployment will
-automatically update the existing content in RStudio Connect.
+To collaborate with others add them as collaborators in RStudio Connect. During
+publishing they should provide their API key and will be able to choose a
+content location to publish to if the notebook title is the same.
+
+You may share notebooks if appropriate.
