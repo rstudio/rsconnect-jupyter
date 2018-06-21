@@ -149,25 +149,26 @@ define([
       return this.save();
     },
 
-    publishContent: function(id, apiKey, notebookTitle) {
+    publishContent: function(serverId, appId, apiKey, notebookTitle) {
       var self = this;
       var notebookPath = Utils.encode_uri_components(
         Jupyter.notebook.notebook_path
       );
 
-      var entry = this.servers[id];
+      var entry = this.servers[serverId];
+      var data = {
+        notebook_path: notebookPath,
+        notebook_title: notebookTitle,
+        app_id: appId,
+        server_address: entry.server,
+        api_key: apiKey
+      };
 
       var xhr = Utils.ajax({
         url: "/rsconnect_jupyter/deploy",
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        data: JSON.stringify({
-          notebook_path: notebookPath,
-          notebook_title: notebookTitle,
-          app_id: entry.appId,
-          server_address: entry.server,
-          api_key: apiKey
-        })
+        data: JSON.stringify(data)
       });
 
       // update server with title and appId and set recently selected
@@ -191,9 +192,9 @@ define([
             title: "Click to open published content on RStudio Connect"
           }
         );
-        self.previousServerId = id;
+        self.previousServerId = serverId;
         return self.updateServer(
-          id,
+          serverId,
           result.app_id,
           notebookTitle,
           result.config.config_url
@@ -201,6 +202,21 @@ define([
       });
 
       return xhr;
+    },
+
+    appSearch: function(serverId, apiKey, notebookTitle) {
+      var entry = this.servers[serverId];
+
+      return Utils.ajax({
+        url: "/rsconnect_jupyter/app_search",
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        data: JSON.stringify({
+          notebook_title: notebookTitle,
+          server_address: entry.server,
+          api_key: apiKey
+        })
+      });
     },
 
     getNotebookTitle: function(id) {
@@ -412,9 +428,21 @@ define([
     return dialogResult;
   }
 
-  function showSelectServerDialog(serverId) {
+  function showSelectServerDialog(
+    // serverId, userEditedTitle, and userProvidedApiKey are shuttled
+    // between content selection dialog and this dialog.
+    serverId,
+    userEditedTitle,
+    userProvidedApiKey,
+    // selectedDeployLocation is set to: 'canceled' when content
+    // selection was canceled, 'new' when user wants to deploy to a
+    // new location, and a stringy appId in case the user wishes to
+    // overwrite content
+    selectedDeployLocation
+  ) {
     var dialogResult = $.Deferred();
     var selectedEntryId = serverId;
+
     // will be set during modal initialization
     var btnPublish = null;
 
@@ -465,7 +493,6 @@ define([
           if ($this.hasClass("active")) {
             selectedEntryId = id;
             btnPublish.removeClass("disabled");
-            maybeDisableTitle();
             maybeShowConfigUrl();
           } else {
             selectedEntryId = null;
@@ -479,16 +506,6 @@ define([
     // will be filled during dialog open
     var txtApiKey = null;
     var txtTitle = null;
-
-    function maybeDisableTitle() {
-      var entry = config.servers[selectedEntryId];
-      // if title was already set for this notebook
-      if (entry && entry.notebookTitle) {
-        txtTitle.val(entry.notebookTitle).attr("disabled", "");
-      } else {
-        txtTitle.removeAttr("disabled");
-      }
-    }
 
     function maybeShowConfigUrl() {
       var entry = config.servers[selectedEntryId];
@@ -577,11 +594,12 @@ define([
 
         // add default title
         txtTitle = publishModal.find("[name=title]");
-        txtTitle.val(config.getNotebookTitle(selectedEntryId));
-        maybeDisableTitle();
+        txtTitle.val(
+          userEditedTitle || config.getNotebookTitle(selectedEntryId)
+        );
         maybeShowConfigUrl();
 
-        txtApiKey = publishModal.find("[name=api-key]");
+        txtApiKey = publishModal.find("[name=api-key]").val(userProvidedApiKey);
 
         var form = publishModal.find("form").on("submit", function(e) {
           e.preventDefault();
@@ -602,29 +620,107 @@ define([
             "Title must be between 3 and 64 alphanumeric characters, dashes, and underscores."
           );
 
+          function enablePublishButton() {
+            btnPublish
+              .removeClass("disabled")
+              .find("i.fa")
+              .addClass("hidden");
+          }
+
+          function handleFailure(xhr) {
+            txtTitle.closest(".form-group").addClass("has-error");
+            txtTitle
+              .siblings(".help-block")
+              .text("Failed to publish. " + xhr.responseJSON.message);
+          }
+
+          function publish() {
+            // assume the user is re-deploying to the same location
+            var appId = config.servers[selectedEntryId].appId;
+
+            // check if the user actually came from content selection,
+            // in which case we'll either create a new app or deploy
+            // to an existing one
+            if (selectedDeployLocation === "canceled") {
+              // no-op
+            } else if (selectedDeployLocation === "new") {
+              // we want to create a new app
+              appId = null;
+            } else if (typeof selectedDeployLocation === "string") {
+              // parse the selected appId as an integer
+              appId = parseInt(selectedDeployLocation, 10);
+            }
+
+            config
+              .publishContent(
+                selectedEntryId,
+                appId,
+                txtApiKey.val(),
+                txtTitle.val()
+              )
+              .always(enablePublishButton)
+              .fail(handleFailure)
+              .then(function() {
+                publishModal.modal("hide");
+              });
+          }
+
           if (selectedEntryId !== null && validApiKey && validTitle) {
             btnPublish
               .addClass("disabled")
               .find("i.fa")
               .removeClass("hidden");
 
-            config
-              .publishContent(selectedEntryId, txtApiKey.val(), txtTitle.val())
-              .then(function() {
+            var currentNotebookTitle =
+              config.servers[selectedEntryId].notebookTitle;
+
+            if (!currentNotebookTitle) {
+              // never been published before (or would have notebook title)
+              debug.info(
+                "publishing for the first time, user selected something: ",
+                !!selectedDeployLocation
+              );
+
+              if (selectedDeployLocation) {
+                // if user selected where to publish: new/existing
+                publish();
+              } else {
+                // no selection, show content selection dialog
                 publishModal.modal("hide");
-              })
-              .fail(function(xhr) {
-                txtTitle.closest(".form-group").addClass("has-error");
-                txtTitle
-                  .siblings(".help-block")
-                  .text("Failed to publish. " + xhr.responseJSON.message);
-              })
-              .always(function() {
-                btnPublish
-                  .removeClass("disabled")
-                  .find("i.fa")
-                  .addClass("hidden");
-              });
+                showSearchDialog(
+                  selectedEntryId,
+                  txtApiKey.val(),
+                  txtTitle.val()
+                );
+              }
+
+              // do search and allow user to pick an option
+            } else if (currentNotebookTitle !== txtTitle.val()) {
+              // published before but title changed
+              debug.info(
+                "title changed, user selected something: ",
+                !!selectedDeployLocation
+              );
+
+              if (selectedDeployLocation) {
+                // user selected where to publish: new/existing
+                publish();
+              } else {
+                // no selection, show content selection dialog
+                publishModal.modal("hide");
+                showSearchDialog(
+                  selectedEntryId,
+                  txtApiKey.val(),
+                  txtTitle.val()
+                );
+              }
+
+              // do search and allow user to pick an option
+            } else {
+              // re-deploying to the same place
+              debug.info("re-deploying to previous location");
+              publish();
+            }
           }
         });
 
@@ -643,10 +739,132 @@ define([
           .find(".modal-footer")
           .append(btnCancel)
           .append(btnPublish);
+
+        // if we came back from content selection dialog we should
+        // take some action (if not canceled)
+        if (selectedDeployLocation && selectedDeployLocation !== "canceled") {
+          form.trigger("submit");
+        }
       }
     });
 
     return dialogResult;
+  }
+
+  function showSearchDialog(serverId, apiKey, title) {
+    function mkRadio(value, name, configUrl) {
+      var input = $("<input></input>")
+        .attr("type", "radio")
+        .attr("name", "location")
+        .val(value);
+      var link = $("<a></a>")
+        .attr("href", configUrl)
+        .attr("target", "_rsconnect")
+        .text(configUrl);
+      var span = $("<span></span>")
+        .text(name + " - ")
+        .append(link);
+      var label = $("<label></label>")
+        .append(input)
+        .append(span);
+      var div = $("<div></div>")
+        .addClass("radio")
+        .append(label);
+      return div;
+    }
+    var newLocationRadio =
+      '<div class="radio"><label><input type="radio" name="location" value="new"> New location</label></div>';
+
+    var btnDeploy;
+
+    function setLoading(loading) {
+      if (loading) {
+        btnDeploy
+          .addClass("disabled")
+          .find("i.fa")
+          .removeClass("hidden");
+      } else {
+        btnDeploy
+          .removeClass("disabled")
+          .find("i.fa")
+          .addClass("hidden");
+      }
+      debug.info(loading, btnDeploy);
+    }
+
+    var selectedLocation = null;
+
+    var searchDialog = Dialog.modal({
+      // pass the existing keyboard manager so all shortcuts are disabled while
+      // modal is active
+      keyboard_manager: Jupyter.notebook.keyboard_manager,
+
+      title: "Select deployment location",
+      body: "<form><fieldset></fieldset></form>",
+      // allow raw html
+      sanitize: false,
+
+      open: function() {
+        disableKeyboardManagerIfNeeded();
+
+        var form = searchDialog.find("form");
+
+        function backToSelectServerDialog(location) {
+          searchDialog.modal("hide");
+          showSelectServerDialog(serverId, title, apiKey, location);
+        }
+
+        // add footer buttons
+        var btnCancel = $('<a class="btn" aria-hidden="true">Cancel</a>');
+        btnDeploy = $(
+          '<a class="btn btn-primary" aria-hidden="true"><i class="fa fa-spinner fa-spin"></i> Deploy</a>'
+        );
+        btnCancel.on("click", function() {
+          backToSelectServerDialog("canceled");
+        });
+        btnDeploy.on("click", function() {
+          backToSelectServerDialog(selectedLocation);
+        });
+        searchDialog
+          .find(".modal-footer")
+          .append(btnCancel)
+          .append(btnDeploy);
+
+        form.on("change", "input", function() {
+          selectedLocation = $(this).val();
+          btnDeploy.removeClass("disabled");
+        });
+
+        setLoading(true);
+
+        config
+          .appSearch(serverId, apiKey, title)
+          .always(function() {
+            setLoading(false);
+            btnDeploy.addClass("disabled");
+          })
+          .fail(function(xhr) {
+            debug.error(xhr.responseJSON);
+          })
+          .then(function(response) {
+            if (response.length === 0) {
+              // no search results, let's create new content
+              selectedLocation = "new";
+              backToSelectServerDialog(selectedLocation);
+              return;
+            }
+
+            // note: in case of single match we can't be 100% sure
+            // that the user wants to overwrite the content
+
+            var radios = response.map(function(app) {
+              return mkRadio(app.id, app.name, app.config_url);
+            });
+            radios.unshift(newLocationRadio);
+            form.find("fieldset").append(radios);
+          });
+      }
+    });
   }
 
   function onPublishClicked(env, event) {

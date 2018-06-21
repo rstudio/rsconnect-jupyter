@@ -22,8 +22,14 @@ Launch jupyter in a python 3 environment
 > Note: notebooks in the `notebooks2` and `notebooks3` directories will be
 > available in respective python environments.
 
-Sample notebooks can be obtained from
-[ipython-in-depth](https://github.com/ipython/ipython-in-depth). e.g.
+Sample notebooks can be obtained from:
+
+- https://github.com/ipython/ipython-in-depth
+- https://github.com/jupyter/jupyter/wiki/A-gallery-of-interesting-Jupyter-Notebooks
+- https://losc.ligo.org/tutorials/
+- http://nb.bianp.net/sort/views/
+
+e.g.
 
 ```
 cd notebooks3
