@@ -47,7 +47,8 @@ configuration information (available/enabled status) will be shared since
 Jupyter Notebook stores this data in the users `$HOME` directory. This is a
 known limitation of Jupyter Notebook.
 
-Note: If you run into an issue during installation please do let us know.
+Note: If you run into an issue during installation please let us know by filing
+a bug.
 
 # Uninstalling
 

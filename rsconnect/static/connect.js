@@ -753,25 +753,24 @@ define([
 
   function showSearchDialog(serverId, apiKey, title) {
     function mkRadio(value, name, configUrl) {
-      var url = $("<div>")
-        .text(configUrl)
-        .html();
-      // manually constructing this b/c jquery's .text() when
-      // applied to labels strips all html for some reason and
-      // bootstrap wants <input> followed by text contained in the
-      // label...yeesh.
-      return [
-        '<div class="radio"><label><input type="radio" name="location" value="',
-        encodeURIComponent(value),
-        '"> ',
-        encodeURIComponent(name),
-        ' &mdash; <a target="_rsconnect" href="',
-        url,
-        '"> ',
-        url,
-        "</a>",
-        "</label></div>"
-      ].join("");
+      var input = $("<input></input>")
+        .attr("type", "radio")
+        .attr("name", "location")
+        .val(value);
+      var link = $("<a></a>")
+        .attr("href", configUrl)
+        .attr("target", "_rsconnect")
+        .text(configUrl);
+      var span = $("<span></span>")
+        .text(name + " - ")
+        .append(link);
+      var label = $("<label></label>")
+        .append(input)
+        .append(span);
+      var div = $("<div></div>")
+        .addClass("radio")
+        .append(label);
+      return div;
     }
     var newLocationRadio =
       '<div class="radio"><label><input type="radio" name="location" value="new"> New location</label></div>';
