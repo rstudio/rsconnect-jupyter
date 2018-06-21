@@ -48,7 +48,7 @@ Jupyter Notebook stores this data in the users `$HOME` directory. This is a
 known limitation of Jupyter Notebook.
 
 Note: If you run into an issue during installation please let us know by filing
-a bug.
+a bug [here](https://github.com/rstudio/rsconnect-jupyter/issues).
 
 # Uninstalling
 
