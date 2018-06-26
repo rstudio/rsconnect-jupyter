@@ -18,8 +18,8 @@ Download the `rsconnect` python package from
 [here](https://github.com/rstudio/rsconnect-jupyter/releases)
 (packaged as a [wheel](https://pythonwheels.com/) file).
 
-We recommend working within a `virtualenv` (especially on a Mac).  If you 
-are unfamiliar, these commands would create and activate a `virtualenv` 
+We recommend working within a `virtualenv` (especially on Mac).  If you 
+are unfamiliar, these commands create and activate a `virtualenv` 
 at `/my/path`:
 
 ```
