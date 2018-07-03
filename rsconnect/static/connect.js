@@ -752,8 +752,7 @@ define([
         if (selectedDeployLocation === "canceled") {
           // pretend like nothing happened since "canceled" is a no-op
           selectedDeployLocation = null;
-        }
-        if (selectedDeployLocation && selectedDeployLocation !== "canceled") {
+        } else if (selectedDeployLocation) {
           form.trigger("submit");
         }
       }
