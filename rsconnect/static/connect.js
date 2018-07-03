@@ -674,6 +674,36 @@ define([
             var currentNotebookTitle =
               config.servers[selectedEntryId].notebookTitle;
 
+            function publishOrSearch() {
+              if (selectedDeployLocation) {
+                // user selected where to publish: new/existing
+                publish();
+              } else {
+                // no selection, show content selection dialog
+                config.appSearch(selectedEntryId, txtApiKey.val(), txtTitle.val())
+                  .always(enablePublishButton)
+                  .fail(handleFailure)
+                  .then(function(searchResults) {
+                    if (searchResults.length === 0) {
+                      // no matching content so publish to new endpoint
+                      selectedDeployLocation = "new";
+                      publish();
+                    } else {
+                      // some search results so let user choose an option.
+                      // note: in case of single match we can't be 100% sure
+                      // that the user wants to overwrite the content
+                      publishModal.modal("hide");
+                      showSearchDialog(
+                        searchResults,
+                        selectedEntryId,
+                        txtApiKey.val(),
+                        txtTitle.val()
+                      );
+                    }
+                  });
+              }
+            }
+
             if (!currentNotebookTitle) {
               // never been published before (or would have notebook title)
               debug.info(
@@ -681,41 +711,18 @@ define([
                 !!selectedDeployLocation
               );
 
-              if (selectedDeployLocation) {
-                // if user selected where to publish: new/existing
-                publish();
-              } else {
-                // no selection, show content selection dialog
-                publishModal.modal("hide");
-                showSearchDialog(
-                  selectedEntryId,
-                  txtApiKey.val(),
-                  txtTitle.val()
-                );
-              }
+              publishOrSearch();
 
               // do search and allow user to pick an option
             } else if (currentNotebookTitle !== txtTitle.val()) {
-              // published before but title changed
+              // published previously but title changed
               debug.info(
                 "title changed, user selected something: ",
                 !!selectedDeployLocation
               );
 
-              if (selectedDeployLocation) {
-                // user selected where to publish: new/existing
-                publish();
-              } else {
-                // no selection, show content selection dialog
-                publishModal.modal("hide");
-                showSearchDialog(
-                  selectedEntryId,
-                  txtApiKey.val(),
-                  txtTitle.val()
-                );
-              }
+              publishOrSearch();
 
-              // do search and allow user to pick an option
             } else {
               // re-deploying to the same place
               debug.info("re-deploying to previous location");
@@ -742,6 +749,10 @@ define([
 
         // if we came back from content selection dialog we should
         // take some action (if not canceled)
+        if (selectedDeployLocation === "canceled") {
+          // pretend like nothing happened since "canceled" is a no-op
+          selectedDeployLocation = null;
+        }
         if (selectedDeployLocation && selectedDeployLocation !== "canceled") {
           form.trigger("submit");
         }
@@ -751,7 +762,7 @@ define([
     return dialogResult;
   }
 
-  function showSearchDialog(serverId, apiKey, title) {
+  function showSearchDialog(searchResults, serverId, apiKey, title) {
     function mkRadio(value, name, configUrl) {
       var input = $("<input></input>")
         .attr("type", "radio")
@@ -775,24 +786,10 @@ define([
     var newLocationRadio =
       '<div class="radio"><label><input type="radio" name="location" value="new"> New location</label></div>';
 
-    var btnDeploy;
-
-    function setLoading(loading) {
-      if (loading) {
-        btnDeploy
-          .addClass("disabled")
-          .find("i.fa")
-          .removeClass("hidden");
-      } else {
-        btnDeploy
-          .removeClass("disabled")
-          .find("i.fa")
-          .addClass("hidden");
-      }
-      debug.info(loading, btnDeploy);
-    }
-
-    var selectedLocation = null;
+    var radios = searchResults.map(function(app) {
+      return mkRadio(app.id, app.name, app.config_url);
+    });
+    radios.unshift(newLocationRadio);
 
     var searchDialog = Dialog.modal({
       // pass the existing keyboard manager so all shortcuts are disabled while
@@ -808,16 +805,19 @@ define([
         disableKeyboardManagerIfNeeded();
 
         var form = searchDialog.find("form");
+        form.find("fieldset").append(radios);
 
         function backToSelectServerDialog(location) {
           searchDialog.modal("hide");
           showSelectServerDialog(serverId, title, apiKey, location);
         }
 
+        var selectedLocation = null;
+
         // add footer buttons
         var btnCancel = $('<a class="btn" aria-hidden="true">Cancel</a>');
-        btnDeploy = $(
-          '<a class="btn btn-primary" aria-hidden="true"><i class="fa fa-spinner fa-spin"></i> Deploy</a>'
+        var btnDeploy = $(
+          '<a class="btn btn-primary disabled" aria-hidden="true">Deploy</a>'
         );
         btnCancel.on("click", function() {
           backToSelectServerDialog("canceled");
@@ -834,35 +834,6 @@ define([
           selectedLocation = $(this).val();
           btnDeploy.removeClass("disabled");
         });
-
-        setLoading(true);
-
-        config
-          .appSearch(serverId, apiKey, title)
-          .always(function() {
-            setLoading(false);
-            btnDeploy.addClass("disabled");
-          })
-          .fail(function(xhr) {
-            debug.error(xhr.responseJSON);
-          })
-          .then(function(response) {
-            if (response.length === 0) {
-              // no search results, let's create new content
-              selectedLocation = "new";
-              backToSelectServerDialog(selectedLocation);
-              return;
-            }
-
-            // note: in case of single match we can't be 100% sure
-            // that the user wants to overwrite the content
-
-            var radios = response.map(function(app) {
-              return mkRadio(app.id, app.name, app.config_url);
-            });
-            radios.unshift(newLocationRadio);
-            form.find("fieldset").append(radios);
-          });
       }
     });
   }
