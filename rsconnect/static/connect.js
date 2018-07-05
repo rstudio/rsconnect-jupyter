@@ -14,6 +14,11 @@ define([
   // this will be filled in lazily
   var config = null;
 
+  var DeploymentLocation = {
+    New: "new",
+    Canceled: "canceled"
+  };
+
   function init() {
     // construct notification widget
     notify = Jupyter.notification_area.widget("rsconnect");
@@ -434,9 +439,9 @@ define([
     serverId,
     userEditedTitle,
     userProvidedApiKey,
-    // selectedDeployLocation is set to: 'canceled' when content
-    // selection was canceled, 'new' when user wants to deploy to a
-    // new location, and a stringy appId in case the user wishes to
+    // selectedDeployLocation is set to: DeploymentLocation.Canceled when
+    // content selection was canceled, DeploymentLocation.New when user wants to
+    // deploy to a new location, and a stringy appId in case the user wishes to
     // overwrite content
     selectedDeployLocation
   ) {
@@ -641,9 +646,9 @@ define([
             // check if the user actually came from content selection,
             // in which case we'll either create a new app or deploy
             // to an existing one
-            if (selectedDeployLocation === "canceled") {
+            if (selectedDeployLocation === DeploymentLocation.Canceled) {
               // no-op
-            } else if (selectedDeployLocation === "new") {
+            } else if (selectedDeployLocation === DeploymentLocation.New) {
               // we want to create a new app
               appId = null;
             } else if (typeof selectedDeployLocation === "string") {
@@ -680,13 +685,14 @@ define([
                 publish();
               } else {
                 // no selection, show content selection dialog
-                config.appSearch(selectedEntryId, txtApiKey.val(), txtTitle.val())
+                config
+                  .appSearch(selectedEntryId, txtApiKey.val(), txtTitle.val())
                   .always(enablePublishButton)
                   .fail(handleFailure)
                   .then(function(searchResults) {
                     if (searchResults.length === 0) {
                       // no matching content so publish to new endpoint
-                      selectedDeployLocation = "new";
+                      selectedDeployLocation = DeploymentLocation.New;
                       publish();
                     } else {
                       // some search results so let user choose an option.
@@ -722,7 +728,6 @@ define([
               );
 
               publishOrSearch();
-
             } else {
               // re-deploying to the same place
               debug.info("re-deploying to previous location");
@@ -747,10 +752,10 @@ define([
           .append(btnCancel)
           .append(btnPublish);
 
-        // if we came back from content selection dialog we should
-        // take some action (if not canceled)
-        if (selectedDeployLocation === "canceled") {
-          // pretend like nothing happened since "canceled" is a no-op
+        // if we came back from content selection dialog we should take some
+        // action (if not canceled)
+        if (selectedDeployLocation === DeploymentLocation.Canceled) {
+          // pretend like nothing happened since Canceled is a no-op
           selectedDeployLocation = null;
         } else if (selectedDeployLocation) {
           form.trigger("submit");
