@@ -123,7 +123,7 @@ class RSConnect:
         self.request('GET', '/__api__/me', None, self.http_headers)
         return self.json_response()
 
-    def app_find(self, filters = {}):
+    def app_find(self, filters):
         params = urlencode(filters)
         self.request('GET', '/__api__/applications?' + params, None, self.http_headers)
         data = self.json_response()
@@ -210,11 +210,10 @@ def deploy(scheme, host, port, api_key, app_id, app_title, tarball):
 def app_search(scheme, host, port, api_key, app_title):
     with RSConnect(scheme, host, api_key, port) as api:
         me = api.me()
-        filters = {'count': 5,
-                   'filter': 'min_role:editor',
-                   'filter': 'account_id:%d' % me['id'],
-                   'search': app_title,
-                   }
+        filters = [('count', 5),
+                   ('filter', 'min_role:editor'),
+                   ('filter', 'account_id:%d' % me['id']),
+                   ('search', app_title)]
         apps = api.app_find(filters)
         if apps is None:
             return []
