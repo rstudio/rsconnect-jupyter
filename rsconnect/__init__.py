@@ -13,7 +13,6 @@ except ImportError:
 
 from notebook.base.handlers import APIHandler
 from notebook.utils import url_path_join
-from notebook.nbconvert.handlers import get_exporter
 from tornado import web
 from tornado.log import app_log
 from ipython_genutils import text
