@@ -107,7 +107,7 @@ class EndpointHandler(APIHandler):
             model = self.contents_manager.get(path=nb_path)
             if model['type'] != 'notebook':
                 # not a notebook
-                raise web.HTTPError(400, u"Not a notebook: %s" % notebook_path)
+                raise web.HTTPError(400, u"Not a notebook: %s" % nb_path)
 
             # create resources dictionary
             resource_dict = {
