@@ -21,7 +21,7 @@ class RSConnectException(Exception):
         super(RSConnectException, self).__init__(message)
         self.message = message
 
-from posixpath import join as urljoin
+from notebook.utils import url_path_join
 
 logger = logging.getLogger('rsconnect')
 
@@ -50,7 +50,7 @@ def verify_server(server_address):
             conn = http.HTTPConnection(r.hostname, port=(r.port or http.HTTP_PORT), timeout=10)
         else:
             conn = http.HTTPSConnection(r.hostname, port=(r.port or http.HTTPS_PORT), timeout=10)
-        conn.request('GET', urljoin(r.path or '/', '__api__/server_settings'))
+        conn.request('GET', url_path_join(r.path or '/', '__api__/server_settings'))
         response = conn.getresponse()
         if response.status >= 400:
             return False
@@ -83,7 +83,7 @@ class RSConnect:
         self.conn = None
 
     def request(self, method, path, *args, **kwargs):
-        request_path = urljoin(self.path_prefix, path)
+        request_path = url_path_join(self.path_prefix, path)
         logger.info('Performing: %s %s' % (method, request_path))
         try:
             self.conn.request(method, request_path, *args, **kwargs)
