@@ -21,6 +21,7 @@ class RSConnectException(Exception):
         super(RSConnectException, self).__init__(message)
         self.message = message
 
+from notebook.utils import url_path_join
 
 logger = logging.getLogger('rsconnect')
 
@@ -49,7 +50,7 @@ def verify_server(server_address):
             conn = http.HTTPConnection(r.hostname, port=(r.port or http.HTTP_PORT), timeout=10)
         else:
             conn = http.HTTPSConnection(r.hostname, port=(r.port or http.HTTPS_PORT), timeout=10)
-        conn.request('GET', '/__api__/server_settings')
+        conn.request('GET', url_path_join(r.path or '/', '__api__/server_settings'))
         response = conn.getresponse()
         if response.status >= 400:
             return False
@@ -62,12 +63,13 @@ def verify_server(server_address):
 
 
 class RSConnect:
-    def __init__(self, scheme, host, api_key, port=3939):
+    def __init__(self, uri, api_key):
+        self.path_prefix = uri.path or '/'
         self.api_key = api_key
         self.conn = None
-        self.mk_conn = lambda: http.HTTPConnection(host, port=port, timeout=10)
-        if scheme == 'https':
-            self.mk_conn = lambda: http.HTTPSConnection(host, port=port, timeout=10)
+        self.mk_conn = lambda: http.HTTPConnection(uri.hostname, port=uri.port, timeout=10)
+        if uri.scheme == 'https':
+            self.mk_conn = lambda: http.HTTPSConnection(uri.hostname, port=uri.port, timeout=10)
         self.http_headers = {
             'Authorization': 'Key %s' % self.api_key,
         }
@@ -81,9 +83,10 @@ class RSConnect:
         self.conn = None
 
     def request(self, method, path, *args, **kwargs):
-        logger.info('Performing: %s %s' % (method, path))
+        request_path = url_path_join(self.path_prefix, path)
+        logger.info('Performing: %s %s' % (method, request_path))
         try:
-            self.conn.request(method, path, *args, **kwargs)
+            self.conn.request(method, request_path, *args, **kwargs)
         except http.HTTPException as e:
             logger.error('HTTPException: %s' % e)
             raise RSConnectException(str(e))
@@ -120,28 +123,28 @@ class RSConnect:
             return data
 
     def me(self):
-        self.request('GET', '/__api__/me', None, self.http_headers)
+        self.request('GET', '__api__/me', None, self.http_headers)
         return self.json_response()
 
     def app_find(self, filters):
         params = urlencode(filters)
-        self.request('GET', '/__api__/applications?' + params, None, self.http_headers)
+        self.request('GET', '__api__/applications?' + params, None, self.http_headers)
         data = self.json_response()
         if data['count'] > 0:
             return data['applications']
 
     def app_create(self, name):
         params = json.dumps({'name': name})
-        self.request('POST', '/__api__/applications', params, self.http_headers)
+        self.request('POST', '__api__/applications', params, self.http_headers)
         return self.json_response()
 
     def app_upload(self, app_id, tarball):
-        self.request('POST', '/__api__/applications/%d/upload' % app_id, tarball, self.http_headers)
+        self.request('POST', '__api__/applications/%d/upload' % app_id, tarball, self.http_headers)
         return self.json_response()
 
     def app_deploy(self, app_id, bundle_id = None):
         params = json.dumps({'bundle': bundle_id})
-        self.request('POST', '/__api__/applications/%d/deploy' % app_id, params, self.http_headers)
+        self.request('POST', '__api__/applications/%d/deploy' % app_id, params, self.http_headers)
         return self.json_response()
 
     def app_publish(self, app_id, access):
@@ -150,15 +153,15 @@ class RSConnect:
             'id': app_id,
             'needs_config': False
         })
-        self.request('POST', '/__api__/applications/%d' % app_id, params, self.http_headers)
+        self.request('POST', '__api__/applications/%d' % app_id, params, self.http_headers)
         return self.json_response()
 
     def app_config(self, app_id):
-        self.request('GET', '/__api__/applications/%d/config' % app_id, None, self.http_headers)
+        self.request('GET', '__api__/applications/%d/config' % app_id, None, self.http_headers)
         return self.json_response()
 
     def task_get(self, task_id):
-        self.request('GET', '/__api__/tasks/%s' % task_id, None, self.http_headers)
+        self.request('GET', '__api__/tasks/%s' % task_id, None, self.http_headers)
         return self.json_response()
 
 
@@ -173,8 +176,8 @@ def mk_manifest(file_name):
     })
 
 
-def deploy(scheme, host, port, api_key, app_id, app_title, tarball):
-    with RSConnect(scheme, host, api_key, port) as api:
+def deploy(uri, api_key, app_id, app_title, tarball):
+    with RSConnect(uri, api_key) as api:
         if app_id is None:
             # create an app if id is not provided
             app = api.app_create(app_title)
@@ -207,8 +210,8 @@ def deploy(scheme, host, port, api_key, app_id, app_title, tarball):
                 raise RSConnectException('Failed to deploy successfully')
 
 
-def app_search(scheme, host, port, api_key, app_title):
-    with RSConnect(scheme, host, api_key, port) as api:
+def app_search(uri, api_key, app_title):
+    with RSConnect(uri, api_key) as api:
         me = api.me()
         filters = [('count', 5),
                    ('filter', 'min_role:editor'),

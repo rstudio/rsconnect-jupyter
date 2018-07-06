@@ -83,7 +83,7 @@ class EndpointHandler(APIHandler):
             api_key = data['api_key']
             title = data['notebook_title']
             try:
-                retval = app_search(uri.scheme, uri.hostname, uri.port, api_key, title)
+                retval = app_search(uri, api_key, title)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
             self.finish(json.dumps(retval))
@@ -149,11 +149,7 @@ class EndpointHandler(APIHandler):
                 # rewind file pointer
                 bundle.seek(0)
                 try:
-                    published_app = deploy(
-                        uri.scheme, uri.hostname, uri.port,
-                        api_key, app_id, nb_title,
-                        bundle
-                    )
+                    published_app = deploy(uri, api_key, app_id, nb_title, bundle)
                 except RSConnectException as exc:
                     raise web.HTTPError(400, exc.message)
 
