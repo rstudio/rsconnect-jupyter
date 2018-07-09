@@ -850,11 +850,24 @@ define([
       window.RSConnect = config;
     }
 
-    if (Object.keys(config.servers).length === 0) {
-      showAddServerDialog(false).then(showSelectServerDialog);
-    } else {
-      showSelectServerDialog(config.previousServerId);
-    }
+    // save before publishing so the server can pick up changes
+    Jupyter.notebook
+      .save_notebook()
+      .then(function() {
+        if (Object.keys(config.servers).length === 0) {
+          showAddServerDialog(false).then(showSelectServerDialog);
+        } else {
+          showSelectServerDialog(config.previousServerId);
+        }
+      }).catch(function(err) {
+        // unlikely but possible if we aren't able to save
+        debug.error("Failed to save notebook:", err);
+        Dialog.modal({
+          title: 'rsconnect-jupyter',
+          body: 'Failed to save this notebook. Error: ' + err,
+          buttons: {Ok: {class: 'btn-primary'}}
+        });
+      });
   }
 
   return {
