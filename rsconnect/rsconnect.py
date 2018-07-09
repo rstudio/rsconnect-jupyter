@@ -212,10 +212,8 @@ def deploy(uri, api_key, app_id, app_title, tarball):
 
 def app_search(uri, api_key, app_title):
     with RSConnect(uri, api_key) as api:
-        me = api.me()
         filters = [('count', 5),
                    ('filter', 'min_role:editor'),
-                   ('filter', 'account_id:%d' % me['id']),
                    ('search', app_title)]
         apps = api.app_find(filters)
         if apps is None:
