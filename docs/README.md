@@ -18,8 +18,8 @@ Download the `rsconnect` python package from
 [here](https://github.com/rstudio/rsconnect-jupyter/releases)
 (packaged as a [wheel](https://pythonwheels.com/) file).
 
-We recommend working within a `virtualenv` (especially on Mac).  If you 
-are unfamiliar, these commands create and activate a `virtualenv` 
+We recommend working within a `virtualenv` (especially on Mac).  If you
+are unfamiliar, these commands create and activate a `virtualenv`
 at `/my/path`:
 
 ```
@@ -32,7 +32,7 @@ source bin/activate
 Install the `rsconnect` package with the following command:
 
 ```
-pip install rsconnect-0.1.0-py2.py3-none-any.whl
+pip install rsconnect-1.0.0-py2.py3-none-any.whl
 ```
 
 Enable the `rsconnect` extension with the following commands:
