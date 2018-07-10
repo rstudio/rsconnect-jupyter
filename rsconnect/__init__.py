@@ -22,7 +22,7 @@ try:
 except:
     from .rsconnect import app_search, mk_manifest, deploy, verify_server, RSConnectException
 
-__version__ = '0.1.0'
+__version__ = '1.0.0'
 
 
 def _jupyter_server_extension_paths():
