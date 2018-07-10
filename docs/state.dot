@@ -1,18 +1,31 @@
 // to generate an image: dot -Tsvg -O state.dot
 // requires grapvhiz
 digraph RSConnectJupyter {
-    Publish -> Save
+    node[shape=box]
+    Publish [shape=oval]
+    Done [shape=oval]
+    "Save\nDocument"[shape=diamond]
+    "Server\nmetadata?"[shape=diamond]
+    "Add Server Dialog"[shape=parallelogram]
+    Add[shape=diamond]
+    "Publish Dialog"[shape=parallelogram]
+    Publish1[shape=diamond]
+    "Previous Title?"[shape=diamond]
+    "Search Content Dialog"[shape=parallelogram]
+    "Publish Request"[shape=diamond]
 
-    Save -> Failure -> "Error Dialog" -> Done
-    Save -> Success
+    Publish -> "Save\nDocument"
 
-    Success -> "Server metadata?" -> {No, Yes}
+    "Save\nDocument" -> Failure -> "Error Dialog" -> Done
+    "Save\nDocument" -> Success
+
+    Success -> "Server\nmetadata?" -> {No, Yes}
     No -> "Add Server Dialog" -> {Cancel, Add}
     Yes -> "Publish Dialog"
     Cancel -> Done
     Add -> {"Invalid Details", "Valid Details"}
     "Invalid Details" -> "Add Server Dialog"
-    "Valid Details" -> "Save Server" -> "Publish Dialog"
+    "Valid Details" -> "Save Server Info" -> "Publish Dialog"
 
     Publish1 [label="Publish"]
     Invalid1 [label="Invalid Details"]
@@ -34,7 +47,4 @@ digraph RSConnectJupyter {
 
     "Search Content Dialog" -> {Cancel, "New Content", "Overwrite Content"}
     {"New Content", "Overwrite Content"} -> "Publish Request"
-
-    Publish [shape=box]
-    Done [shape=box]
 }
