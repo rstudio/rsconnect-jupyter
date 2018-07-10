@@ -1,0 +1,40 @@
+// to generate an image: dot -Tsvg -O state.dot
+// requires grapvhiz
+digraph RSConnectJupyter {
+    Publish -> Save
+
+    Save -> Failure -> "Error Dialog" -> Done
+    Save -> Success
+
+    Success -> "Server metadata?" -> {No, Yes}
+    No -> "Add Server Dialog" -> {Cancel, Add}
+    Yes -> "Publish Dialog"
+    Cancel -> Done
+    Add -> {"Invalid Details", "Valid Details"}
+    "Invalid Details" -> "Add Server Dialog"
+    "Valid Details" -> "Save Server" -> "Publish Dialog"
+
+    Publish1 [label="Publish"]
+    Invalid1 [label="Invalid Details"]
+    Valid1 [label="Valid Details"]
+    No2 [label="No"]
+    "Publish Dialog" -> Cancel
+    "Publish Dialog" -> Publish1 -> {Invalid1, Valid1}
+    Invalid1 -> "Publish Dialog"
+    Valid1 -> "Previous Title?" -> {No2, "Different Title", "Same Title"}
+    No2 -> "Search Content Dialog"
+    "Same Title" -> "Publish Request"
+    "Different Title" -> "Search Content Dialog"
+
+    Failure1 [label="Failure"]
+    Success1 [label="Success"]
+    "Publish Request" -> {Failure1, Success1}
+    Failure1 -> "Publish Dialog"
+    Success1 -> "Show Content Link" -> Done
+
+    "Search Content Dialog" -> {Cancel, "New Content", "Overwrite Content"}
+    {"New Content", "Overwrite Content"} -> "Publish Request"
+
+    Publish [shape=box]
+    Done [shape=box]
+}
