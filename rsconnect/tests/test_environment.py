@@ -19,12 +19,9 @@ class TestEnvironment(TestCase):
 
     def test_pip_freeze(self):
         result = detect_environment(self.get_dir('pip2'))
+        contents = result.pop('contents')
 
-        self.assertIn('contents', result)
-        contents = result['contents']
-        del result['contents']
-
-        # this assumes `python setup.py install` was run before testing
+        # these are the dependencies declared in our setup.py
         self.assertIn('notebook', contents)
         self.assertIn('nbformat', contents)
 

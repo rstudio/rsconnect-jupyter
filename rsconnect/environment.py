@@ -59,7 +59,7 @@ def pip_freeze(dirname):
 		pip_stdout, pip_stderr = proc.communicate()
 		pip_status = proc.returncode
 	except Exception as exc:
-		return dict(error='Error during pip freeze: %s' % str(exc),)
+		return dict(error='Error during pip freeze: %s' % str(exc))
 
 	if pip_status != 0:
 		msg = pip_stderr or ('exited with code %d' % pip_status)
