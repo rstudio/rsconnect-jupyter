@@ -43,16 +43,19 @@ def get_python_version():
 
 def get_version(binary):
     # use os.path.realpath to traverse any symlinks
-    binary_path = os.path.realpath(os.path.join(exec_dir, binary))
-    if not os.path.isfile(binary_path):
-        return None, ("File not found: %s" % binary_path)
-    args = [binary_path, "--version"]
-    proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-    stdout, stderr = proc.communicate()
-    match = version_re.search(stdout)
-    if match:
-        return match.group(), None
-    return None, ("Failed to get version of '%s' from the output of: %s --version" % (binary, binary_path))
+    try:
+        binary_path = os.path.realpath(os.path.join(exec_dir, binary))
+        if not os.path.isfile(binary_path):
+            return None, ("File not found: %s" % binary_path)
+        args = [binary_path, "--version"]
+        proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        stdout, stderr = proc.communicate()
+        match = version_re.search(stdout)
+        if match:
+            return match.group(), None
+        return None, ("Failed to get version of '%s' from the output of: %s --version" % (binary, binary_path))
+    except Exception as exc:
+        return None, str(exc)
 
 
 def output_file(dirname, filename):
