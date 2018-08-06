@@ -10,6 +10,10 @@ version_re = re.compile(r'\d+\.\d+(\.\d+)?')
 exec_dir = os.path.join(sys.exec_prefix, 'bin')
 
 
+class EnvironmentException(Exception):
+    pass
+
+
 def detect_environment(dirname):
     """Determine the python dependencies in the environment.
 
@@ -79,7 +83,7 @@ def output_file(dirname, filename):
             'source': 'file',
         }
     except Exception as exc:
-        return dict(error='Error reading %s: %s' % (filename, str(exc)))
+        raise EnvironmentException('Error reading %s: %s' % (filename, str(exc)))
 
 
 def pip_freeze(dirname):
@@ -97,11 +101,11 @@ def pip_freeze(dirname):
         pip_stdout, pip_stderr = proc.communicate()
         pip_status = proc.returncode
     except Exception as exc:
-        return dict(error='Error during pip freeze: %s' % str(exc))
+        raise EnvironmentException('Error during pip freeze: %s' % str(exc))
 
     if pip_status != 0:
         msg = pip_stderr or ('exited with code %d' % pip_status)
-        return dict(error='Error during pip freeze: %s' % msg)
+        raise EnvironmentException('Error during pip freeze: %s' % msg)
 
     return {
         'filename': 'requirements.txt',
@@ -111,10 +115,14 @@ def pip_freeze(dirname):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        result = dict(error ='Usage: %s NOTEBOOK_PATH' % sys.argv[0])
-    else:
+    try:
+        if len(sys.argv) < 2:
+            raise EnvironmentException('Usage: %s NOTEBOOK_PATH' % sys.argv[0])
+        
         notebook_path = sys.argv[1]
         dirname = os.path.dirname(notebook_path)
         result = detect_environment(dirname)
+    except EnvironmentException as exc:
+        result = dict(error=str(exc))
+
     json.dump(result, sys.stdout, indent=4)
