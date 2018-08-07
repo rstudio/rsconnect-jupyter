@@ -56,12 +56,44 @@ if (isUserBranch) {
   nodename = 'connect-branches'
 }
 
-def build_args() {
+def build_args(pyVersion) {
   def uid = sh (script: 'id -u jenkins', returnStdout: true).trim()
   def gid = sh (script: 'id -g jenkins', returnStdout: true).trim()
-  def image = 'continuumio/miniconda3:4.4.10'
-  return " --build-arg PY_VERSION=3 --build-arg BASE_IMAGE=${image} --build-arg NB_UID=${uid} --build-arg NB_GID=${gid} "
+
+  def imageName
+  if(pyVersion == '3') {
+    imageName='miniconda3'
+  }
+  else {
+    imageName='miniconda'
+  }
+  def image = "continuumio/${imageName}:4.4.10"
+  return " --build-arg PY_VERSION=${pyVersion} --build-arg BASE_IMAGE=${image} --build-arg NB_UID=${uid} --build-arg NB_GID=${gid} "
 }
+
+
+def buildAndTest(pyVersion) {
+  img = pullBuildPush(
+    image_name: 'jenkins/rsconnect-jupyter',
+    image_tag: "python${pyVersion}",
+    build_arg_nb_uid: 'JENKINS_UID',
+    build_arg_nb_gid: 'JENKINS_GID',
+    build_args: build_args(pyVersion),
+    push: !isUserBranch
+  )
+
+  img.inside("-v ${env.WORKSPACE}:/rsconnect") {
+    withEnv(["PY_VERSION=${pyVersion}"]) {
+      print "running tests: python${pyVersion}"
+      sh '/rsconnect/run.sh test'
+
+      print "building python wheel package: python${pyVersion}"
+      sh 'make dist'
+      archiveArtifacts artifacts: 'dist/*.whl'
+    }
+  }
+}
+
 
 try {
   node(nodename) {
@@ -81,24 +113,15 @@ try {
       // Looking up the author also demands being in a `node`.
       gitAuthor = sh(returnStdout: true, script: 'git --no-pager show -s --format="%aN" HEAD').trim()
 
-      def dockerImage
-      stage('prepare environment') {
-        dockerImage = pullBuildPush(
-          image_name: 'jenkins/rsconnect-jupyter',
-          image_tag: 'python3',
-          build_arg_nb_uid: 'JENKINS_UID',
-          build_arg_nb_gid: 'JENKINS_GID',
-          build_args: build_args(),
-          push: !isUserBranch
+      stage('Docker build and test') {
+        parallel(
+          'python2': {
+            buildAndTest("2")
+          },
+          'python3': {
+            buildAndTest("3")
+          }
         )
-      }
-
-      dockerImage.inside() {
-        stage('package') {
-          print "building python wheel package"
-          sh 'make dist'
-          archiveArtifacts artifacts: 'dist/*.whl'
-        }
       }
     }
   }
