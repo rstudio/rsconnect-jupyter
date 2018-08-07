@@ -24,6 +24,10 @@ class TestBundle(TestCase):
         dir = self.get_dir('pip1')
         nb_path = join(dir, 'dummy.ipynb')
 
+        # Note that here we are introspecting the environment from within
+        # the test environment. Don't do this in the production code, which
+        # runs in the notebook server. We need the introspection to run in
+        # the kernel environment and not the notebook server environment.
         environment = detect_environment(dir)
         bundle = make_bundle(nb_path, environment)
 
