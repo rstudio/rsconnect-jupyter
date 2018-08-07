@@ -1,9 +1,18 @@
 from setuptools import setup
+import sys
 
 
 def readme():
     with open('README.md') as f:
         return f.read()
+
+
+def ipython_dependency():
+    # https://github.com/ipython/ipython/blob/master/README.rst#ipython-requires-python-version-3-or-above
+    if sys.version_info[0] < 3 and 'bdist_wheel' not in sys.argv:
+        return ['ipython<6']
+    else:
+        return ['ipython']
 
 
 setup(name='rsconnect',
@@ -18,6 +27,6 @@ setup(name='rsconnect',
       install_requires=[
           'notebook',
           'nbformat'
-      ],
+      ] + ipython_dependency(),
       include_package_data=True,
       zip_safe=False)

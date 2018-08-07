@@ -56,11 +56,19 @@ if (isUserBranch) {
   nodename = 'connect-branches'
 }
 
-def build_args() {
+def build_args(pyVersion) {
   def uid = sh (script: 'id -u jenkins', returnStdout: true).trim()
   def gid = sh (script: 'id -g jenkins', returnStdout: true).trim()
-  def image = 'continuumio/miniconda3:4.4.10'
-  return " --build-arg PY_VERSION=3 --build-arg BASE_IMAGE=${image} --build-arg NB_UID=${uid} --build-arg NB_GID=${gid} "
+
+  def imageName
+  if(pyVersion == '3') {
+    imageName='miniconda3'
+  }
+  else {
+    imageName='miniconda'
+  }
+  def image = "continuumio/${imageName}:4.4.10"
+  return " --build-arg PY_VERSION=${pyVersion} --build-arg BASE_IMAGE=${image} --build-arg NB_UID=${uid} --build-arg NB_GID=${gid} "
 }
 
 try {
@@ -83,17 +91,41 @@ try {
 
       def dockerImage
       stage('prepare environment') {
-        dockerImage = pullBuildPush(
+        dockerImage2 = pullBuildPush(
+          image_name: 'jenkins/rsconnect-jupyter',
+          image_tag: 'python2',
+          build_arg_nb_uid: 'JENKINS_UID',
+          build_arg_nb_gid: 'JENKINS_GID',
+          build_args: build_args("2"),
+          push: !isUserBranch
+        )
+
+        dockerImage3 = pullBuildPush(
           image_name: 'jenkins/rsconnect-jupyter',
           image_tag: 'python3',
           build_arg_nb_uid: 'JENKINS_UID',
           build_arg_nb_gid: 'JENKINS_GID',
-          build_args: build_args(),
+          build_args: build_args("3"),
           push: !isUserBranch
         )
       }
 
-      dockerImage.inside() {
+      dockerImage2.inside("-v ${env.WORKSPACE}:/rsconnect") {
+        stage('Python2 test') {
+          withEnv(["PY_VERSION=2"]) {
+            print "running tests: python2"
+            sh '/rsconnect/run.sh test'
+          }
+        }
+      }
+
+      dockerImage3.inside("-v ${env.WORKSPACE}:/rsconnect") {
+        stage('Python3 test') {
+          withEnv(["PY_VERSION=3"]) {
+            print "running tests: python3"
+            sh '/rsconnect/run.sh test'
+          }
+        }
         stage('package') {
           print "building python wheel package"
           sh 'make dist'
