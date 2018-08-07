@@ -53,6 +53,12 @@ test:
 # TODO run in container
 	python setup.py test
 
+test2:
+	make DOCKER_IMAGE=$(PY2) PY_VERSION=2 TARGET=test launch
+
+test3:
+	make DOCKER_IMAGE=$(PY3) PY_VERSION=3 TARGET=test launch
+
 dist:
 # wheels don't get built if _any_ file it tries to touch has a timestamp < 1980
 # (system files) so use the current timestamp as a point of reference instead
