@@ -30,12 +30,7 @@ def detect_environment(dirname):
 
     if result is not None:
         result['python'] = get_python_version()
-
-        pip_version, err = get_version('pip')
-        if err:
-            result['error'] = err
-        else:
-            result['pip'] = pip_version
+        result['pip'] = get_version('pip')
 
     return result
 
@@ -50,16 +45,19 @@ def get_version(binary):
     try:
         binary_path = os.path.realpath(os.path.join(exec_dir, binary))
         if not os.path.isfile(binary_path):
-            return None, ("File not found: %s" % binary_path)
+            raise EnvironmentException("File not found: %s" % binary_path)
+
         args = [binary_path, "--version"]
         proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         stdout, stderr = proc.communicate()
         match = version_re.search(stdout)
         if match:
-            return match.group(), None
-        return None, ("Failed to get version of '%s' from the output of: %s --version" % (binary, binary_path))
+            return match.group()
+
+        msg = "Failed to get version of '%s' from the output of: %s --version" % (binary, binary_path)
+        raise EnvironmentException(msg)
     except Exception as exc:
-        return None, str(exc)
+        raise EnvironmentException("Error getting '%s' version: %s" % (binary, str(exc)))
 
 
 def output_file(dirname, filename):
