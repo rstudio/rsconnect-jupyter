@@ -89,51 +89,58 @@ try {
       // Looking up the author also demands being in a `node`.
       gitAuthor = sh(returnStdout: true, script: 'git --no-pager show -s --format="%aN" HEAD').trim()
 
-      def dockerImage
-      stage('prepare environment') {
-        dockerImage2 = pullBuildPush(
-          image_name: 'jenkins/rsconnect-jupyter',
-          image_tag: 'python2',
-          build_arg_nb_uid: 'JENKINS_UID',
-          build_arg_nb_gid: 'JENKINS_GID',
-          build_args: build_args("2"),
-          push: !isUserBranch
-        )
+      def dockerImage3
 
-        dockerImage3 = pullBuildPush(
-          image_name: 'jenkins/rsconnect-jupyter',
-          image_tag: 'python3',
-          build_arg_nb_uid: 'JENKINS_UID',
-          build_arg_nb_gid: 'JENKINS_GID',
-          build_args: build_args("3"),
-          push: !isUserBranch
+      stage('Docker build and test') {
+        parallel(
+          'python2': {
+            dockerImage2 = pullBuildPush(
+              image_name: 'jenkins/rsconnect-jupyter',
+              image_tag: 'python2',
+              build_arg_nb_uid: 'JENKINS_UID',
+              build_arg_nb_gid: 'JENKINS_GID',
+              build_args: build_args("2"),
+              push: !isUserBranch
+            )
+
+            dockerImage2.inside("-v ${env.WORKSPACE}:/rsconnect") {
+              withEnv(["PY_VERSION=2"]) {
+                print "running tests: python2"
+                sh '/rsconnect/run.sh test'
+              }
+            }
+          },
+
+          'python3': {
+            dockerImage3 = pullBuildPush(
+              image_name: 'jenkins/rsconnect-jupyter',
+              image_tag: 'python3',
+              build_arg_nb_uid: 'JENKINS_UID',
+              build_arg_nb_gid: 'JENKINS_GID',
+              build_args: build_args("3"),
+              push: !isUserBranch
+            )
+
+            dockerImage3.inside("-v ${env.WORKSPACE}:/rsconnect") {
+              withEnv(["PY_VERSION=3"]) {
+                print "running tests: python3"
+                sh '/rsconnect/run.sh test'
+              }
+            }
+          }
         )
       }
 
-      dockerImage2.inside("-v ${env.WORKSPACE}:/rsconnect") {
-        stage('Python2 test') {
-          withEnv(["PY_VERSION=2"]) {
-            print "running tests: python2"
-            sh '/rsconnect/run.sh test'
-          }
-        }
-      }
-
-      dockerImage3.inside("-v ${env.WORKSPACE}:/rsconnect") {
-        stage('Python3 test') {
-          withEnv(["PY_VERSION=3"]) {
-            print "running tests: python3"
-            sh '/rsconnect/run.sh test'
-          }
-        }
+      dockerImage3.inside() {
+        // This needs more work if we're going to build wheels for multiple python versions
         stage('package') {
           print "building python wheel package"
           sh 'make dist'
           archiveArtifacts artifacts: 'dist/*.whl'
         }
       }
-    }
   }
+}
 
   // Slack message includes username information.
   message = "${messagePrefix} by ${gitAuthor} passed"
