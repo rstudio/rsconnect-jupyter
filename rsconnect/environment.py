@@ -25,7 +25,7 @@ def detect_environment(dirname):
     and contents if successful, or a dictionary containing 'error' 
     on failure.
     """
-    result = (output_file(dirname, 'requirements.txt') or
+    result = (output_file(dirname, 'requirements.txt', 'pip') or
               pip_freeze(dirname))
 
     if result is not None:
@@ -60,7 +60,7 @@ def get_version(binary):
         raise EnvironmentException("Error getting '%s' version: %s" % (binary, str(exc)))
 
 
-def output_file(dirname, filename):
+def output_file(dirname, filename, package_manager):
     """Read an existing package spec file.
 
     Returns a dictionary containing the filename and contents
@@ -79,6 +79,7 @@ def output_file(dirname, filename):
             'filename': filename,
             'contents': data,
             'source': 'file',
+            'package_manager': package_manager,
         }
     except Exception as exc:
         raise EnvironmentException('Error reading %s: %s' % (filename, str(exc)))
@@ -109,6 +110,7 @@ def pip_freeze(dirname):
         'filename': 'requirements.txt',
         'contents': pip_stdout,
         'source': 'pip_freeze',
+        'package_manager': 'pip',
     }
 
 
