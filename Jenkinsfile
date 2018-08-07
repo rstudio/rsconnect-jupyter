@@ -113,8 +113,6 @@ try {
       // Looking up the author also demands being in a `node`.
       gitAuthor = sh(returnStdout: true, script: 'git --no-pager show -s --format="%aN" HEAD').trim()
 
-      def dockerImage3
-
       stage('Docker build and test') {
         parallel(
           'python2': {
