@@ -563,8 +563,10 @@ define([
 
           if (appId) {
             config.getApp(selectedEntryId, apiKey, appId).then(function(app) {
-              console.log("Title from server: " + app.title);
-              txtTitle.val(app.title);
+              if (app.title) {
+                console.log("Title from server: " + app.title);
+                txtTitle.val(app.title);
+              }
             });
           }
         }
