@@ -557,17 +557,13 @@ define([
       // only do this if the user hasn't edited the title
       if (txtTitle.val() === initialTitle && !userEditedTitle) {
         // and we have a valid API key to use for the request
-        console.log("Title not edited yet");
-
         apiKey = txtApiKey.val();
         if (selectedEntryId && apiKey.length === 32) {
-          console.log("Got valid API key");
           var appId = config.servers[selectedEntryId].appId;
 
           if (appId) {
-            console.log("Have an app id, fetching title for app " + appId);
             config.getApp(selectedEntryId, apiKey, appId).then(function(app) {
-              console.log("Found title: " + app.title);
+              console.log("Title from server: " + app.title);
               txtTitle.val(app.title);
             });
           }
