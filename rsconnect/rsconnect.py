@@ -53,8 +53,10 @@ def verify_server(server_address):
         conn.request('GET', url_path_join(r.path or '/', '__api__/server_settings'))
         response = conn.getresponse()
         if response.status >= 400:
+            logger.error('Response from Connect server: %s %s' % (response.status, response.reason))
             return False
-    except (http.HTTPException, OSError, socket.error):
+    except (http.HTTPException, OSError, socket.error) as exc:
+        logger.error('Error connecting to Connect: %s' % str(exc))
         return False
     finally:
         if conn is not None:
