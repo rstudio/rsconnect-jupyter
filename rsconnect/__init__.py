@@ -18,9 +18,9 @@ from tornado.log import app_log
 from ipython_genutils import text
 
 try:
-    from rsconnect import app_search, mk_manifest, deploy, verify_server, RSConnectException
+    from rsconnect import app_get, app_search, mk_manifest, deploy, verify_server, RSConnectException
 except:
-    from .rsconnect import app_search, mk_manifest, deploy, verify_server, RSConnectException
+    from .rsconnect import app_get, app_search, mk_manifest, deploy, verify_server, RSConnectException
 
 __version__ = '1.0.0'
 
@@ -154,6 +154,18 @@ class EndpointHandler(APIHandler):
                     raise web.HTTPError(400, exc.message)
 
             self.finish(published_app)
+            return
+
+        if action == 'app_get':
+            uri = urlparse(data['server_address'])
+            api_key = data['api_key']
+            app_id = data['app_id']
+
+            try:
+                retval = app_get(uri, api_key, app_id)
+            except RSConnectException as exc:
+                raise web.HTTPError(400, exc.message)
+            self.finish(json.dumps(retval))
             return
 
 

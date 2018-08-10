@@ -140,6 +140,10 @@ class RSConnect:
         self.request('POST', '__api__/applications', params, self.http_headers)
         return self.json_response()
 
+    def app_get(self, app_id):
+        self.request('GET', '__api__/applications/%d' % app_id, None, self.http_headers)
+        return self.json_response()
+
     def app_upload(self, app_id, tarball):
         self.request('POST', '__api__/applications/%d/upload' % app_id, tarball, self.http_headers)
         return self.json_response()
@@ -229,3 +233,8 @@ def app_search(uri, api_key, app_title):
                 'config_url': api.app_config(app['id'])['config_url'],
             })
         return data
+
+
+def app_get(uri, api_key, app_id):
+    with RSConnect(uri, api_key) as api:
+        return api.app_get(app_id)
