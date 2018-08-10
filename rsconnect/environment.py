@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import json
+import locale
 import os
 import re
 import subprocess
@@ -31,6 +32,7 @@ def detect_environment(dirname):
     if result is not None:
         result['python'] = get_python_version()
         result['pip'] = get_version('pip')
+        result['locale'] = get_default_locale()
 
     return result
 
@@ -38,6 +40,10 @@ def detect_environment(dirname):
 def get_python_version():
     v = sys.version_info
     return "%d.%d.%d" % (v[0], v[1], v[2])
+
+
+def get_default_locale():
+    return '.'.join(locale.getdefaultlocale())
 
 
 def get_version(binary):
