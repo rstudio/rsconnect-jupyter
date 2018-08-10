@@ -45,6 +45,10 @@ class TestBundle(TestCase):
             self.assertEqual(reqs, b'numpy\npandas\nmatplotlib\n')
 
             manifest = json.load(tar.extractfile('manifest.json'))
+
+            # don't check locale value, just require it be present
+            del manifest['locale']
+
             self.assertEqual(manifest, {
                 "version": 1,
                 "metadata": {
@@ -105,6 +109,9 @@ class TestBundle(TestCase):
 
             # don't check requirements.txt since we don't know the checksum
             del manifest['files']['requirements.txt']
+
+            # also don't check locale value, just require it be present
+            del manifest['locale']
 
             self.assertEqual(manifest, {
                 "version": 1,

@@ -20,6 +20,7 @@ def make_manifest(entrypoint, environment, appmode):
             "appmode": appmode,
             "entrypoint": entrypoint
         },
+        "locale": environment['locale'],
         "python": {
             "version": environment['python'],
             "package_manager": {
