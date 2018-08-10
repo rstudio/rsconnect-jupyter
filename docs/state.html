@@ -12,13 +12,15 @@ graph TB
     SaveSuccess-- Success --> Metadata{Metadata<br/>Present?}
 
     Metadata-- No Metadata --> AddServer[Add Server Dialog]
-    Metadata-- Yes --> PublishDialog[Publish Dialog]
+    Metadata-- Yes --> FetchAppTitle[Fetch App Title from Server]
+
+    FetchAppTitle --> PublishDialog[Publish Dialog]
 
     AddServer-- Add --> AddServerValid{Details<br/>valid?}
     AddServer-. Cancel .-> Done
 
     AddServerValid-- Invalid --> AddServer
-    AddServerValid-- Valid --> SaveServerInfo[Save Server Info]
+    AddServerValid-- Valid --> SaveServerInfo[Save Server Info,<br/>Use Default Title]
     SaveServerInfo --> PublishDialog
 
     PublishDialog-. Cancel .-> Done
