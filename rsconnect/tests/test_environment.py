@@ -23,7 +23,12 @@ class TestEnvironment(TestCase):
         pip_version = result.pop('pip')
         self.assertTrue(version_re.match(pip_version))
 
+        locale = result.pop('locale')
+        self.assertIsInstance(locale, str)
+        self.assertIn('.', locale)
+
         self.assertEqual(result, {
+            'package_manager': 'pip', 
             'source': 'file',
             'filename': 'requirements.txt', 
             'contents': 'numpy\npandas\nmatplotlib\n',
@@ -41,7 +46,12 @@ class TestEnvironment(TestCase):
         pip_version = result.pop('pip')
         self.assertTrue(version_re.match(pip_version))
 
+        locale = result.pop('locale')
+        self.assertIsInstance(locale, str)
+        self.assertIn('.', locale)
+
         self.assertEqual(result, {
+            'package_manager': 'pip', 
             'source': 'pip_freeze',
             'filename': 'requirements.txt',
             'python': self.python_version(),

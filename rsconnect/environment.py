@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import json
+import locale
 import os
 import re
 import subprocess
@@ -25,17 +26,13 @@ def detect_environment(dirname):
     and contents if successful, or a dictionary containing 'error' 
     on failure.
     """
-    result = (output_file(dirname, 'requirements.txt') or
+    result = (output_file(dirname, 'requirements.txt', 'pip') or
               pip_freeze(dirname))
 
     if result is not None:
         result['python'] = get_python_version()
-
-        pip_version, err = get_version('pip')
-        if err:
-            result['error'] = err
-        else:
-            result['pip'] = pip_version
+        result['pip'] = get_version('pip')
+        result['locale'] = get_default_locale()
 
     return result
 
@@ -45,24 +42,31 @@ def get_python_version():
     return "%d.%d.%d" % (v[0], v[1], v[2])
 
 
+def get_default_locale():
+    return '.'.join(locale.getdefaultlocale())
+
+
 def get_version(binary):
     # use os.path.realpath to traverse any symlinks
     try:
         binary_path = os.path.realpath(os.path.join(exec_dir, binary))
         if not os.path.isfile(binary_path):
-            return None, ("File not found: %s" % binary_path)
+            raise EnvironmentException("File not found: %s" % binary_path)
+
         args = [binary_path, "--version"]
         proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         stdout, stderr = proc.communicate()
         match = version_re.search(stdout)
         if match:
-            return match.group(), None
-        return None, ("Failed to get version of '%s' from the output of: %s --version" % (binary, binary_path))
+            return match.group()
+
+        msg = "Failed to get version of '%s' from the output of: %s --version" % (binary, binary_path)
+        raise EnvironmentException(msg)
     except Exception as exc:
-        return None, str(exc)
+        raise EnvironmentException("Error getting '%s' version: %s" % (binary, str(exc)))
 
 
-def output_file(dirname, filename):
+def output_file(dirname, filename, package_manager):
     """Read an existing package spec file.
 
     Returns a dictionary containing the filename and contents
@@ -81,6 +85,7 @@ def output_file(dirname, filename):
             'filename': filename,
             'contents': data,
             'source': 'file',
+            'package_manager': package_manager,
         }
     except Exception as exc:
         raise EnvironmentException('Error reading %s: %s' % (filename, str(exc)))
@@ -111,6 +116,7 @@ def pip_freeze(dirname):
         'filename': 'requirements.txt',
         'contents': pip_stdout,
         'source': 'pip_freeze',
+        'package_manager': 'pip',
     }
 
 
