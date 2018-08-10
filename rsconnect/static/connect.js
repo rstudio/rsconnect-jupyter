@@ -902,13 +902,14 @@ define([
         } else {
           showSelectServerDialog(config.previousServerId);
         }
-      }).catch(function(err) {
+      })
+      .catch(function(err) {
         // unlikely but possible if we aren't able to save
         debug.error("Failed to save notebook:", err);
         Dialog.modal({
-          title: 'rsconnect-jupyter',
-          body: 'Failed to save this notebook. Error: ' + err,
-          buttons: {Ok: {class: 'btn-primary'}}
+          title: "rsconnect-jupyter",
+          body: "Failed to save this notebook. Error: " + err,
+          buttons: { Ok: { class: "btn-primary" } }
         });
       });
   }
