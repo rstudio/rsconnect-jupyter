@@ -515,6 +515,7 @@ define([
             selectedEntryId = id;
             btnPublish.removeClass("disabled");
             maybeShowConfigUrl();
+            maybeUpdateAppTitle();
           } else {
             selectedEntryId = null;
             btnPublish.addClass("disabled");
@@ -527,6 +528,8 @@ define([
     // will be filled during dialog open
     var txtApiKey = null;
     var txtTitle = null;
+    var initialTitle =
+      userEditedTitle || config.getNotebookTitle(selectedEntryId);
 
     function maybeShowConfigUrl() {
       var entry = config.servers[selectedEntryId];
@@ -546,6 +549,29 @@ define([
           .text("")
           .find("a")
           .remove();
+      }
+    }
+
+    function maybeUpdateAppTitle() {
+      // Retrieve the title from the Connect server and make that the new default title.
+      // only do this if the user hasn't edited the title
+      if (txtTitle.val() === initialTitle && !userEditedTitle) {
+        // and we have a valid API key to use for the request
+        console.log("Title not edited yet");
+
+        apiKey = txtApiKey.val();
+        if (selectedEntryId && apiKey.length === 32) {
+          console.log("Got valid API key");
+          var appId = config.servers[selectedEntryId].appId;
+
+          if (appId) {
+            console.log("Have an app id, fetching title for app " + appId);
+            config.getApp(selectedEntryId, apiKey, appId).then(function(app) {
+              console.log("Found title: " + app.title);
+              txtTitle.val(app.title);
+            });
+          }
+        }
       }
     }
 
@@ -615,12 +641,13 @@ define([
 
         // add default title
         txtTitle = publishModal.find("[name=title]");
-        txtTitle.val(
-          userEditedTitle || config.getNotebookTitle(selectedEntryId)
-        );
+        txtTitle.val(initialTitle);
         maybeShowConfigUrl();
 
         txtApiKey = publishModal.find("[name=api-key]").val(userProvidedApiKey);
+        txtApiKey.change(function() {
+          maybeUpdateAppTitle();
+        });
 
         var form = publishModal.find("form").on("submit", function(e) {
           e.preventDefault();
