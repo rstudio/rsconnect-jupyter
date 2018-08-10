@@ -79,6 +79,7 @@ define([
     this.updateServer = this.updateServer.bind(this);
     this.verifyServer = this.verifyServer.bind(this);
     this.addServer = this.addServer.bind(this);
+    this.getApp = this.getApp.bind(this);
     this.removeServer = this.removeServer.bind(this);
     this.publishContent = this.publishContent.bind(this);
     this.getNotebookTitle = this.getNotebookTitle.bind(this);
@@ -140,6 +141,21 @@ define([
         .then(function() {
           return id;
         });
+    },
+
+    getApp: function(serverId, apiKey, appId) {
+      var entry = this.servers[serverId];
+
+      return Utils.ajax({
+        url: "/rsconnect_jupyter/app_get",
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        data: JSON.stringify({
+          app_id: appId,
+          server_address: entry.server,
+          api_key: apiKey
+        })
+      });
     },
 
     updateServer: function(id, appId, notebookTitle, configUrl) {
