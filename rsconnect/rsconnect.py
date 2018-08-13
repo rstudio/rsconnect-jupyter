@@ -231,6 +231,7 @@ def app_search(uri, api_key, app_title, app_id):
                    ('search', app_title)]
 
         apps = api.app_find(filters)
+        found = False
 
         for app in apps or []:
             data.append({
@@ -239,7 +240,10 @@ def app_search(uri, api_key, app_title, app_id):
                 'config_url': api.app_config(app['id'])['config_url'],
             })
 
-        if app_id:
+            if app['id'] == app_id:
+                found = True
+
+        if app_id and not found:
             try:
                 # offer the current location as an option
                 app = api.app_get(app_id)
