@@ -1,0 +1,48 @@
+<html>
+<link rel="stylesheet" src="https://unpkg.com/mermaid@8.0.0-rc.8/dist/mermaid.css" />
+<body>
+
+<div class="mermaid">
+graph TB
+    Start((Publish)) --> Save[Save Document]
+    Save --> SaveSuccess{Success?}
+    SaveSuccess-. Error .-> Error[Error Dialog]
+    Error .-> Done((Done))
+
+    SaveSuccess-- Success --> Metadata{Metadata<br/>Present?}
+
+    Metadata-- No Metadata --> AddServer[Add Server Dialog]
+    Metadata-- Yes --> FetchAppTitle[Fetch App Title from Server]
+
+    FetchAppTitle --> PublishDialog[Publish Dialog]
+
+    AddServer-- Add --> AddServerValid{Details<br/>valid?}
+    AddServer-. Cancel .-> Done
+
+    AddServerValid-- Invalid --> AddServer
+    AddServerValid-- Valid --> SaveServerInfo[Save Server Info,<br/>Use Default Title]
+    SaveServerInfo --> PublishDialog
+
+    PublishDialog-. Cancel .-> Done
+    PublishDialog-- Publish --> PublishValidate{Details<br/>Valid?}
+
+    PublishValidate-- Invalid --> PublishDialog
+    PublishValidate-- Valid --> TitleCheck{Previous<br/>Title?}
+
+    TitleCheck-- No Title --> SearchDialog[Search Content Dialog]
+    TitleCheck-- Different Title --> SearchDialog
+    TitleCheck-- Same Title --> PublishRequest[Send Publish Request]
+
+    SearchDialog-. Cancel .-> Done
+    SearchDialog-- New Content --> PublishRequest
+    SearchDialog-- Overwrite --> PublishRequest
+
+    PublishRequest --> PublishRequestSuccess{Success?}
+    PublishRequestSuccess-- Error --> PublishDialog
+    PublishRequestSuccess-- Success --> ShowLink[Show Content Link]
+    ShowLink --> Done
+</div>
+<script src="https://unpkg.com/mermaid@8.0.0-rc.8/dist/mermaid.min.js"></script>
+
+</body>
+</html>

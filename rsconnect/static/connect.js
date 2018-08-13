@@ -79,6 +79,7 @@ define([
     this.updateServer = this.updateServer.bind(this);
     this.verifyServer = this.verifyServer.bind(this);
     this.addServer = this.addServer.bind(this);
+    this.getApp = this.getApp.bind(this);
     this.removeServer = this.removeServer.bind(this);
     this.publishContent = this.publishContent.bind(this);
     this.getNotebookTitle = this.getNotebookTitle.bind(this);
@@ -140,6 +141,21 @@ define([
         .then(function() {
           return id;
         });
+    },
+
+    getApp: function(serverId, apiKey, appId) {
+      var entry = this.servers[serverId];
+
+      return Utils.ajax({
+        url: "/rsconnect_jupyter/app_get",
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        data: JSON.stringify({
+          app_id: appId,
+          server_address: entry.server,
+          api_key: apiKey
+        })
+      });
     },
 
     updateServer: function(id, appId, notebookTitle, configUrl) {
@@ -499,6 +515,7 @@ define([
             selectedEntryId = id;
             btnPublish.removeClass("disabled");
             maybeShowConfigUrl();
+            maybeUpdateAppTitle();
           } else {
             selectedEntryId = null;
             btnPublish.addClass("disabled");
@@ -511,6 +528,8 @@ define([
     // will be filled during dialog open
     var txtApiKey = null;
     var txtTitle = null;
+    var initialTitle =
+      userEditedTitle || config.getNotebookTitle(selectedEntryId);
 
     function maybeShowConfigUrl() {
       var entry = config.servers[selectedEntryId];
@@ -530,6 +549,26 @@ define([
           .text("")
           .find("a")
           .remove();
+      }
+    }
+
+    function maybeUpdateAppTitle() {
+      // Retrieve the title from the Connect server and make that the new default title.
+      // only do this if the user hasn't edited the title
+      if (txtTitle.val() === initialTitle && !userEditedTitle) {
+        // and we have a valid API key to use for the request
+        apiKey = txtApiKey.val();
+        if (selectedEntryId && apiKey.length === 32) {
+          var appId = config.servers[selectedEntryId].appId;
+
+          if (appId) {
+            config.getApp(selectedEntryId, apiKey, appId).then(function(app) {
+              if (app.title) {
+                txtTitle.val(app.title);
+              }
+            });
+          }
+        }
       }
     }
 
@@ -599,12 +638,13 @@ define([
 
         // add default title
         txtTitle = publishModal.find("[name=title]");
-        txtTitle.val(
-          userEditedTitle || config.getNotebookTitle(selectedEntryId)
-        );
+        txtTitle.val(initialTitle);
         maybeShowConfigUrl();
 
         txtApiKey = publishModal.find("[name=api-key]").val(userProvidedApiKey);
+        txtApiKey.change(function() {
+          maybeUpdateAppTitle();
+        });
 
         var form = publishModal.find("form").on("submit", function(e) {
           e.preventDefault();
@@ -859,13 +899,14 @@ define([
         } else {
           showSelectServerDialog(config.previousServerId);
         }
-      }).catch(function(err) {
+      })
+      .catch(function(err) {
         // unlikely but possible if we aren't able to save
         debug.error("Failed to save notebook:", err);
         Dialog.modal({
-          title: 'rsconnect-jupyter',
-          body: 'Failed to save this notebook. Error: ' + err,
-          buttons: {Ok: {class: 'btn-primary'}}
+          title: "rsconnect-jupyter",
+          body: "Failed to save this notebook. Error: " + err,
+          buttons: { Ok: { class: "btn-primary" } }
         });
       });
   }

@@ -53,8 +53,10 @@ def verify_server(server_address):
         conn.request('GET', url_path_join(r.path or '/', '__api__/server_settings'))
         response = conn.getresponse()
         if response.status >= 400:
+            logger.error('Response from Connect server: %s %s' % (response.status, response.reason))
             return False
-    except (http.HTTPException, OSError, socket.error):
+    except (http.HTTPException, OSError, socket.error) as exc:
+        logger.error('Error connecting to Connect: %s' % str(exc))
         return False
     finally:
         if conn is not None:
@@ -136,6 +138,10 @@ class RSConnect:
     def app_create(self, name):
         params = json.dumps({'name': name})
         self.request('POST', '__api__/applications', params, self.http_headers)
+        return self.json_response()
+
+    def app_get(self, app_id):
+        self.request('GET', '__api__/applications/%d' % app_id, None, self.http_headers)
         return self.json_response()
 
     def app_upload(self, app_id, tarball):
@@ -227,3 +233,8 @@ def app_search(uri, api_key, app_title):
                 'config_url': api.app_config(app['id'])['config_url'],
             })
         return data
+
+
+def app_get(uri, api_key, app_id):
+    with RSConnect(uri, api_key) as api:
+        return api.app_get(app_id)
