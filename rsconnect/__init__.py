@@ -82,8 +82,9 @@ class EndpointHandler(APIHandler):
             uri = urlparse(data['server_address'])
             api_key = data['api_key']
             title = data['notebook_title']
+            app_id = data['app_id']
             try:
-                retval = app_search(uri, api_key, title)
+                retval = app_search(uri, api_key, title, app_id)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
             self.finish(json.dumps(retval))

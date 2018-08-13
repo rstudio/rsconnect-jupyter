@@ -225,7 +225,7 @@ define([
       return xhr;
     },
 
-    appSearch: function(serverId, apiKey, notebookTitle) {
+    appSearch: function(serverId, apiKey, notebookTitle, appId) {
       var entry = this.servers[serverId];
 
       return Utils.ajax({
@@ -234,6 +234,7 @@ define([
         headers: { "Content-Type": "application/json" },
         data: JSON.stringify({
           notebook_title: notebookTitle,
+          app_id: appId,
           server_address: entry.server,
           api_key: apiKey
         })
@@ -719,6 +720,7 @@ define([
 
             var currentNotebookTitle =
               config.servers[selectedEntryId].notebookTitle;
+            var currentAppId = config.servers[selectedEntryId].appId;
 
             function publishOrSearch() {
               if (selectedDeployLocation) {
@@ -727,26 +729,26 @@ define([
               } else {
                 // no selection, show content selection dialog
                 config
-                  .appSearch(selectedEntryId, txtApiKey.val(), txtTitle.val())
+                  .appSearch(
+                    selectedEntryId,
+                    txtApiKey.val(),
+                    txtTitle.val(),
+                    currentAppId
+                  )
                   .always(enablePublishButton)
                   .fail(handleFailure)
                   .then(function(searchResults) {
-                    if (searchResults.length === 0) {
-                      // no matching content so publish to new endpoint
-                      selectedDeployLocation = DeploymentLocation.New;
-                      publish();
-                    } else {
-                      // some search results so let user choose an option.
-                      // note: in case of single match we can't be 100% sure
-                      // that the user wants to overwrite the content
-                      publishModal.modal("hide");
-                      showSearchDialog(
-                        searchResults,
-                        selectedEntryId,
-                        txtApiKey.val(),
-                        txtTitle.val()
-                      );
-                    }
+                    // some search results so let user choose an option.
+                    // note: in case of single match we can't be 100% sure
+                    // that the user wants to overwrite the content
+                    publishModal.modal("hide");
+                    showSearchDialog(
+                      searchResults,
+                      selectedEntryId,
+                      txtApiKey.val(),
+                      txtTitle.val(),
+                      currentAppId
+                    );
                   });
               }
             }
@@ -807,7 +809,7 @@ define([
     return dialogResult;
   }
 
-  function showSearchDialog(searchResults, serverId, apiKey, title) {
+  function showSearchDialog(searchResults, serverId, apiKey, title, appId) {
     function mkRadio(value, name, configUrl) {
       var input = $("<input></input>")
         .attr("type", "radio")
