@@ -737,17 +737,23 @@ define([
                   .always(enablePublishButton)
                   .fail(handleFailure)
                   .then(function(searchResults) {
-                    // some search results so let user choose an option.
-                    // note: in case of single match we can't be 100% sure
-                    // that the user wants to overwrite the content
-                    publishModal.modal("hide");
-                    showSearchDialog(
-                      searchResults,
-                      selectedEntryId,
-                      txtApiKey.val(),
-                      txtTitle.val(),
-                      currentAppId
-                    );
+                    if (searchResults.length === 0) {
+                      // no matching content so publish to new endpoint
+                      selectedDeployLocation = DeploymentLocation.New;
+                      publish();
+                    } else {
+                      // some search results so let user choose an option.
+                      // note: in case of single match we can't be 100% sure
+                      // that the user wants to overwrite the content
+                      publishModal.modal("hide");
+                      showSearchDialog(
+                        searchResults,
+                        selectedEntryId,
+                        txtApiKey.val(),
+                        txtTitle.val(),
+                        currentAppId
+                      );
+                    }
                   });
               }
             }
