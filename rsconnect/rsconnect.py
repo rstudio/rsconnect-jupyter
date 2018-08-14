@@ -191,7 +191,7 @@ def mk_manifest(file_name):
     })
 
 
-def wait_for_task(api, task_id, timeout, period=0.1):
+def wait_for_task(api, task_id, timeout, period=1.0):
     last_status = None
     ending = time.time() + timeout
 
