@@ -82,8 +82,10 @@ class EndpointHandler(APIHandler):
             uri = urlparse(data['server_address'])
             api_key = data['api_key']
             title = data['notebook_title']
+            app_id = data.get('app_id')
+
             try:
-                retval = app_search(uri, api_key, title)
+                retval = app_search(uri, api_key, title, app_id)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
             self.finish(json.dumps(retval))
@@ -93,6 +95,7 @@ class EndpointHandler(APIHandler):
             uri = urlparse(data['server_address'])
             app_id = data['app_id'] if 'app_id' in data else None
             nb_title = data['notebook_title']
+            nb_name = data['notebook_name']
             nb_path = unquote_plus(data['notebook_path'].strip('/'))
             api_key = data['api_key']
 
@@ -149,7 +152,7 @@ class EndpointHandler(APIHandler):
                 # rewind file pointer
                 bundle.seek(0)
                 try:
-                    published_app = deploy(uri, api_key, app_id, nb_title, bundle)
+                    published_app = deploy(uri, api_key, app_id, nb_name, nb_title, bundle)
                 except RSConnectException as exc:
                     raise web.HTTPError(400, exc.message)
 

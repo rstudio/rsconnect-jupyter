@@ -148,6 +148,11 @@ class RSConnect:
         self.request('POST', '__api__/applications/%d/upload' % app_id, tarball, self.http_headers)
         return self.json_response()
 
+    def app_update(self, app_id, updates):
+        params = json.dumps(updates)
+        self.request('POST', '__api__/applications/%d' % app_id, params, self.http_headers)
+        return self.json_response()
+
     def app_deploy(self, app_id, bundle_id = None):
         params = json.dumps({'bundle': bundle_id})
         self.request('POST', '__api__/applications/%d/deploy' % app_id, params, self.http_headers)
@@ -182,15 +187,18 @@ def mk_manifest(file_name):
     })
 
 
-def deploy(uri, api_key, app_id, app_title, tarball):
+def deploy(uri, api_key, app_id, app_name, app_title, tarball):
     with RSConnect(uri, api_key) as api:
         if app_id is None:
             # create an app if id is not provided
-            app = api.app_create(app_title)
+            app = api.app_create(app_name)
         else:
             # assume app exists. if it was deleted then Connect will
             # raise an error
-            app = {'id': app_id}
+            app = api.app_get(app_id)
+
+        if app['title'] != app_title:
+            api.app_update(app['id'], {'title': app_title})
 
         app_bundle = api.app_upload(app['id'], tarball)
         task = api.app_deploy(app['id'], app_bundle['id'])
@@ -216,22 +224,42 @@ def deploy(uri, api_key, app_id, app_title, tarball):
                 raise RSConnectException('Failed to deploy successfully')
 
 
-def app_search(uri, api_key, app_title):
+def app_search(uri, api_key, app_title, app_id):
     with RSConnect(uri, api_key) as api:
+        data = []
+
         filters = [('count', 5),
                    ('filter', 'min_role:editor'),
                    ('search', app_title)]
-        apps = api.app_find(filters)
-        if apps is None:
-            return []
 
-        data = []
-        for app in apps:
+        apps = api.app_find(filters)
+        found = False
+
+        for app in apps or []:
             data.append({
                 'id': app['id'],
                 'name': app['name'],
+                'title': app['title'],
                 'config_url': api.app_config(app['id'])['config_url'],
             })
+
+            if app['id'] == app_id:
+                found = True
+
+        if app_id and not found:
+            try:
+                # offer the current location as an option
+                app = api.app_get(app_id)
+
+                data.append({
+                    'id': app['id'],
+                    'name': app['name'],
+                    'title': app['title'],
+                    'config_url': api.app_config(app['id'])['config_url'],
+                })
+            except RSConnectException:
+                logger.exception('Error getting info for previous app_id "%s", skipping', app_id)
+
         return data
 
 

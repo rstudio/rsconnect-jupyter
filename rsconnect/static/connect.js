@@ -180,6 +180,7 @@ define([
       var data = {
         notebook_path: notebookPath,
         notebook_title: notebookTitle,
+        notebook_name: this.getNotebookName(notebookTitle),
         app_id: appId,
         server_address: entry.server,
         api_key: apiKey
@@ -225,7 +226,7 @@ define([
       return xhr;
     },
 
-    appSearch: function(serverId, apiKey, notebookTitle) {
+    appSearch: function(serverId, apiKey, notebookTitle, appId) {
       var entry = this.servers[serverId];
 
       return Utils.ajax({
@@ -234,10 +235,15 @@ define([
         headers: { "Content-Type": "application/json" },
         data: JSON.stringify({
           notebook_title: notebookTitle,
+          app_id: appId,
           server_address: entry.server,
           api_key: apiKey
         })
       });
+    },
+
+    getNotebookName: function(title) {
+      return title.replace(/[^a-zA-Z0-9_-]+/g, "_");
     },
 
     getNotebookTitle: function(id) {
@@ -250,15 +256,7 @@ define([
         }
       }
       // default title - massage the title so it validates
-      var title = Jupyter.notebook
-        .get_notebook_name()
-        .split("")
-        .map(function(c) {
-          if (/[a-zA-Z0-9_-]/.test(c)) return c;
-          else return "_";
-        })
-        .join("");
-      return title;
+      return Jupyter.notebook.get_notebook_name();
     }
   };
 
@@ -652,7 +650,7 @@ define([
           publishModal.find(".help-block").text("");
 
           var validApiKey = txtApiKey.val().length === 32;
-          var validTitle = /^[a-zA-Z0-9_-]{3,64}$/.test(txtTitle.val());
+          var validTitle = txtTitle.val().length >= 3;
 
           addValidationMarkup(
             validApiKey,
@@ -662,7 +660,7 @@ define([
           addValidationMarkup(
             validTitle,
             txtTitle,
-            "Title must be between 3 and 64 alphanumeric characters, dashes, and underscores."
+            "Title must be at least 3 characters."
           );
 
           function enablePublishButton() {
@@ -718,6 +716,7 @@ define([
 
             var currentNotebookTitle =
               config.servers[selectedEntryId].notebookTitle;
+            var currentAppId = config.servers[selectedEntryId].appId;
 
             function publishOrSearch() {
               if (selectedDeployLocation) {
@@ -726,7 +725,12 @@ define([
               } else {
                 // no selection, show content selection dialog
                 config
-                  .appSearch(selectedEntryId, txtApiKey.val(), txtTitle.val())
+                  .appSearch(
+                    selectedEntryId,
+                    txtApiKey.val(),
+                    txtTitle.val(),
+                    currentAppId
+                  )
                   .always(enablePublishButton)
                   .fail(handleFailure)
                   .then(function(searchResults) {
@@ -743,7 +747,8 @@ define([
                         searchResults,
                         selectedEntryId,
                         txtApiKey.val(),
-                        txtTitle.val()
+                        txtTitle.val(),
+                        currentAppId
                       );
                     }
                   });
@@ -806,7 +811,7 @@ define([
     return dialogResult;
   }
 
-  function showSearchDialog(searchResults, serverId, apiKey, title) {
+  function showSearchDialog(searchResults, serverId, apiKey, title, appId) {
     function mkRadio(value, name, configUrl) {
       var input = $("<input></input>")
         .attr("type", "radio")
@@ -831,7 +836,7 @@ define([
       '<div class="radio"><label><input type="radio" name="location" value="new"> New location</label></div>';
 
     var radios = searchResults.map(function(app) {
-      return mkRadio(app.id, app.name, app.config_url);
+      return mkRadio(app.id, app.title || app.name, app.config_url);
     });
     radios.unshift(newLocationRadio);
 
