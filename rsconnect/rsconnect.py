@@ -24,6 +24,7 @@ class RSConnectException(Exception):
 from notebook.utils import url_path_join
 
 logger = logging.getLogger('rsconnect')
+logger.setLevel(logging.INFO)
 
 
 def wait_until(predicate, timeout, period=0.1):
@@ -86,7 +87,7 @@ class RSConnect:
 
     def request(self, method, path, *args, **kwargs):
         request_path = url_path_join(self.path_prefix, path)
-        logger.info('Performing: %s %s' % (method, request_path))
+        logger.debug('Performing: %s %s' % (method, request_path))
         try:
             self.conn.request(method, request_path, *args, **kwargs)
         except http.HTTPException as e:
@@ -171,8 +172,11 @@ class RSConnect:
         self.request('GET', '__api__/applications/%d/config' % app_id, None, self.http_headers)
         return self.json_response()
 
-    def task_get(self, task_id):
-        self.request('GET', '__api__/tasks/%s' % task_id, None, self.http_headers)
+    def task_get(self, task_id, first_status=None):
+        url = '__api__/tasks/%s' % task_id
+        if first_status is not None:
+            url += '?first_status=%d' % first_status
+        self.request('GET', url, None, self.http_headers)
         return self.json_response()
 
 
@@ -185,6 +189,26 @@ def mk_manifest(file_name):
             "primary_html": file_name,
         },
     })
+
+
+def wait_for_task(api, task_id, timeout, period=1.0):
+    last_status = None
+    ending = time.time() + timeout
+
+    while time.time() < ending:
+        task_status = api.task_get(task_id, first_status=last_status)
+
+        if task_status['last_status'] != last_status:
+            # we've gotten an updated status, reset timer
+            logger.info('Deployment status: %s', task_status['status'])
+            ending = time.time() + timeout
+            last_status = task_status['last_status']
+
+        if task_status['finished']:
+            return task_status
+
+        time.sleep(period)
+    return None
 
 
 def deploy(uri, api_key, app_id, app_name, app_title, tarball):
@@ -201,27 +225,26 @@ def deploy(uri, api_key, app_id, app_name, app_title, tarball):
             api.app_update(app['id'], {'title': app_title})
 
         app_bundle = api.app_upload(app['id'], tarball)
-        task = api.app_deploy(app['id'], app_bundle['id'])
+        task_id = api.app_deploy(app['id'], app_bundle['id'])['id']
 
         # 10 minute timeout
         timeout = 600
-        def task_is_finished(task_id):
-            return api.task_get(task_id)['finished']
-        task_id = task['id']
-        task_finished = wait_until(lambda: task_is_finished(task_id), timeout)
+        task = wait_for_task(api, task_id, timeout)
 
-        if task_finished:
-            if task['code'] == 0:
-                # app deployed successfully
-                api.app_publish(app['id'], 'acl')
-                config = api.app_config(app['id'])
-                return {
-                    'app_id': app['id'],
-                    'config': config,
-                }
-            else:
-                # app failed to deploy
-                raise RSConnectException('Failed to deploy successfully')
+        if task is None:
+            raise RSConnectException('Deployment timed out')
+
+        if task['code'] != 0:
+            # app failed to deploy
+            raise RSConnectException('Failed to deploy successfully')
+
+        # app deployed successfully
+        api.app_publish(app['id'], 'acl')
+        config = api.app_config(app['id'])
+        return {
+            'app_id': app['id'],
+            'config': config,
+        }
 
 
 def app_search(uri, api_key, app_title, app_id):
