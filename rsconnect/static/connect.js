@@ -372,6 +372,15 @@ define([
         var $txtServer = serverModal.find("#rsc-server");
         var $txtServerName = serverModal.find("#rsc-servername");
 
+        function enableAddButton(state) {
+          serverModal.find("fieldset").attr("disabled", state ? state : null);
+          serverModal
+            .find(".modal-footer .btn:last")
+            .toggleClass("disabled", state)
+            .find("i.fa")
+            .toggleClass("hidden", !state);
+        }
+
         var form = serverModal.find("form").on("submit", function(e) {
           e.preventDefault();
           serverModal.find(".form-group").removeClass("has-error");
@@ -396,12 +405,7 @@ define([
           );
 
           if (validServer && validServerName) {
-            serverModal.find("fieldset").attr("disabled", true);
-            serverModal
-              .find(".modal-footer .btn:last")
-              .addClass("disabled")
-              .find("i.fa")
-              .removeClass("hidden");
+            enableAddButton(true);
 
             config
               .addServer($txtServer.val(), $txtServerName.val())
@@ -420,12 +424,7 @@ define([
                   );
               })
               .always(function() {
-                serverModal.find("fieldset").removeAttr("disabled");
-                serverModal
-                  .find(".modal-footer .btn:last")
-                  .removeClass("disabled")
-                  .find("i.fa")
-                  .addClass("hidden");
+                enableAddButton(false);
               });
           }
         });
