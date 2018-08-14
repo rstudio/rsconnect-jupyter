@@ -369,6 +369,15 @@ define([
         var $txtServer = serverModal.find("#rsc-server");
         var $txtServerName = serverModal.find("#rsc-servername");
 
+        function toggleAddButton(state) {
+          serverModal.find("fieldset").attr("disabled", state ? null : true);
+          serverModal
+            .find(".modal-footer .btn:last")
+            .toggleClass("disabled", !state)
+            .find("i.fa")
+            .toggleClass("hidden", state);
+        }
+
         var form = serverModal.find("form").on("submit", function(e) {
           e.preventDefault();
           serverModal.find(".form-group").removeClass("has-error");
@@ -393,12 +402,7 @@ define([
           );
 
           if (validServer && validServerName) {
-            serverModal.find("fieldset").attr("disabled", true);
-            serverModal
-              .find(".modal-footer .btn:last")
-              .addClass("disabled")
-              .find("i.fa")
-              .removeClass("hidden");
+            toggleAddButton(false);
 
             config
               .addServer($txtServer.val(), $txtServerName.val())
@@ -407,22 +411,16 @@ define([
                 serverModal.modal("hide");
               })
               .fail(function(xhr) {
-                $txtServer.closest(".form-group").addClass("has-error");
-                $txtServer
-                  .siblings(".help-block")
-                  .text(
-                    "Failed to verify RSConnect Connect is running at " +
-                      $txtServer.val() +
-                      ". Please ensure the server address is valid."
-                  );
+                addValidationMarkup(
+                  false,
+                  $txtServer,
+                  "Failed to verify RSConnect Connect is running at " +
+                    $txtServer.val() +
+                    ". Please ensure the server address is valid."
+                );
               })
               .always(function() {
-                serverModal.find("fieldset").removeAttr("disabled");
-                serverModal
-                  .find(".modal-footer .btn:last")
-                  .removeClass("disabled")
-                  .find("i.fa")
-                  .addClass("hidden");
+                toggleAddButton(true);
               });
           }
         });
@@ -663,18 +661,19 @@ define([
             "Title must be at least 3 characters."
           );
 
-          function enablePublishButton() {
+          function togglePublishButton(enabled) {
             btnPublish
-              .removeClass("disabled")
+              .toggleClass("disabled", !enabled)
               .find("i.fa")
-              .addClass("hidden");
+              .toggleClass("hidden", enabled);
           }
 
           function handleFailure(xhr) {
-            txtTitle.closest(".form-group").addClass("has-error");
-            txtTitle
-              .siblings(".help-block")
-              .text("Failed to publish. " + xhr.responseJSON.message);
+            addValidationMarkup(
+              false,
+              txtTitle,
+              "Failed to publish. " + xhr.responseJSON.message
+            );
           }
 
           function publish() {
@@ -701,7 +700,9 @@ define([
                 txtApiKey.val(),
                 txtTitle.val()
               )
-              .always(enablePublishButton)
+              .always(function() {
+                togglePublishButton(true);
+              })
               .fail(handleFailure)
               .then(function() {
                 publishModal.modal("hide");
@@ -709,10 +710,7 @@ define([
           }
 
           if (selectedEntryId !== null && validApiKey && validTitle) {
-            btnPublish
-              .addClass("disabled")
-              .find("i.fa")
-              .removeClass("hidden");
+            togglePublishButton(false);
 
             var currentNotebookTitle =
               config.servers[selectedEntryId].notebookTitle;
@@ -731,7 +729,9 @@ define([
                     txtTitle.val(),
                     currentAppId
                   )
-                  .always(enablePublishButton)
+                  .always(function() {
+                    togglePublishButton(true);
+                  })
                   .fail(handleFailure)
                   .then(function(searchResults) {
                     if (searchResults.length === 0) {
@@ -869,7 +869,7 @@ define([
           '<a class="btn btn-primary disabled" aria-hidden="true">Deploy</a>'
         );
         btnCancel.on("click", function() {
-          backToSelectServerDialog("canceled");
+          backToSelectServerDialog(DeploymentLocation.Canceled);
         });
         btnDeploy.on("click", function() {
           backToSelectServerDialog(selectedLocation);
