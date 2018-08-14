@@ -205,10 +205,10 @@ def wait_for_task(api, task_id, timeout, period=0.1):
             last_status = task_status['last_status']
 
         if task_status['finished']:
-            return True
+            return task_status
 
         time.sleep(period)
-    return False
+    return None
 
 
 def deploy(uri, api_key, app_id, app_name, app_title, tarball):
@@ -225,24 +225,26 @@ def deploy(uri, api_key, app_id, app_name, app_title, tarball):
             api.app_update(app['id'], {'title': app_title})
 
         app_bundle = api.app_upload(app['id'], tarball)
-        task = api.app_deploy(app['id'], app_bundle['id'])
+        task_id = api.app_deploy(app['id'], app_bundle['id'])['id']
 
         # 10 minute timeout
         timeout = 600
-        task_finished = wait_for_task(api, task['id'], timeout)
+        task = wait_for_task(api, task_id, timeout)
 
-        if task_finished:
-            if task['code'] == 0:
-                # app deployed successfully
-                api.app_publish(app['id'], 'acl')
-                config = api.app_config(app['id'])
-                return {
-                    'app_id': app['id'],
-                    'config': config,
-                }
-            else:
-                # app failed to deploy
-                raise RSConnectException('Failed to deploy successfully')
+        if task is None:
+            raise RSConnectException('Deployment timed out')
+
+        if task['code'] != 0:
+            # app failed to deploy
+            raise RSConnectException('Failed to deploy successfully')
+
+        # app deployed successfully
+        api.app_publish(app['id'], 'acl')
+        config = api.app_config(app['id'])
+        return {
+            'app_id': app['id'],
+            'config': config,
+        }
 
 
 def app_search(uri, api_key, app_title, app_id):
