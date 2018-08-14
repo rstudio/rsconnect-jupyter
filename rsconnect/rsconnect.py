@@ -195,8 +195,10 @@ def deploy(uri, api_key, app_id, app_title, tarball):
         else:
             # assume app exists. if it was deleted then Connect will
             # raise an error
-            app = {'id': app_id}
-            api.app_update(app_id, {'title': app_title})
+            app = api.app_get(app_id)
+
+            if app['title'] != app_title:
+                api.app_update(app_id, {'title': app_title})
 
         app_bundle = api.app_upload(app['id'], tarball)
         task = api.app_deploy(app['id'], app_bundle['id'])
