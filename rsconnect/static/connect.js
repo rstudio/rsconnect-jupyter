@@ -870,7 +870,7 @@ define([
           '<a class="btn btn-primary disabled" aria-hidden="true">Deploy</a>'
         );
         btnCancel.on("click", function() {
-          backToSelectServerDialog("canceled");
+          backToSelectServerDialog(DeploymentLocation.Canceled);
         });
         btnDeploy.on("click", function() {
           backToSelectServerDialog(selectedLocation);
