@@ -24,6 +24,7 @@ class RSConnectException(Exception):
 from notebook.utils import url_path_join
 
 logger = logging.getLogger('rsconnect')
+logger.setLevel(logging.INFO)
 
 
 def wait_until(predicate, timeout, period=0.1):
@@ -86,7 +87,7 @@ class RSConnect:
 
     def request(self, method, path, *args, **kwargs):
         request_path = url_path_join(self.path_prefix, path)
-        logger.info('Performing: %s %s' % (method, request_path))
+        logger.debug('Performing: %s %s' % (method, request_path))
         try:
             self.conn.request(method, request_path, *args, **kwargs)
         except http.HTTPException as e:
@@ -196,13 +197,15 @@ def wait_for_task(api, task_id, timeout, period=0.1):
 
     while time.time() < ending:
         task_status = api.task_get(task_id, first_status=last_status)
-        if task_status['finished']:
-            return True
 
         if task_status['last_status'] != last_status:
             # we've gotten an updated status, reset timer
+            logger.info('Deployment status: %s', task_status['status'])
             ending = time.time() + timeout
             last_status = task_status['last_status']
+
+        if task_status['finished']:
+            return True
 
         time.sleep(period)
     return False
