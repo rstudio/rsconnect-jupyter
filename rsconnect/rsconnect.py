@@ -171,8 +171,11 @@ class RSConnect:
         self.request('GET', '__api__/applications/%d/config' % app_id, None, self.http_headers)
         return self.json_response()
 
-    def task_get(self, task_id):
-        self.request('GET', '__api__/tasks/%s' % task_id, None, self.http_headers)
+    def task_get(self, task_id, first_status=None):
+        url = '__api__/tasks/%s' % task_id
+        if first_status is not None:
+            url += '?first_status=%d' % first_status
+        self.request('GET', url, None, self.http_headers)
         return self.json_response()
 
 
@@ -185,6 +188,24 @@ def mk_manifest(file_name):
             "primary_html": file_name,
         },
     })
+
+
+def wait_for_task(api, task_id, timeout, period=0.1):
+    last_status = None
+    ending = time.time() + timeout
+
+    while time.time() < ending:
+        task_status = api.task_get(task_id, first_status=last_status)
+        if task_status['finished']:
+            return True
+
+        if task_status['last_status'] != last_status:
+            # we've gotten an updated status, reset timer
+            ending = time.time() + timeout
+            last_status = task_status['last_status']
+
+        time.sleep(period)
+    return False
 
 
 def deploy(uri, api_key, app_id, app_name, app_title, tarball):
@@ -205,10 +226,7 @@ def deploy(uri, api_key, app_id, app_name, app_title, tarball):
 
         # 10 minute timeout
         timeout = 600
-        def task_is_finished(task_id):
-            return api.task_get(task_id)['finished']
-        task_id = task['id']
-        task_finished = wait_until(lambda: task_is_finished(task_id), timeout)
+        task_finished = wait_for_task(api, task['id'], timeout)
 
         if task_finished:
             if task['code'] == 0:
