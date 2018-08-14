@@ -369,7 +369,7 @@ define([
         var $txtServer = serverModal.find("#rsc-server");
         var $txtServerName = serverModal.find("#rsc-servername");
 
-        function enableAddButton(state) {
+        function toggleAddButton(state) {
           serverModal.find("fieldset").attr("disabled", state ? null : true);
           serverModal
             .find(".modal-footer .btn:last")
@@ -402,7 +402,7 @@ define([
           );
 
           if (validServer && validServerName) {
-            enableAddButton(false);
+            toggleAddButton(false);
 
             config
               .addServer($txtServer.val(), $txtServerName.val())
@@ -420,7 +420,7 @@ define([
                 );
               })
               .always(function() {
-                enableAddButton(true);
+                toggleAddButton(true);
               });
           }
         });
@@ -661,7 +661,7 @@ define([
             "Title must be at least 3 characters."
           );
 
-          function enablePublishButton(enabled) {
+          function togglePublishButton(enabled) {
             btnPublish
               .toggleClass("disabled", !enabled)
               .find("i.fa")
@@ -701,7 +701,7 @@ define([
                 txtTitle.val()
               )
               .always(function() {
-                enablePublishButton(true);
+                togglePublishButton(true);
               })
               .fail(handleFailure)
               .then(function() {
@@ -710,7 +710,7 @@ define([
           }
 
           if (selectedEntryId !== null && validApiKey && validTitle) {
-            enablePublishButton(false);
+            togglePublishButton(false);
 
             var currentNotebookTitle =
               config.servers[selectedEntryId].notebookTitle;
@@ -729,7 +729,9 @@ define([
                     txtTitle.val(),
                     currentAppId
                   )
-                  .always(enablePublishButton)
+                  .always(function() {
+                    togglePublishButton(true);
+                  })
                   .fail(handleFailure)
                   .then(function(searchResults) {
                     if (searchResults.length === 0) {
