@@ -672,10 +672,11 @@ define([
           }
 
           function handleFailure(xhr) {
-            txtTitle.closest(".form-group").addClass("has-error");
-            txtTitle
-              .siblings(".help-block")
-              .text("Failed to publish. " + xhr.responseJSON.message);
+            addValidationMarkup(
+              false,
+              txtTitle,
+              "Failed to publish. " + xhr.responseJSON.message
+            );
           }
 
           function publish() {
