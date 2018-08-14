@@ -373,12 +373,12 @@ define([
         var $txtServerName = serverModal.find("#rsc-servername");
 
         function enableAddButton(state) {
-          serverModal.find("fieldset").attr("disabled", state ? state : null);
+          serverModal.find("fieldset").attr("disabled", state ? null : true);
           serverModal
             .find(".modal-footer .btn:last")
-            .toggleClass("disabled", state)
+            .toggleClass("disabled", !state)
             .find("i.fa")
-            .toggleClass("hidden", !state);
+            .toggleClass("hidden", state);
         }
 
         var form = serverModal.find("form").on("submit", function(e) {
@@ -405,7 +405,7 @@ define([
           );
 
           if (validServer && validServerName) {
-            enableAddButton(true);
+            enableAddButton(false);
 
             config
               .addServer($txtServer.val(), $txtServerName.val())
@@ -423,7 +423,7 @@ define([
                 );
               })
               .always(function() {
-                enableAddButton(false);
+                enableAddButton(true);
               });
           }
         });
@@ -664,7 +664,7 @@ define([
             "Title must be between 3 and 64 alphanumeric characters, dashes, and underscores."
           );
 
-          function enablePublishButton() {
+          function enablePublishButton(state) {
             btnPublish
               .removeClass("disabled")
               .find("i.fa")
