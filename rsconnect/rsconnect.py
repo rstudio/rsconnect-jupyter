@@ -239,6 +239,7 @@ def app_search(uri, api_key, app_title, app_id):
             data.append({
                 'id': app['id'],
                 'name': app['name'],
+                'title': app['title'],
                 'config_url': api.app_config(app['id'])['config_url'],
             })
 
@@ -253,6 +254,7 @@ def app_search(uri, api_key, app_title, app_id):
                 data.append({
                     'id': app['id'],
                     'name': app['name'],
+                    'title': app['title'],
                     'config_url': api.app_config(app['id'])['config_url'],
                 })
             except RSConnectException:

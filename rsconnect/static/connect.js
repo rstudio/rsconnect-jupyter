@@ -839,7 +839,7 @@ define([
       '<div class="radio"><label><input type="radio" name="location" value="new"> New location</label></div>';
 
     var radios = searchResults.map(function(app) {
-      return mkRadio(app.id, app.name, app.config_url);
+      return mkRadio(app.id, app.title || app.name, app.config_url);
     });
     radios.unshift(newLocationRadio);
 
