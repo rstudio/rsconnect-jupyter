@@ -414,14 +414,13 @@ define([
                 serverModal.modal("hide");
               })
               .fail(function(xhr) {
-                $txtServer.closest(".form-group").addClass("has-error");
-                $txtServer
-                  .siblings(".help-block")
-                  .text(
-                    "Failed to verify RSConnect Connect is running at " +
-                      $txtServer.val() +
-                      ". Please ensure the server address is valid."
-                  );
+                addValidationMarkup(
+                  false,
+                  $txtServer,
+                  "Failed to verify RSConnect Connect is running at " +
+                    $txtServer.val() +
+                    ". Please ensure the server address is valid."
+                );
               })
               .always(function() {
                 enableAddButton(false);
