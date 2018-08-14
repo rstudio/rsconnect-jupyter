@@ -664,11 +664,11 @@ define([
             "Title must be between 3 and 64 alphanumeric characters, dashes, and underscores."
           );
 
-          function enablePublishButton(state) {
+          function enablePublishButton(enabled) {
             btnPublish
-              .removeClass("disabled")
+              .toggleClass("disabled", !enabled)
               .find("i.fa")
-              .addClass("hidden");
+              .toggleClass("hidden", enabled);
           }
 
           function handleFailure(xhr) {
@@ -702,7 +702,9 @@ define([
                 txtApiKey.val(),
                 txtTitle.val()
               )
-              .always(enablePublishButton)
+              .always(function() {
+                enablePublishButton(true);
+              })
               .fail(handleFailure)
               .then(function() {
                 publishModal.modal("hide");
@@ -710,10 +712,7 @@ define([
           }
 
           if (selectedEntryId !== null && validApiKey && validTitle) {
-            btnPublish
-              .addClass("disabled")
-              .find("i.fa")
-              .removeClass("hidden");
+            enablePublishButton(false);
 
             var currentNotebookTitle =
               config.servers[selectedEntryId].notebookTitle;
