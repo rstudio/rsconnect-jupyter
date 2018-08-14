@@ -180,6 +180,7 @@ define([
       var data = {
         notebook_path: notebookPath,
         notebook_title: notebookTitle,
+        notebook_name: this.getNotebookName(notebookTitle),
         app_id: appId,
         server_address: entry.server,
         api_key: apiKey
@@ -241,6 +242,10 @@ define([
       });
     },
 
+    getNotebookName: function(title) {
+      return title.replace(/[^a-zA-Z0-9_-]+/g, "_");
+    },
+
     getNotebookTitle: function(id) {
       if (id) {
         // it's possible the entry is gone
@@ -251,15 +256,7 @@ define([
         }
       }
       // default title - massage the title so it validates
-      var title = Jupyter.notebook
-        .get_notebook_name()
-        .split("")
-        .map(function(c) {
-          if (/[a-zA-Z0-9_-]/.test(c)) return c;
-          else return "_";
-        })
-        .join("");
-      return title;
+      return Jupyter.notebook.get_notebook_name();
     }
   };
 
@@ -653,7 +650,7 @@ define([
           publishModal.find(".help-block").text("");
 
           var validApiKey = txtApiKey.val().length === 32;
-          var validTitle = /^[a-zA-Z0-9_-]{3,64}$/.test(txtTitle.val());
+          var validTitle = txtTitle.val().length >= 3;
 
           addValidationMarkup(
             validApiKey,
@@ -663,7 +660,7 @@ define([
           addValidationMarkup(
             validTitle,
             txtTitle,
-            "Title must be between 3 and 64 alphanumeric characters, dashes, and underscores."
+            "Title must be at least 3 characters."
           );
 
           function enablePublishButton() {
