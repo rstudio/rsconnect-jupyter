@@ -7,7 +7,7 @@ from unittest import TestCase
 from os.path import dirname, exists, join
 
 from rsconnect.environment import detect_environment
-from rsconnect.bundle import make_bundle
+from rsconnect.bundle import make_source_bundle
 
 
 class TestBundle(TestCase):
@@ -29,7 +29,7 @@ class TestBundle(TestCase):
         # runs in the notebook server. We need the introspection to run in
         # the kernel environment and not the notebook server environment.
         environment = detect_environment(dir)
-        bundle = make_bundle(nb_path, environment)
+        bundle = make_source_bundle(nb_path, environment)
 
         tar = tarfile.open(mode='r:gz', fileobj=bundle)
 
@@ -86,7 +86,7 @@ class TestBundle(TestCase):
         # runs in the notebook server. We need the introspection to run in
         # the kernel environment and not the notebook server environment.
         environment = detect_environment(dir)
-        bundle = make_bundle(nb_path, environment, extra_files=['data.csv'])
+        bundle = make_source_bundle(nb_path, environment, extra_files=['data.csv'])
 
         tar = tarfile.open(mode='r:gz', fileobj=bundle)
 

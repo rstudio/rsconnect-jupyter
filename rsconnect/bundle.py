@@ -101,7 +101,7 @@ def bundle_add_buffer(bundle, filename, contents):
     log.debug('added buffer: %s', filename)
 
 
-def make_bundle(nb_path, environment, extra_files=None):
+def make_source_bundle(nb_path, environment, extra_files=None):
     """Create a bundle containing the specified notebook file and python environment.
 
     Returns a file-like object containing the bundle tarball.
