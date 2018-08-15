@@ -3,10 +3,13 @@ import hashlib
 import io
 import json
 import logging
+import posixpath
 import tarfile
 import tempfile
 
 from os.path import join, split, splitext
+
+import nbformat
 from ipython_genutils import text
 
 log = logging.getLogger('rsconnect')
@@ -103,18 +106,20 @@ def bundle_add_buffer(bundle, filename, contents):
     log.debug('added buffer: %s', filename)
 
 
-def make_source_bundle(nb_path, environment, extra_files=None):
-    """Create a bundle containing the specified notebook file and python environment.
+def make_source_bundle(model, environment, ext_resources_dir, extra_files=None):
+    """Create a bundle containing the specified notebook and python environment.
 
     Returns a file-like object containing the bundle tarball.
     """
-    nb_dir, nb_name = split(nb_path)
+    nb_name = model['name']
+    nb_content = nbformat.writes(model['content'])
+
     manifest = make_source_manifest(nb_name, environment, 'jupyter-static')
-    manifest_add_file(manifest, nb_name, nb_dir)
+    manifest_add_buffer(manifest, nb_name, nb_content)
     manifest_add_buffer(manifest, environment['filename'], environment['contents'])
 
     for rel_path in (extra_files or []):
-        manifest_add_file(manifest, rel_path, nb_dir)
+        manifest_add_file(manifest, rel_path, ext_resources_dir)
 
     log.debug('manifest: %r', manifest)
 
@@ -123,11 +128,11 @@ def make_source_bundle(nb_path, environment, extra_files=None):
 
         # add the manifest first in case we want to partially untar the bundle for inspection
         bundle_add_buffer(bundle, 'manifest.json', json.dumps(manifest))
-        bundle_add_file(bundle, nb_name, nb_dir)
+        bundle_add_buffer(bundle, nb_name, nb_content)
         bundle_add_buffer(bundle, environment['filename'], environment['contents'])
 
         for rel_path in (extra_files or []):
-            bundle_add_file(bundle, rel_path, nb_dir)
+            bundle_add_file(bundle, rel_path, ext_resources_dir)
 
     bundle_file.seek(0)
     return bundle_file

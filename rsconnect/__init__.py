@@ -76,17 +76,18 @@ class EndpointHandler(APIHandler):
             api_key = data['api_key']
             app_mode = data['app_mode']
             environment = data.get('environment')
+            model = self.contents_manager.get(path=nb_path)
+
+            if hasattr(self.contents_manager, '_get_os_path'):
+                os_path = self.contents_manager._get_os_path(nb_path)
+                ext_resources_dir, _ = os.path.split(os_path)
+            else:
+                ext_resources_dir = None
 
             if app_mode == 'static':
                 # If the notebook relates to a real file (default contents manager),
                 # give its path to nbconvert.
-                if hasattr(self.contents_manager, '_get_os_path'):
-                    os_path = self.contents_manager._get_os_path(nb_path)
-                    ext_resources_dir, _ = os.path.split(os_path)
-                else:
-                    ext_resources_dir = None
 
-                model = self.contents_manager.get(path=nb_path)
                 if model['type'] != 'notebook':
                     # not a notebook
                     raise web.HTTPError(400, u"Not a notebook: %s" % nb_path)
@@ -104,7 +105,7 @@ class EndpointHandler(APIHandler):
                     raise web.HTTPError(400, 'environment is required for jupyter-static app_mode')
 
                 try:
-                    bundle = make_source_bundle(nb_path, environment, extra_files=[])
+                    bundle = make_source_bundle(model, environment, ext_resources_dir, extra_files=[])
                 except Exception as exc:
                     self.log.exception('Bundle creation failed')
                     raise web.HTTPError(500, u"Bundle creation failed: %s" % exc)
