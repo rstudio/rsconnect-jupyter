@@ -54,7 +54,7 @@ define([
        { previousServerId: "abc-def-ghi-jkl"
          servers: {
            "xyz-uvw": { server: "http://172.0.0.3:3939/", serverName: "dev" }
-           "rst-opq": { server: "http://somewhere/connect/", serverName: "prod", notebookTitle:"Meow", appId: 42 }
+           "rst-opq": { server: "http://somewhere/connect/", serverName: "prod", notebookTitle:"Meow", appId: 42, appMode: "static" }
          }
        }
     */
@@ -158,9 +158,10 @@ define([
       });
     },
 
-    updateServer: function(id, appId, notebookTitle, configUrl) {
+    updateServer: function(id, appId, notebookTitle, appMode, configUrl) {
       this.servers[id].appId = appId;
       this.servers[id].notebookTitle = notebookTitle;
+      this.servers[id].appMode = appMode;
       this.servers[id].configUrl = configUrl;
       return this.save();
     },
@@ -183,7 +184,8 @@ define([
         notebook_name: this.getNotebookName(notebookTitle),
         app_id: appId,
         server_address: entry.server,
-        api_key: apiKey
+        api_key: apiKey,
+        app_mode: entry.appMode
       };
 
       var xhr = Utils.ajax({
@@ -219,6 +221,7 @@ define([
           serverId,
           result.app_id,
           notebookTitle,
+          entry.appMode,
           result.config.config_url
         );
       });
