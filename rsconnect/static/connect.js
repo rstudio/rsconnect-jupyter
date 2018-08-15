@@ -255,7 +255,7 @@ define([
           return e.notebookTitle;
         }
       }
-      // default title - massage the title so it validates
+      // default title
       return Jupyter.notebook.get_notebook_name();
     }
   };
