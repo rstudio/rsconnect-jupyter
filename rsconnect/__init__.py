@@ -78,6 +78,10 @@ class EndpointHandler(APIHandler):
             environment = data.get('environment')
             model = self.contents_manager.get(path=nb_path)
 
+            if model['type'] != 'notebook':
+                # not a notebook
+                raise web.HTTPError(400, u"Not a notebook: %s" % nb_path)
+
             if hasattr(self.contents_manager, '_get_os_path'):
                 os_path = self.contents_manager._get_os_path(nb_path)
                 ext_resources_dir, _ = os.path.split(os_path)
@@ -87,10 +91,6 @@ class EndpointHandler(APIHandler):
             if app_mode == 'static':
                 # If the notebook relates to a real file (default contents manager),
                 # give its path to nbconvert.
-
-                if model['type'] != 'notebook':
-                    # not a notebook
-                    raise web.HTTPError(400, u"Not a notebook: %s" % nb_path)
 
                 config_dir = self.application.settings['config_dir']
 
