@@ -112,7 +112,7 @@ def make_source_bundle(model, environment, ext_resources_dir, extra_files=None):
     Returns a file-like object containing the bundle tarball.
     """
     nb_name = model['name']
-    nb_content = nbformat.writes(model['content'])
+    nb_content = nbformat.writes(model['content'], nbformat.NO_CONVERT) + '\n'
 
     manifest = make_source_manifest(nb_name, environment, 'jupyter-static')
     manifest_add_buffer(manifest, nb_name, nb_content)

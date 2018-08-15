@@ -1,10 +1,14 @@
 
 import json
+import os
 import sys
 import tarfile
 
+from datetime import datetime
 from unittest import TestCase
-from os.path import dirname, exists, join
+from os.path import basename, dirname, exists, join
+
+import nbformat
 
 from rsconnect.environment import detect_environment
 from rsconnect.bundle import make_source_bundle
@@ -17,9 +21,16 @@ class TestBundle(TestCase):
         return path
 
     def python_version(self):
-        return '.'.join(map(str, sys.version_info[:3]))
+        return u'.'.join(map(str, sys.version_info[:3]))
 
-    def test_bundle1(self):
+    def read_notebook(self, nb_path):
+        return {
+            'name': basename(nb_path),
+            'last_modified': datetime.fromtimestamp(os.stat(nb_path).st_mtime),
+            'content': nbformat.read(nb_path, nbformat.NO_CONVERT),
+        }
+
+    def test_source_bundle1(self):
         self.maxDiff = 5000
         dir = self.get_dir('pip1')
         nb_path = join(dir, 'dummy.ipynb')
@@ -29,7 +40,8 @@ class TestBundle(TestCase):
         # runs in the notebook server. We need the introspection to run in
         # the kernel environment and not the notebook server environment.
         environment = detect_environment(dir)
-        bundle = make_source_bundle(nb_path, environment)
+        notebook = self.read_notebook(nb_path)
+        bundle = make_source_bundle(notebook, environment, dir)
 
         tar = tarfile.open(mode='r:gz', fileobj=bundle)
 
@@ -50,25 +62,25 @@ class TestBundle(TestCase):
             del manifest['locale']
 
             self.assertEqual(manifest, {
-                "version": 1,
-                "metadata": {
-                    "appmode": "jupyter-static",
-                    "entrypoint": "dummy.ipynb"
+                u"version": 1,
+                u"metadata": {
+                    u"appmode": u"jupyter-static",
+                    u"entrypoint": u"dummy.ipynb"
                 },
-                "python": {
-                    "version": self.python_version(),
-                    "package_manager": {
-                        "name": "pip",
-                        "version": "10.0.1",  # this is the version in our docker image
-                        "package_file": "requirements.txt"
+                u"python": {
+                    u"version": self.python_version(),
+                    u"package_manager": {
+                        u"name": u"pip",
+                        u"version": u"10.0.1",  # this is the version in our docker image
+                        u"package_file": u"requirements.txt"
                     }
                 },
-                "files": {
-                    "dummy.ipynb": {
-                        "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+                u"files": {
+                    u"dummy.ipynb": {
+                        u"checksum": u"36873800b48ca5ab54760d60ba06703a"
                     },
-                    "requirements.txt": {
-                        "checksum": "5f2a5e862fe7afe3def4a57bb5cfb214"
+                    u"requirements.txt": {
+                        u"checksum": u"5f2a5e862fe7afe3def4a57bb5cfb214"
                     }
                 }
             })
@@ -76,7 +88,7 @@ class TestBundle(TestCase):
             tar.close()
             bundle.close()
 
-    def test_bundle2(self):
+    def test_source_bundle2(self):
         self.maxDiff = 5000
         dir = self.get_dir('pip2')
         nb_path = join(dir, 'dummy.ipynb')
@@ -86,7 +98,8 @@ class TestBundle(TestCase):
         # runs in the notebook server. We need the introspection to run in
         # the kernel environment and not the notebook server environment.
         environment = detect_environment(dir)
-        bundle = make_source_bundle(nb_path, environment, extra_files=['data.csv'])
+        notebook = self.read_notebook(nb_path)
+        bundle = make_source_bundle(notebook, environment, dir, extra_files=['data.csv'])
 
         tar = tarfile.open(mode='r:gz', fileobj=bundle)
 
@@ -114,25 +127,25 @@ class TestBundle(TestCase):
             del manifest['locale']
 
             self.assertEqual(manifest, {
-                "version": 1,
-                "metadata": {
-                    "appmode": "jupyter-static",
-                    "entrypoint": "dummy.ipynb"
+                u"version": 1,
+                u"metadata": {
+                    u"appmode": u"jupyter-static",
+                    u"entrypoint": u"dummy.ipynb"
                 },
-                "python": {
-                    "version": self.python_version(),
-                    "package_manager": {
-                        "name": "pip",
-                        "version": "10.0.1",  # this is the version in our docker image
-                        "package_file": "requirements.txt"
+                u"python": {
+                    u"version": self.python_version(),
+                    u"package_manager": {
+                        u"name": u"pip",
+                        u"version": u"10.0.1",  # this is the version in our docker image
+                        u"package_file": u"requirements.txt"
                     }
                 },
-                "files": {
-                    "dummy.ipynb": {
-                        "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+                u"files": {
+                    u"dummy.ipynb": {
+                        u"checksum": u"36873800b48ca5ab54760d60ba06703a"
                     },
-                    "data.csv": {
-                        "checksum": "f2bd77cc2752b3efbb732b761d2aa3c3"
+                    u"data.csv": {
+                        u"checksum": u"f2bd77cc2752b3efbb732b761d2aa3c3"
                     }
                 }
             })
