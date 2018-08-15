@@ -14,10 +14,10 @@ from tornado import web
 
 try:
     from rsconnect import app_get, app_search, deploy, verify_server, RSConnectException
-    from rsconnect.bundle import make_html_bundle
+    from rsconnect.bundle import make_html_bundle, make_source_bundle
 except ImportError:
     from .rsconnect import app_get, app_search, deploy, verify_server, RSConnectException
-    from .bundle import make_html_bundle
+    from .bundle import make_html_bundle, make_source_bundle
 
 __version__ = '1.0.0'
 
@@ -69,33 +69,47 @@ class EndpointHandler(APIHandler):
 
         if action == 'deploy':
             uri = urlparse(data['server_address'])
-            app_id = data['app_id'] if 'app_id' in data else None
+            app_id = data.get('app_id')
             nb_title = data['notebook_title']
             nb_name = data['notebook_name']
             nb_path = unquote_plus(data['notebook_path'].strip('/'))
             api_key = data['api_key']
+            app_mode = data['app_mode']
+            environment = data.get('environment')
 
-            # If the notebook relates to a real file (default contents manager),
-            # give its path to nbconvert.
-            if hasattr(self.contents_manager, '_get_os_path'):
-                os_path = self.contents_manager._get_os_path(nb_path)
-                ext_resources_dir, _ = os.path.split(os_path)
+            if app_mode == 'static':
+                # If the notebook relates to a real file (default contents manager),
+                # give its path to nbconvert.
+                if hasattr(self.contents_manager, '_get_os_path'):
+                    os_path = self.contents_manager._get_os_path(nb_path)
+                    ext_resources_dir, _ = os.path.split(os_path)
+                else:
+                    ext_resources_dir = None
+
+                model = self.contents_manager.get(path=nb_path)
+                if model['type'] != 'notebook':
+                    # not a notebook
+                    raise web.HTTPError(400, u"Not a notebook: %s" % nb_path)
+
+                config_dir = self.application.settings['config_dir']
+
+                try:
+                    bundle = make_html_bundle(model, nb_title, config_dir,
+                                              ext_resources_dir, self.config, self.log)
+                except Exception as exc:
+                    self.log.exception('Bundle creation failed')
+                    raise web.HTTPError(500, u"Bundle creation failed: %s" % exc)
+            elif app_mode == 'jupyter-static':
+                if not environment:
+                    raise web.HTTPError(400, 'environment is required for jupyter-static app_mode')
+
+                try:
+                    bundle = make_source_bundle(nb_path, environment, extra_files=[])
+                except Exception as exc:
+                    self.log.exception('Bundle creation failed')
+                    raise web.HTTPError(500, u"Bundle creation failed: %s" % exc)
             else:
-                ext_resources_dir = None
-
-            model = self.contents_manager.get(path=nb_path)
-            if model['type'] != 'notebook':
-                # not a notebook
-                raise web.HTTPError(400, u"Not a notebook: %s" % nb_path)
-
-            config_dir = self.application.settings['config_dir']
-
-            try:
-                bundle = make_html_bundle(model, nb_title, config_dir,
-                                          ext_resources_dir, self.config, self.log)
-            except Exception as exc:
-                self.log.exception('Bundle creation failed')
-                raise web.HTTPError(500, u"Bundle creation failed: %s" % exc)
+                raise web.HTTPError(400, 'Invalid app_mode: %s, must be "static" or "jupyter-static"' % app_mode)
 
             try:
                 published_app = deploy(uri, api_key, app_id, nb_name, nb_title, bundle)
