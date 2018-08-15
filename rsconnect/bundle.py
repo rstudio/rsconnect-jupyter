@@ -117,16 +117,15 @@ def make_source_bundle(nb_path, environment, extra_files=None):
     log.debug('manifest: %r', manifest)
 
     bundle_file = tempfile.TemporaryFile(prefix='rsc_bundle')
-    bundle = tarfile.open(mode='w:gz', fileobj=bundle_file)
+    with tarfile.open(mode='w:gz', fileobj=bundle_file) as bundle:
 
-    # add the manifest first in case we want to partially untar the bundle for inspection
-    bundle_add_buffer(bundle, 'manifest.json', json.dumps(manifest))
-    bundle_add_file(bundle, nb_name, nb_dir)
-    bundle_add_buffer(bundle, environment['filename'], environment['contents'])
+        # add the manifest first in case we want to partially untar the bundle for inspection
+        bundle_add_buffer(bundle, 'manifest.json', json.dumps(manifest))
+        bundle_add_file(bundle, nb_name, nb_dir)
+        bundle_add_buffer(bundle, environment['filename'], environment['contents'])
 
-    for rel_path in (extra_files or []):
-        bundle_add_file(bundle, rel_path, nb_dir)
+        for rel_path in (extra_files or []):
+            bundle_add_file(bundle, rel_path, nb_dir)
 
-    bundle.close()
     bundle_file.seek(0)
     return bundle_file
