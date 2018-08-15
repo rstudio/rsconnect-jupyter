@@ -6,9 +6,11 @@ import logging
 import tarfile
 import tempfile
 
-from os.path import basename, join, split
+from os.path import join, split, splitext
+from ipython_genutils import text
 
 log = logging.getLogger('rsconnect')
+log.setLevel(logging.DEBUG)
 
 
 def make_source_manifest(entrypoint, environment, appmode):
@@ -127,5 +129,69 @@ def make_source_bundle(nb_path, environment, extra_files=None):
         for rel_path in (extra_files or []):
             bundle_add_file(bundle, rel_path, nb_dir)
 
+    bundle_file.seek(0)
+    return bundle_file
+
+
+def get_exporter(**kwargs):
+    """get an exporter, raising appropriate errors"""
+    # if this fails, will raise 500
+    try:
+        from nbconvert.exporters.base import get_exporter
+    except ImportError as e:
+        raise Exception("Could not import nbconvert: %s" % e)
+
+    try:
+        Exporter = get_exporter('html')
+    except KeyError:
+        raise Exception("No exporter for format: html")
+
+    try:
+        return Exporter(**kwargs)
+    except Exception as e:
+        raise Exception("Could not construct Exporter: %s" % e)
+
+
+def make_html_manifest(file_name):
+    return {
+        "version": 1,
+        "metadata": {
+            "appmode": "static",
+            "primary_html": file_name,
+        },
+    }
+
+
+def make_html_bundle(model, nb_title, config_dir, ext_resources_dir, config, jupyter_log):
+    # create resources dictionary
+    resource_dict = {
+        "metadata": {
+            "name": nb_title,
+            "modified_date": model['last_modified'].strftime(text.date_format)
+        },
+        "config_dir": config_dir
+    }
+
+    if ext_resources_dir:
+        resource_dict['metadata']['path'] = ext_resources_dir
+
+    exporter = get_exporter(config=config, log=jupyter_log)
+    notebook = model['content']
+    output, resources = exporter.from_notebook_node(notebook, resources=resource_dict)
+
+    filename = splitext(model['name'])[0] + resources['output_extension']
+    log.info('filename = %s' % filename)
+
+    bundle_file = tempfile.TemporaryFile(prefix='rsc_bundle')
+
+    with tarfile.open(mode='w:gz', fileobj=bundle_file) as bundle:
+        bundle_add_buffer(bundle, filename, output)
+
+        # manifest
+        manifest = make_html_manifest(filename)
+        log.debug('manifest: %r', manifest)
+        bundle_add_buffer(bundle, 'manifest.json', json.dumps(manifest))
+
+    # rewind file pointer
     bundle_file.seek(0)
     return bundle_file

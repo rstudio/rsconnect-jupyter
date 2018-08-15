@@ -1,8 +1,5 @@
-import io
 import json
 import os
-import tarfile
-import tempfile
 
 try:
     # python3
@@ -14,13 +11,13 @@ except ImportError:
 from notebook.base.handlers import APIHandler
 from notebook.utils import url_path_join
 from tornado import web
-from tornado.log import app_log
-from ipython_genutils import text
 
 try:
-    from rsconnect import app_get, app_search, mk_manifest, deploy, verify_server, RSConnectException
-except:
-    from .rsconnect import app_get, app_search, mk_manifest, deploy, verify_server, RSConnectException
+    from rsconnect import app_get, app_search, deploy, verify_server, RSConnectException
+    from rsconnect.bundle import make_html_bundle
+except ImportError:
+    from .rsconnect import app_get, app_search, deploy, verify_server, RSConnectException
+    from .bundle import make_html_bundle
 
 __version__ = '1.0.0'
 
@@ -41,27 +38,6 @@ def _jupyter_nbextension_paths():
         dest="rsconnect",
         # _also_ in the `nbextension/` namespace
         require="rsconnect/index")]
-
-
-def get_exporter(**kwargs):
-    """get an exporter, raising appropriate errors"""
-    # if this fails, will raise 500
-    try:
-        from nbconvert.exporters.base import get_exporter
-    except ImportError as e:
-        raise web.HTTPError(500, "Could not import nbconvert: %s" % e)
-
-    try:
-        Exporter = get_exporter('html')
-    except KeyError:
-        # should this be 400?
-        raise web.HTTPError(400, u"No exporter for format: html")
-
-    try:
-        return Exporter(**kwargs)
-    except Exception as e:
-        app_log.exception("Could not construct Exporter: %s", Exporter)
-        raise web.HTTPError(500, "Could not construct Exporter: %s" % e)
 
 
 # https://github.com/jupyter/notebook/blob/master/notebook/base/handlers.py
@@ -112,49 +88,19 @@ class EndpointHandler(APIHandler):
                 # not a notebook
                 raise web.HTTPError(400, u"Not a notebook: %s" % nb_path)
 
-            # create resources dictionary
-            resource_dict = {
-                "metadata": {
-                    "name": nb_title,
-                    "modified_date": model['last_modified'].strftime(text.date_format)
-                },
-                "config_dir": self.application.settings['config_dir']
-            }
-            # TODO handle zip file? (not sure what this is yet)
-            if ext_resources_dir:
-                resource_dict['metadata']['path'] = ext_resources_dir
+            config_dir = self.application.settings['config_dir']
 
-            exporter = get_exporter(config=self.config, log=self.log)
-            notebook = model['content']
             try:
-                output, resources = exporter.from_notebook_node(notebook, resources=resource_dict)
-            except Exception as e:
-                self.log.exception("nbconvert failed: %s", e)
-                raise web.HTTPError(500, "nbconvert failed: %s" % e)
+                bundle = make_html_bundle(model, nb_title, config_dir,
+                                          ext_resources_dir, self.config, self.log)
+            except Exception as exc:
+                self.log.exception('Bundle creation failed')
+                raise web.HTTPError(500, u"Bundle creation failed: %s" % exc)
 
-            filename = os.path.splitext(model['name'])[0] + resources['output_extension']
-            self.log.info('filename = %s' % filename)
-
-            published_app = {}
-            with tempfile.TemporaryFile() as bundle:
-                with tarfile.open(mode='w:gz', fileobj=bundle) as tar:
-                    buf = io.BytesIO(output.encode())
-                    fileinfo = tarfile.TarInfo(filename)
-                    fileinfo.size = len(buf.getvalue())
-                    tar.addfile(fileinfo, buf)
-
-                    # manifest
-                    buf = io.BytesIO(mk_manifest(filename).encode())
-                    fileinfo = tarfile.TarInfo('manifest.json')
-                    fileinfo.size = len(buf.getvalue())
-                    tar.addfile(fileinfo, buf)
-
-                # rewind file pointer
-                bundle.seek(0)
-                try:
-                    published_app = deploy(uri, api_key, app_id, nb_name, nb_title, bundle)
-                except RSConnectException as exc:
-                    raise web.HTTPError(400, exc.message)
+            try:
+                published_app = deploy(uri, api_key, app_id, nb_name, nb_title, bundle)
+            except RSConnectException as exc:
+                raise web.HTTPError(400, exc.message)
 
             self.finish(published_app)
             return
