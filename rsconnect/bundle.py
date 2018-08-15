@@ -11,7 +11,7 @@ from os.path import basename, join, split
 log = logging.getLogger('rsconnect')
 
 
-def make_manifest(entrypoint, environment, appmode):
+def make_source_manifest(entrypoint, environment, appmode):
     package_manager = environment['package_manager']
 
     manifest = {
@@ -107,7 +107,7 @@ def make_source_bundle(nb_path, environment, extra_files=None):
     Returns a file-like object containing the bundle tarball.
     """
     nb_dir, nb_name = split(nb_path)
-    manifest = make_manifest(nb_name, environment, 'jupyter-static')
+    manifest = make_source_manifest(nb_name, environment, 'jupyter-static')
     manifest_add_file(manifest, nb_name, nb_dir)
     manifest_add_buffer(manifest, environment['filename'], environment['contents'])
 
