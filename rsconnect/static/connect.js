@@ -699,7 +699,9 @@ define([
         });
 
         // app mode
-        publishModal.find(".rsc-appmode").addClass(function() {
+        var appModeChoices = publishModal.find(".rsc-appmode");
+
+        appModeChoices.addClass(function() {
           if ($(this).data("appmode") === appMode) {
             return "active";
           }
@@ -711,7 +713,7 @@ define([
           !previousAppMode ||
           selectedDeployLocation === DeploymentLocation.New
         ) {
-          publishModal.find(".rsc-appmode").on("click", function() {
+          appModeChoices.on("click", function() {
             appMode = $(this).data("appmode");
 
             $(this)
@@ -719,6 +721,8 @@ define([
               .siblings()
               .removeClass("active");
           });
+        } else {
+          appModeChoices.addClass("disabled");
         }
 
         var form = publishModal.find("form").on("submit", function(e) {
