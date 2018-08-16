@@ -54,7 +54,7 @@ define([
        { previousServerId: "abc-def-ghi-jkl"
          servers: {
            "xyz-uvw": { server: "http://172.0.0.3:3939/", serverName: "dev" }
-           "rst-opq": { server: "http://somewhere/connect/", serverName: "prod", notebookTitle:"Meow", appId: 42 }
+           "rst-opq": { server: "http://somewhere/connect/", serverName: "prod", notebookTitle:"Meow", appId: 42, appMode: "static" }
          }
        }
     */
@@ -255,7 +255,7 @@ define([
           return e.notebookTitle;
         }
       }
-      // default title - massage the title so it validates
+      // default title
       return Jupyter.notebook.get_notebook_name();
     }
   };
