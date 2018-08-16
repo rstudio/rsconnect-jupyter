@@ -81,6 +81,7 @@ define([
     this.addServer = this.addServer.bind(this);
     this.getApp = this.getApp.bind(this);
     this.removeServer = this.removeServer.bind(this);
+    this.inspectEnvironment = this.inspectEnvironment.bind(this);
     this.publishContent = this.publishContent.bind(this);
     this.getNotebookTitle = this.getNotebookTitle.bind(this);
   }
@@ -168,6 +169,44 @@ define([
     removeServer: function(id) {
       delete this.servers[id];
       return this.save();
+    },
+
+    inspectEnvironment: function() {
+      var path = Jupyter.notebook.notebook_name;
+
+      // TODO: cannot assume rsconnect is installed in the kernel environment
+      var cmd = "!python -m rsconnect.environment ${PWD}/" + path;
+      console.log("executing: " + cmd);
+
+      var result = $.Deferred();
+      var content = "";
+
+      function count(ch, s) {
+        return s.split(ch).length - 1;
+      }
+
+      function handle_output(message) {
+        content += message.content.text;
+
+        if (count("{", content) === count("}", content)) {
+          try {
+            debug.info("environment:", content);
+            result.resolve(JSON.parse(content));
+          } catch (err) {
+            debug.info("environment error:", err);
+            result.reject(content);
+          }
+        }
+      }
+
+      var callbacks = {
+        iopub: {
+          output: handle_output
+        }
+      };
+
+      Jupyter.notebook.kernel.execute(cmd, callbacks);
+      return result;
     },
 
     publishContent: function(serverId, appId, apiKey, notebookTitle) {
