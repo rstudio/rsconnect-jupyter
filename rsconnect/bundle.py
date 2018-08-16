@@ -3,15 +3,20 @@ import hashlib
 import io
 import json
 import logging
+import posixpath
 import tarfile
 import tempfile
 
-from os.path import basename, join, split
+from os.path import join, split, splitext
+
+import nbformat
+from ipython_genutils import text
 
 log = logging.getLogger('rsconnect')
+log.setLevel(logging.DEBUG)
 
 
-def make_manifest(entrypoint, environment, appmode):
+def make_source_manifest(entrypoint, environment, appmode):
     package_manager = environment['package_manager']
 
     manifest = {
@@ -101,32 +106,97 @@ def bundle_add_buffer(bundle, filename, contents):
     log.debug('added buffer: %s', filename)
 
 
-def make_bundle(nb_path, environment, extra_files=None):
-    """Create a bundle containing the specified notebook file and python environment.
+def make_source_bundle(model, environment, ext_resources_dir, extra_files=None):
+    """Create a bundle containing the specified notebook and python environment.
 
     Returns a file-like object containing the bundle tarball.
     """
-    nb_dir, nb_name = split(nb_path)
-    manifest = make_manifest(nb_name, environment, 'jupyter-static')
-    manifest_add_file(manifest, nb_name, nb_dir)
+    nb_name = model['name']
+    nb_content = nbformat.writes(model['content'], nbformat.NO_CONVERT) + '\n'
+
+    manifest = make_source_manifest(nb_name, environment, 'jupyter-static')
+    manifest_add_buffer(manifest, nb_name, nb_content)
     manifest_add_buffer(manifest, environment['filename'], environment['contents'])
 
     for rel_path in (extra_files or []):
-        manifest_add_file(manifest, rel_path, nb_dir)
+        manifest_add_file(manifest, rel_path, ext_resources_dir)
 
     log.debug('manifest: %r', manifest)
 
     bundle_file = tempfile.TemporaryFile(prefix='rsc_bundle')
-    bundle = tarfile.open(mode='w:gz', fileobj=bundle_file)
+    with tarfile.open(mode='w:gz', fileobj=bundle_file) as bundle:
 
-    # add the manifest first in case we want to partially untar the bundle for inspection
-    bundle_add_buffer(bundle, 'manifest.json', json.dumps(manifest))
-    bundle_add_file(bundle, nb_name, nb_dir)
-    bundle_add_buffer(bundle, environment['filename'], environment['contents'])
+        # add the manifest first in case we want to partially untar the bundle for inspection
+        bundle_add_buffer(bundle, 'manifest.json', json.dumps(manifest))
+        bundle_add_buffer(bundle, nb_name, nb_content)
+        bundle_add_buffer(bundle, environment['filename'], environment['contents'])
 
-    for rel_path in (extra_files or []):
-        bundle_add_file(bundle, rel_path, nb_dir)
+        for rel_path in (extra_files or []):
+            bundle_add_file(bundle, rel_path, ext_resources_dir)
 
-    bundle.close()
+    bundle_file.seek(0)
+    return bundle_file
+
+
+def get_exporter(**kwargs):
+    """get an exporter, raising appropriate errors"""
+    # if this fails, will raise 500
+    try:
+        from nbconvert.exporters.base import get_exporter
+    except ImportError as e:
+        raise Exception("Could not import nbconvert: %s" % e)
+
+    try:
+        Exporter = get_exporter('html')
+    except KeyError:
+        raise Exception("No exporter for format: html")
+
+    try:
+        return Exporter(**kwargs)
+    except Exception as e:
+        raise Exception("Could not construct Exporter: %s" % e)
+
+
+def make_html_manifest(file_name):
+    return {
+        "version": 1,
+        "metadata": {
+            "appmode": "static",
+            "primary_html": file_name,
+        },
+    }
+
+
+def make_html_bundle(model, nb_title, config_dir, ext_resources_dir, config, jupyter_log):
+    # create resources dictionary
+    resource_dict = {
+        "metadata": {
+            "name": nb_title,
+            "modified_date": model['last_modified'].strftime(text.date_format)
+        },
+        "config_dir": config_dir
+    }
+
+    if ext_resources_dir:
+        resource_dict['metadata']['path'] = ext_resources_dir
+
+    exporter = get_exporter(config=config, log=jupyter_log)
+    notebook = model['content']
+    output, resources = exporter.from_notebook_node(notebook, resources=resource_dict)
+
+    filename = splitext(model['name'])[0] + resources['output_extension']
+    log.info('filename = %s' % filename)
+
+    bundle_file = tempfile.TemporaryFile(prefix='rsc_bundle')
+
+    with tarfile.open(mode='w:gz', fileobj=bundle_file) as bundle:
+        bundle_add_buffer(bundle, filename, output)
+
+        # manifest
+        manifest = make_html_manifest(filename)
+        log.debug('manifest: %r', manifest)
+        bundle_add_buffer(bundle, 'manifest.json', json.dumps(manifest))
+
+    # rewind file pointer
     bundle_file.seek(0)
     return bundle_file

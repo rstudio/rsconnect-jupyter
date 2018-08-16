@@ -51,7 +51,7 @@ notebook3:
 
 test:
 # TODO run in container
-	python setup.py test
+	python -Wi setup.py test
 
 test2:
 	make DOCKER_IMAGE=$(PY2) PY_VERSION=2 TARGET=test launch
