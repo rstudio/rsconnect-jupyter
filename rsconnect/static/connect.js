@@ -271,7 +271,7 @@ define([
         return xhr;
       }
 
-      entry.appMode = "jupyter-static";
+      // entry.appMode = "jupyter-static";
       if (entry.appMode === "jupyter-static") {
         return this.inspectEnvironment().then(deploy);
       } else {
