@@ -180,17 +180,6 @@ class RSConnect:
         return self.json_response()
 
 
-def mk_manifest(file_name):
-    return json.dumps({
-        "version": 1,
-         # unused for content without source
-        "metadata": {
-            "appmode": "static",
-            "primary_html": file_name,
-        },
-    })
-
-
 def wait_for_task(api, task_id, timeout, period=1.0):
     last_status = None
     ending = time.time() + timeout

@@ -54,7 +54,7 @@ define([
        { previousServerId: "abc-def-ghi-jkl"
          servers: {
            "xyz-uvw": { server: "http://172.0.0.3:3939/", serverName: "dev" }
-           "rst-opq": { server: "http://somewhere/connect/", serverName: "prod", notebookTitle:"Meow", appId: 42 }
+           "rst-opq": { server: "http://somewhere/connect/", serverName: "prod", notebookTitle:"Meow", appId: 42, appMode: "static" }
          }
        }
     */
@@ -81,6 +81,7 @@ define([
     this.addServer = this.addServer.bind(this);
     this.getApp = this.getApp.bind(this);
     this.removeServer = this.removeServer.bind(this);
+    this.inspectEnvironment = this.inspectEnvironment.bind(this);
     this.publishContent = this.publishContent.bind(this);
     this.getNotebookTitle = this.getNotebookTitle.bind(this);
   }
@@ -158,9 +159,10 @@ define([
       });
     },
 
-    updateServer: function(id, appId, notebookTitle, configUrl) {
+    updateServer: function(id, appId, notebookTitle, appMode, configUrl) {
       this.servers[id].appId = appId;
       this.servers[id].notebookTitle = notebookTitle;
+      this.servers[id].appMode = appMode;
       this.servers[id].configUrl = configUrl;
       return this.save();
     },
@@ -170,6 +172,44 @@ define([
       return this.save();
     },
 
+    inspectEnvironment: function() {
+      var path = Jupyter.notebook.notebook_name;
+
+      // TODO: cannot assume rsconnect is installed in the kernel environment
+      var cmd = "!python -m rsconnect.environment ${PWD}/" + path;
+      console.log("executing: " + cmd);
+
+      var result = $.Deferred();
+      var content = "";
+
+      function count(ch, s) {
+        return s.split(ch).length - 1;
+      }
+
+      function handle_output(message) {
+        content += message.content.text;
+
+        if (count("{", content) === count("}", content)) {
+          try {
+            debug.info("environment:", content);
+            result.resolve(JSON.parse(content));
+          } catch (err) {
+            debug.info("environment error:", err);
+            result.reject(content);
+          }
+        }
+      }
+
+      var callbacks = {
+        iopub: {
+          output: handle_output
+        }
+      };
+
+      Jupyter.notebook.kernel.execute(cmd, callbacks);
+      return result;
+    },
+
     publishContent: function(serverId, appId, apiKey, notebookTitle) {
       var self = this;
       var notebookPath = Utils.encode_uri_components(
@@ -177,53 +217,66 @@ define([
       );
 
       var entry = this.servers[serverId];
-      var data = {
-        notebook_path: notebookPath,
-        notebook_title: notebookTitle,
-        notebook_name: this.getNotebookName(notebookTitle),
-        app_id: appId,
-        server_address: entry.server,
-        api_key: apiKey
-      };
 
-      var xhr = Utils.ajax({
-        url: "/rsconnect_jupyter/deploy",
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        data: JSON.stringify(data)
-      });
+      function deploy(environment) {
+        var data = {
+          notebook_path: notebookPath,
+          notebook_title: notebookTitle,
+          notebook_name: self.getNotebookName(notebookTitle),
+          app_id: appId,
+          server_address: entry.server,
+          api_key: apiKey,
+          app_mode: entry.appMode || "static",
+          environment: environment
+        };
 
-      // update server with title and appId and set recently selected
-      // server
-      xhr.then(function(result) {
-        notify.set_message(
-          " Successfully published content",
-          // timeout in milliseconds after which the notification
-          // should disappear
-          15 * 1000,
-          // click handler
-          function() {
-            // note: logs_url is included in result.config
-            window.open(result.config.config_url, "rsconnect");
-          },
-          // options
-          {
-            class: "info",
-            icon: "fa fa-link",
-            // tooltip
-            title: "Click to open published content on RStudio Connect"
-          }
-        );
-        self.previousServerId = serverId;
-        return self.updateServer(
-          serverId,
-          result.app_id,
-          notebookTitle,
-          result.config.config_url
-        );
-      });
+        var xhr = Utils.ajax({
+          url: "/rsconnect_jupyter/deploy",
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          data: JSON.stringify(data)
+        });
 
-      return xhr;
+        // update server with title and appId and set recently selected
+        // server
+        xhr.then(function(result) {
+          notify.set_message(
+            " Successfully published content",
+            // timeout in milliseconds after which the notification
+            // should disappear
+            15 * 1000,
+            // click handler
+            function() {
+              // note: logs_url is included in result.config
+              window.open(result.config.config_url, "rsconnect");
+            },
+            // options
+            {
+              class: "info",
+              icon: "fa fa-link",
+              // tooltip
+              title: "Click to open published content on RStudio Connect"
+            }
+          );
+          self.previousServerId = serverId;
+          return self.updateServer(
+            serverId,
+            result.app_id,
+            notebookTitle,
+            entry.appMode,
+            result.config.config_url
+          );
+        });
+
+        return xhr;
+      }
+
+      // entry.appMode = "jupyter-static";
+      if (entry.appMode === "jupyter-static") {
+        return this.inspectEnvironment().then(deploy);
+      } else {
+        return deploy(null);
+      }
     },
 
     appSearch: function(serverId, apiKey, notebookTitle, appId) {
@@ -255,7 +308,7 @@ define([
           return e.notebookTitle;
         }
       }
-      // default title - massage the title so it validates
+      // default title
       return Jupyter.notebook.get_notebook_name();
     }
   };
