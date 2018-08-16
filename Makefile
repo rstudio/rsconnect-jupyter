@@ -51,13 +51,7 @@ notebook3:
 
 test:
 # TODO run in container
-	python setup.py test
-	python -V
-	python -Wi setup.py install
 	python -Wi setup.py test
-
-test%:
-	make DOCKER_IMAGE=rstudio/rsconnect-jupyter-py$* PY_VERSION=$* TARGET=test launch
 
 test2:
 	make DOCKER_IMAGE=$(PY2) PY_VERSION=2 TARGET=test launch
