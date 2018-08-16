@@ -217,53 +217,66 @@ define([
       );
 
       var entry = this.servers[serverId];
-      var data = {
-        notebook_path: notebookPath,
-        notebook_title: notebookTitle,
-        notebook_name: this.getNotebookName(notebookTitle),
-        app_id: appId,
-        server_address: entry.server,
-        api_key: apiKey
-      };
 
-      var xhr = Utils.ajax({
-        url: "/rsconnect_jupyter/deploy",
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        data: JSON.stringify(data)
-      });
+      function deploy(environment) {
+        var data = {
+          notebook_path: notebookPath,
+          notebook_title: notebookTitle,
+          notebook_name: self.getNotebookName(notebookTitle),
+          app_id: appId,
+          server_address: entry.server,
+          api_key: apiKey,
+          app_mode: entry.appMode || "static",
+          environment: environment
+        };
 
-      // update server with title and appId and set recently selected
-      // server
-      xhr.then(function(result) {
-        notify.set_message(
-          " Successfully published content",
-          // timeout in milliseconds after which the notification
-          // should disappear
-          15 * 1000,
-          // click handler
-          function() {
-            // note: logs_url is included in result.config
-            window.open(result.config.config_url, "rsconnect");
-          },
-          // options
-          {
-            class: "info",
-            icon: "fa fa-link",
-            // tooltip
-            title: "Click to open published content on RStudio Connect"
-          }
-        );
-        self.previousServerId = serverId;
-        return self.updateServer(
-          serverId,
-          result.app_id,
-          notebookTitle,
-          result.config.config_url
-        );
-      });
+        var xhr = Utils.ajax({
+          url: "/rsconnect_jupyter/deploy",
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          data: JSON.stringify(data)
+        });
 
-      return xhr;
+        // update server with title and appId and set recently selected
+        // server
+        xhr.then(function(result) {
+          notify.set_message(
+            " Successfully published content",
+            // timeout in milliseconds after which the notification
+            // should disappear
+            15 * 1000,
+            // click handler
+            function() {
+              // note: logs_url is included in result.config
+              window.open(result.config.config_url, "rsconnect");
+            },
+            // options
+            {
+              class: "info",
+              icon: "fa fa-link",
+              // tooltip
+              title: "Click to open published content on RStudio Connect"
+            }
+          );
+          self.previousServerId = serverId;
+          return self.updateServer(
+            serverId,
+            result.app_id,
+            notebookTitle,
+            entry.appMode,
+            result.config.config_url
+          );
+        });
+
+        return xhr;
+      }
+
+      // entry.appMode = "jupyter-static";
+      if (entry.appMode === "jupyter-static") {
+        return this.inspectEnvironment().then(deploy);
+      } else {
+        return deploy(null);
+      }
     },
 
     appSearch: function(serverId, apiKey, notebookTitle, appId) {
