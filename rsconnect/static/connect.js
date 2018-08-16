@@ -159,9 +159,10 @@ define([
       });
     },
 
-    updateServer: function(id, appId, notebookTitle, configUrl) {
+    updateServer: function(id, appId, notebookTitle, appMode, configUrl) {
       this.servers[id].appId = appId;
       this.servers[id].notebookTitle = notebookTitle;
+      this.servers[id].appMode = appMode;
       this.servers[id].configUrl = configUrl;
       return this.save();
     },
