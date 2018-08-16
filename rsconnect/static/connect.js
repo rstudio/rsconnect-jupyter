@@ -182,10 +182,14 @@ define([
       var result = $.Deferred();
       var content = "";
 
+      function count(ch, s) {
+        return s.split(ch).length - 1;
+      }
+
       function handle_output(message) {
         content += message.content.text;
 
-        if (/\}$/.test(content)) {
+        if (count("{", content) === count("}", content)) {
           try {
             debug.info("environment:", content);
             result.resolve(JSON.parse(content));
@@ -267,6 +271,7 @@ define([
         return xhr;
       }
 
+      entry.appMode = "jupyter-static";
       if (entry.appMode === "jupyter-static") {
         return this.inspectEnvironment().then(deploy);
       } else {
