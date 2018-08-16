@@ -42,11 +42,9 @@ class TestBundle(TestCase):
         # the kernel environment and not the notebook server environment.
         environment = detect_environment(dir)
         notebook = self.read_notebook(nb_path)
-        bundle = make_source_bundle(notebook, environment, dir)
+        with make_source_bundle(notebook, environment, dir) as bundle, \
+            tarfile.open(mode='r:gz', fileobj=bundle) as tar:
 
-        tar = tarfile.open(mode='r:gz', fileobj=bundle)
-
-        try:
             names = sorted(tar.getnames())
             self.assertEqual(names, [
                 'dummy.ipynb',
@@ -85,9 +83,6 @@ class TestBundle(TestCase):
                     }
                 }
             })
-        finally:
-            tar.close()
-            bundle.close()
 
     def test_source_bundle2(self):
         self.maxDiff = 5000
@@ -100,11 +95,10 @@ class TestBundle(TestCase):
         # the kernel environment and not the notebook server environment.
         environment = detect_environment(dir)
         notebook = self.read_notebook(nb_path)
-        bundle = make_source_bundle(notebook, environment, dir, extra_files=['data.csv'])
 
-        tar = tarfile.open(mode='r:gz', fileobj=bundle)
+        with make_source_bundle(notebook, environment, dir, extra_files=['data.csv']) as bundle, \
+            tarfile.open(mode='r:gz', fileobj=bundle) as tar:
 
-        try:
             names = sorted(tar.getnames())
             self.assertEqual(names, [
                 'data.csv',
@@ -150,9 +144,6 @@ class TestBundle(TestCase):
                     }
                 }
             })
-        finally:
-            tar.close()
-            bundle.close()
 
     def test_html_bundle1(self):
         self.do_test_html_bundle(self.get_dir('pip1'))
