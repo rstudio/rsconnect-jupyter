@@ -20,3 +20,7 @@
 	width: 40px;
 	height: 35px;
 }
+
+.rsc-appmode.disabled {
+	opacity: 0.5;
+}
