@@ -69,7 +69,7 @@ package:
 
 run:
 # link python package
-	python setup.py install
+	python setup.py develop
 # install rsconnect as a jupyter extension
 	jupyter-nbextension install --symlink --user --py rsconnect
 # enable js extension
