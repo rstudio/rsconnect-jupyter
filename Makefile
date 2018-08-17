@@ -1,4 +1,4 @@
-.PHONY: clean images image2 image3 launch notebook2 notebook3 package dist test dist run shell shell2 shell3
+.PHONY: clean images image2 image3 launch notebook2 notebook3 package dist test dist run shell shell2 shell3 dist-run dist-run2 dist-run3
 
 NB_UID=$(shell id -u)
 NB_GID=$(shell id -g)
@@ -69,7 +69,7 @@ package:
 
 run:
 # link python package
-	python setup.py develop
+	python setup.py install
 # install rsconnect as a jupyter extension
 	jupyter-nbextension install --symlink --user --py rsconnect
 # enable js extension
@@ -87,3 +87,16 @@ shell2:
 
 shell3:
 	make DOCKER_IMAGE=$(PY3) PY_VERSION=3 TARGET=shell launch
+
+dist-run2:
+	make DOCKER_IMAGE=$(PY2) PY_VERSION=2 TARGET=dist-run launch
+
+dist-run3:
+	make DOCKER_IMAGE=$(PY3) PY_VERSION=3 TARGET=dist-run launch
+
+dist-run: dist
+	pip install dist/rsconnect-1.0.0-py2.py3-none-any.whl
+	jupyter-nbextension install --symlink --user --py rsconnect
+	jupyter-nbextension enable --py rsconnect
+	jupyter-serverextension enable --py rsconnect
+	jupyter-notebook -y --notebook-dir=/notebooks --ip='*' --port=9999 --no-browser --NotebookApp.token=''
