@@ -12,5 +12,4 @@ fi
 cd /rsconnect
 export PATH=/opt/conda/bin:$PATH
 source activate "py${PY_VERSION}"
-python setup.py install
 make -f /rsconnect/Makefile $1
