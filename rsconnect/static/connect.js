@@ -497,7 +497,7 @@ define([
 
     var entry = config.servers[selectedEntryId];
     var previousAppMode = entry && entry.appMode;
-    var appMode = selectedAppMode || previousAppMode;
+    var appMode = selectedAppMode || previousAppMode || "static";
 
     // will be set during modal initialization
     var btnPublish = null;
