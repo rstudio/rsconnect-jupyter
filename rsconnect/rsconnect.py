@@ -236,6 +236,15 @@ def deploy(uri, api_key, app_id, app_name, app_title, tarball):
         }
 
 
+APP_MODE_STATIC = 4
+APP_MODE_JUPYTER_STATIC = 7
+
+app_modes = {
+    APP_MODE_STATIC: 'static',
+    APP_MODE_JUPYTER_STATIC: 'jupyter-static',
+}
+
+
 def app_search(uri, api_key, app_title, app_id):
     with RSConnect(uri, api_key) as api:
         data = []
@@ -247,28 +256,27 @@ def app_search(uri, api_key, app_title, app_id):
         apps = api.app_find(filters)
         found = False
 
-        for app in apps or []:
-            data.append({
+        def app_data(app):
+            return {
                 'id': app['id'],
                 'name': app['name'],
                 'title': app['title'],
+                'app_mode': app_modes.get(app['app_mode']),
                 'config_url': api.app_config(app['id'])['config_url'],
-            })
+            }
 
-            if app['id'] == app_id:
-                found = True
+        for app in apps or []:
+            if app['app_mode'] in (APP_MODE_STATIC, APP_MODE_JUPYTER_STATIC):
+                data.append(app_data(app))
+                if app['id'] == app_id:
+                    found = True
 
         if app_id and not found:
             try:
                 # offer the current location as an option
                 app = api.app_get(app_id)
-
-                data.append({
-                    'id': app['id'],
-                    'name': app['name'],
-                    'title': app['title'],
-                    'config_url': api.app_config(app['id'])['config_url'],
-                })
+                if app['app_mode'] in (APP_MODE_STATIC, APP_MODE_JUPYTER_STATIC):
+                    data.append(app_data(app))
             except RSConnectException:
                 logger.exception('Error getting info for previous app_id "%s", skipping', app_id)
 

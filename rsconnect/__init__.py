@@ -74,10 +74,10 @@ class EndpointHandler(APIHandler):
             nb_name = data['notebook_name']
             nb_path = unquote_plus(data['notebook_path'].strip('/'))
             api_key = data['api_key']
-            app_mode = data.get('app_mode', 'static')
+            app_mode = data['app_mode']
             environment = data.get('environment')
-            model = self.contents_manager.get(path=nb_path)
 
+            model = self.contents_manager.get(path=nb_path)
             if model['type'] != 'notebook':
                 # not a notebook
                 raise web.HTTPError(400, u"Not a notebook: %s" % nb_path)

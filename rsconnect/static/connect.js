@@ -54,7 +54,7 @@ define([
        { previousServerId: "abc-def-ghi-jkl"
          servers: {
            "xyz-uvw": { server: "http://172.0.0.3:3939/", serverName: "dev" }
-           "rst-opq": { server: "http://somewhere/connect/", serverName: "prod", notebookTitle:"Meow", appId: 42 }
+           "rst-opq": { server: "http://somewhere/connect/", serverName: "prod", notebookTitle:"Meow", appId: 42, appMode: "static" }
          }
        }
     */
@@ -81,6 +81,7 @@ define([
     this.addServer = this.addServer.bind(this);
     this.getApp = this.getApp.bind(this);
     this.removeServer = this.removeServer.bind(this);
+    this.inspectEnvironment = this.inspectEnvironment.bind(this);
     this.publishContent = this.publishContent.bind(this);
     this.getNotebookTitle = this.getNotebookTitle.bind(this);
   }
@@ -158,9 +159,10 @@ define([
       });
     },
 
-    updateServer: function(id, appId, notebookTitle, configUrl) {
+    updateServer: function(id, appId, notebookTitle, appMode, configUrl) {
       this.servers[id].appId = appId;
       this.servers[id].notebookTitle = notebookTitle;
+      this.servers[id].appMode = appMode;
       this.servers[id].configUrl = configUrl;
       return this.save();
     },
@@ -170,60 +172,92 @@ define([
       return this.save();
     },
 
-    publishContent: function(serverId, appId, apiKey, notebookTitle) {
+    inspectEnvironment: function() {
+      var path = Jupyter.notebook.notebook_name;
+
+      // TODO: cannot assume rsconnect is installed in the kernel environment
+      var cmd = "!python -m rsconnect.environment ${PWD}/" + path;
+      console.log("executing: " + cmd);
+
+      var result = $.Deferred();
+      var content = "";
+
+      function count(ch, s) {
+        return s.split(ch).length - 1;
+      }
+
+      function handle_output(message) {
+        content += message.content.text;
+
+        if (count("{", content) === count("}", content)) {
+          try {
+            debug.info("environment:", content);
+            result.resolve(JSON.parse(content));
+          } catch (err) {
+            debug.info("environment error:", err);
+            result.reject(content);
+          }
+        }
+      }
+
+      var callbacks = {
+        iopub: {
+          output: handle_output
+        }
+      };
+
+      Jupyter.notebook.kernel.execute(cmd, callbacks);
+      return result;
+    },
+
+    publishContent: function(serverId, appId, apiKey, notebookTitle, appMode) {
       var self = this;
       var notebookPath = Utils.encode_uri_components(
         Jupyter.notebook.notebook_path
       );
 
       var entry = this.servers[serverId];
-      var data = {
-        notebook_path: notebookPath,
-        notebook_title: notebookTitle,
-        notebook_name: this.getNotebookName(notebookTitle),
-        app_id: appId,
-        server_address: entry.server,
-        api_key: apiKey
-      };
 
-      var xhr = Utils.ajax({
-        url: "/rsconnect_jupyter/deploy",
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        data: JSON.stringify(data)
-      });
+      function deploy(environment) {
+        var data = {
+          notebook_path: notebookPath,
+          notebook_title: notebookTitle,
+          notebook_name: self.getNotebookName(notebookTitle),
+          app_id: appId,
+          server_address: entry.server,
+          api_key: apiKey,
+          app_mode: appMode,
+          environment: environment
+        };
 
-      // update server with title and appId and set recently selected
-      // server
-      xhr.then(function(result) {
-        notify.set_message(
-          " Successfully published content",
-          // timeout in milliseconds after which the notification
-          // should disappear
-          15 * 1000,
-          // click handler
-          function() {
-            // note: logs_url is included in result.config
-            window.open(result.config.config_url, "rsconnect");
-          },
-          // options
-          {
-            class: "info",
-            icon: "fa fa-link",
-            // tooltip
-            title: "Click to open published content on RStudio Connect"
-          }
-        );
-        self.previousServerId = serverId;
-        return self.updateServer(
-          serverId,
-          result.app_id,
-          notebookTitle,
-          result.config.config_url
-        );
-      });
+        var xhr = Utils.ajax({
+          url: "/rsconnect_jupyter/deploy",
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          data: JSON.stringify(data)
+        });
 
-      return xhr;
+        // update server with title and appId and set recently selected
+        // server
+        xhr.then(function(result) {
+          self.previousServerId = serverId;
+          return self.updateServer(
+            serverId,
+            result.app_id,
+            notebookTitle,
+            appMode,
+            result.config.config_url
+          );
+        });
+
+        return xhr;
+      }
+
+      if (appMode === "jupyter-static") {
+        return this.inspectEnvironment().then(deploy);
+      } else {
+        return deploy(null);
+      }
     },
 
     appSearch: function(serverId, apiKey, notebookTitle, appId) {
@@ -255,7 +289,7 @@ define([
           return e.notebookTitle;
         }
       }
-      // default title - massage the title so it validates
+      // default title
       return Jupyter.notebook.get_notebook_name();
     }
   };
@@ -455,10 +489,15 @@ define([
     // content selection was canceled, DeploymentLocation.New when user wants to
     // deploy to a new location, and a stringy appId in case the user wishes to
     // overwrite content
-    selectedDeployLocation
+    selectedDeployLocation,
+    selectedAppMode
   ) {
     var dialogResult = $.Deferred();
     var selectedEntryId = serverId;
+
+    var entry = config.servers[selectedEntryId];
+    var previousAppMode = entry && entry.appMode;
+    var appMode = selectedAppMode || previousAppMode || "static";
 
     // will be set during modal initialization
     var btnPublish = null;
@@ -555,7 +594,8 @@ define([
         // and we have a valid API key to use for the request
         apiKey = txtApiKey.val();
         if (selectedEntryId && apiKey.length === 32) {
-          var appId = config.servers[selectedEntryId].appId;
+          var entry = config.servers[selectedEntryId];
+          var appId = entry && entry.appId;
 
           if (appId) {
             config.getApp(selectedEntryId, apiKey, appId).then(function(app) {
@@ -579,7 +619,7 @@ define([
         '    <div class="form-group">',
         '        <a href="#" id="rsc-add-server" class="pull-right">Add server...</a>',
         "        <label>Publish to</label>",
-        '        <div class="list-group">',
+        '        <div id="rsc-select-server" class="list-group">',
         "        </div>",
         "    </div>",
         '    <div class="form-group">',
@@ -591,6 +631,22 @@ define([
         "        <label>Title</label>",
         '        <input class="form-control" name="title" type="text" minlength="3" maxlength="64" required>',
         '        <span class="help-block"></span>',
+        "    </div>",
+        '    <div class="form-group">',
+        "        <label>Publish Source Code</label>",
+        '        <div class="list-group">',
+        '            <a href="#" id="rsc-publish-with-source" class="list-group-item rsc-appmode" data-appmode="jupyter-static">',
+        '                <img src="/nbextensions/rsconnect/images/publishDocWithSource.png" class="rsc-image">',
+        '                <span class="rsc-label">Publish document with source code</span><br/>',
+        '                <span class="rsc-text-light">Choose this option if you want to create a scheduled report or rebuild your document on the server</span>',
+        "            </a>",
+        '            <a href="#" id="rsc-publish-without-source" class="list-group-item rsc-appmode" data-appmode="static">',
+        '                <img src="/nbextensions/rsconnect/images/publishDocWithoutSource.png" class="rsc-image">',
+        '                <span class="rsc-label">Publish finished document only</span><br/>',
+        '                <span class="rsc-text-light">Choose this option to publish a snapshot of the notebook as it appears in Jupyter</span>',
+        "            </a>",
+        '            <span class="help-block"></span>',
+        "        </div>",
         "    </div>",
         '    <div class="text-center" data-id="configUrl"></div>',
         '    <input type="submit" hidden>',
@@ -630,7 +686,7 @@ define([
           var matchingServer = serverId === id;
           return mkServerItem(id, matchingServer);
         });
-        publishModal.find(".list-group").append(serverItems);
+        publishModal.find("#rsc-select-server").append(serverItems);
 
         // add default title
         txtTitle = publishModal.find("[name=title]");
@@ -641,6 +697,41 @@ define([
         txtApiKey.change(function() {
           maybeUpdateAppTitle();
         });
+
+        // app mode
+        var appModeChoices = publishModal.find(".rsc-appmode");
+
+        appModeChoices.addClass(function() {
+          if ($(this).data("appmode") === appMode) {
+            return "active";
+          }
+        });
+
+        // User can freely choose app mode on the initial publication only,
+        // or if publishing to a New location
+        if (
+          !previousAppMode ||
+          selectedDeployLocation === DeploymentLocation.New
+        ) {
+          appModeChoices.on("click", function() {
+            appMode = $(this).data("appmode");
+
+            $(this)
+              .addClass("active")
+              .siblings()
+              .removeClass("active");
+          });
+        } else {
+          appModeChoices.addClass("disabled");
+          appModeChoices.on("click", function() {
+            appModeChoices
+              .parent()
+              .find(".help-block")
+              .text(
+                'To change the app type: enter a unique title, click Publish, then select "New location".'
+              );
+          });
+        }
 
         var form = publishModal.find("form").on("submit", function(e) {
           e.preventDefault();
@@ -698,13 +789,32 @@ define([
                 selectedEntryId,
                 appId,
                 txtApiKey.val(),
-                txtTitle.val()
+                txtTitle.val(),
+                appMode
               )
               .always(function() {
                 togglePublishButton(true);
               })
               .fail(handleFailure)
-              .then(function() {
+              .then(function(result) {
+                notify.set_message(
+                  " Successfully published content",
+                  // timeout in milliseconds after which the notification
+                  // should disappear
+                  15 * 1000,
+                  // click handler
+                  function() {
+                    // note: logs_url is included in result.config
+                    window.open(result.config.config_url, "rsconnect");
+                  },
+                  // options
+                  {
+                    class: "info",
+                    icon: "fa fa-link",
+                    // tooltip
+                    title: "Click to open published content on RStudio Connect"
+                  }
+                );
                 publishModal.modal("hide");
               });
           }
@@ -748,7 +858,8 @@ define([
                         selectedEntryId,
                         txtApiKey.val(),
                         txtTitle.val(),
-                        currentAppId
+                        currentAppId,
+                        appMode
                       );
                     }
                   });
@@ -802,7 +913,7 @@ define([
         if (selectedDeployLocation === DeploymentLocation.Canceled) {
           // pretend like nothing happened since Canceled is a no-op
           selectedDeployLocation = null;
-        } else if (selectedDeployLocation) {
+        } else if (selectedDeployLocation !== DeploymentLocation.New) {
           form.trigger("submit");
         }
       }
@@ -811,12 +922,30 @@ define([
     return dialogResult;
   }
 
-  function showSearchDialog(searchResults, serverId, apiKey, title, appId) {
-    function mkRadio(value, name, configUrl) {
+  function showSearchDialog(
+    searchResults,
+    serverId,
+    apiKey,
+    title,
+    appId,
+    appMode
+  ) {
+    function getUserAppMode(mode) {
+      if (mode === "static") {
+        return "[document]";
+      } else if (mode === "jupyter-static") {
+        return "[document with source code]";
+      } else {
+        return "[unknown type]";
+      }
+    }
+
+    function mkRadio(value, name, configUrl, appMode) {
       var input = $("<input></input>")
         .attr("type", "radio")
         .attr("name", "location")
-        .val(value);
+        .val(value)
+        .data("appmode", appMode);
       var link = $("<a></a>")
         .attr("href", configUrl)
         .attr("target", "_rsconnect")
@@ -824,9 +953,11 @@ define([
       var span = $("<span></span>")
         .text(name + " - ")
         .append(link);
+      var span2 = $("<span></span>").text("  " + getUserAppMode(appMode));
       var label = $("<label></label>")
         .append(input)
-        .append(span);
+        .append(span)
+        .append(span2);
       var div = $("<div></div>")
         .addClass("radio")
         .append(label);
@@ -836,9 +967,16 @@ define([
       '<div class="radio"><label><input type="radio" name="location" value="new"> New location</label></div>';
 
     var radios = searchResults.map(function(app) {
-      return mkRadio(app.id, app.title || app.name, app.config_url);
+      return mkRadio(
+        app.id,
+        app.title || app.name,
+        app.config_url,
+        app.app_mode
+      );
     });
     radios.unshift(newLocationRadio);
+
+    var selectedAppMode = appMode;
 
     var searchDialog = Dialog.modal({
       // pass the existing keyboard manager so all shortcuts are disabled while
@@ -858,7 +996,13 @@ define([
 
         function backToSelectServerDialog(location) {
           searchDialog.modal("hide");
-          showSelectServerDialog(serverId, title, apiKey, location);
+          showSelectServerDialog(
+            serverId,
+            title,
+            apiKey,
+            location,
+            selectedAppMode
+          );
         }
 
         var selectedLocation = null;
@@ -881,6 +1025,7 @@ define([
 
         form.on("change", "input", function() {
           selectedLocation = $(this).val();
+          selectedAppMode = $(this).data("appmode");
           btnDeploy.removeClass("disabled");
         });
       }
