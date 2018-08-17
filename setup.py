@@ -26,7 +26,8 @@ setup(name='rsconnect',
       packages=['rsconnect'],
       install_requires=[
           'notebook',
-          'nbformat'
+          'nbformat',
+          'six'
       ] + ipython_dependency(),
       include_package_data=True,
       zip_safe=False)

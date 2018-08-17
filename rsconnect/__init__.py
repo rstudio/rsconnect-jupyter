@@ -1,12 +1,7 @@
 import json
 import os
 
-try:
-    # python3
-    from urllib.parse import unquote_plus, urlparse
-except ImportError:
-    from urllib import unquote_plus
-    from urlparse import urlparse
+from six.moves.urllib.parse import unquote_plus, urlparse
 
 from notebook.base.handlers import APIHandler
 from notebook.utils import url_path_join
