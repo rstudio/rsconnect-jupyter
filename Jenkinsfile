@@ -134,7 +134,7 @@ try {
   // CC the whole connect team.
   slackNameFail = "unknown"
   if (!isUserBranch) {
-    slackNameFail = "${gitAuthor} (cc @kenny)"
+    slackNameFail = "${gitAuthor} (cc @nand)"
   }
 
   message = "${messagePrefix} by ${slackNameFail} failed: ${err}"
