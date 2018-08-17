@@ -1,23 +1,14 @@
 import json
 import os
 
-try:
-    # python3
-    from urllib.parse import unquote_plus, urlparse
-except ImportError:
-    from urllib import unquote_plus
-    from urlparse import urlparse
+from six.moves.urllib.parse import unquote_plus, urlparse
 
 from notebook.base.handlers import APIHandler
 from notebook.utils import url_path_join
 from tornado import web
 
-try:
-    from rsconnect import app_get, app_search, deploy, verify_server, RSConnectException
-    from rsconnect.bundle import make_html_bundle, make_source_bundle
-except ImportError:
-    from .rsconnect import app_get, app_search, deploy, verify_server, RSConnectException
-    from .bundle import make_html_bundle, make_source_bundle
+from rsconnect.api import app_get, app_search, deploy, verify_server, RSConnectException
+from rsconnect.bundle import make_html_bundle, make_source_bundle
 
 __version__ = '1.0.0'
 
