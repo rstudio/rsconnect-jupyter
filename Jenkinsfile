@@ -97,6 +97,8 @@ def buildAndTest(pyVersion) {
 
 def publishArtifacts() {
     // Promote master builds to S3
+    sh 'pip install awscli --upgrade --user'
+
     cmd = 'aws s3 sync --exclude "*" --include "*.whl" dist/ s3://studio-rsconnect-jupyter/'
 
     if (isUserBranch) {
