@@ -99,7 +99,7 @@ def publishArtifacts() {
     // Promote master builds to S3
     sh 'pip install awscli --upgrade --user'
 
-    cmd = '~/.local/bin/aws s3 sync --exclude "*" --include "*.whl" dist/ s3://studio-rsconnect-jupyter/'
+    cmd = '~/.local/bin/aws s3 cp --exclude "*" --include "*.whl" dist/ s3://studio-rsconnect-jupyter/'
 
     if (isUserBranch) {
         print "S3 sync DRY RUN for user branch ${env.BRANCH_NAME}"
