@@ -20,7 +20,7 @@ VERSION = '1.1.0'
 BUILD = os.environ.get('BUILD_NUMBER', '9999')
 
 setup(name='rsconnect',
-      version='{version}-{build}'.format(version=VERSION, build=BUILD),
+      version='{version}.{build}'.format(version=VERSION, build=BUILD),
       description='Jupyter Notebook integration with RStudio Connect',
       long_description=readme(),
       url='http://github.com/rstudio/rsconnect-jupyter',
