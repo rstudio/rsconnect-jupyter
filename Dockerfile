@@ -18,3 +18,6 @@ RUN useradd --password password \
 USER ${NB_UID}:${NB_GID}
 RUN cd /home/builder \
     && conda create --yes --name py${PY_VERSION} python=${PY_VERSION} jupyter
+
+# enable the Jenkins build to upload to s3
+RUN pip install awscli --upgrade --user
