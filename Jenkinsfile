@@ -86,13 +86,9 @@ def buildAndTest(pyVersion) {
     withEnv(["PY_VERSION=${pyVersion}"]) {
       print "running tests: python${pyVersion}"
       sh '/rsconnect/run.sh test'
-
-      print "building python wheel package: python${pyVersion}"
-      sh 'make dist'
-      archiveArtifacts artifacts: 'dist/*.whl'
-      publishArtifacts()
     }
   }
+  return img
 }
 
 def publishArtifacts() {
@@ -132,7 +128,13 @@ try {
             buildAndTest("2")
           },
           'python3': {
-            buildAndTest("3")
+            img = buildAndTest("3")
+
+            img.inside("-v ${env.WORKSPACE}:/rsconnect") {
+              print "building python wheel package"
+              sh 'make dist'
+              archiveArtifacts artifacts: 'dist/*.whl'
+            }
           }
         )
       }
@@ -147,7 +149,7 @@ try {
   // CC the whole connect team.
   slackNameFail = "unknown"
   if (!isUserBranch) {
-    slackNameFail = "${gitAuthor} (cc @kenny)"
+    slackNameFail = "${gitAuthor} (cc @nand)"
   }
 
   message = "${messagePrefix} by ${slackNameFail} failed: ${err}"

@@ -14,3 +14,13 @@
 .rsc-label {
     font-weight: bold;
 }
+
+.rsc-image {
+    float: left;
+    width: 40px;
+    height: 35px;
+}
+
+.rsc-appmode.disabled {
+    opacity: 0.5;
+}
