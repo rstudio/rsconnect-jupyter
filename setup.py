@@ -16,7 +16,9 @@ def ipython_dependency():
         return ['ipython']
 
 
-VERSION = '1.1.0'
+with open('version.txt', 'r') as f:
+    VERSION = f.read().strip()
+
 BUILD = os.environ.get('BUILD_NUMBER', '9999')
 
 setup(name='rsconnect',
