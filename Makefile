@@ -51,6 +51,7 @@ notebook3:
 
 test:
 # TODO run in container
+	python -V
 	python -Wi setup.py test
 
 test2:
