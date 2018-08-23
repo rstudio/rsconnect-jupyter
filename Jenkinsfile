@@ -134,6 +134,7 @@ try {
               print "building python wheel package"
               sh 'make dist'
               archiveArtifacts artifacts: 'dist/*.whl'
+              publishArtifacts()
             }
           }
         )
