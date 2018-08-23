@@ -493,6 +493,12 @@ define([
     selectedAppMode
   ) {
     var dialogResult = $.Deferred();
+
+    var servers = Object.keys(config.servers);
+    if (servers.length == 1) {
+      serverId = servers[0];
+    }
+
     var selectedEntryId = serverId;
 
     var entry = config.servers[selectedEntryId];
