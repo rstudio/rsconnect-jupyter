@@ -577,7 +577,11 @@ define([
 
     function maybeShowConfigUrl() {
       var entry = config.servers[selectedEntryId];
-      if (entry && entry.configUrl) {
+      if (
+        entry &&
+        entry.configUrl &&
+        selectedDeployLocation !== DeploymentLocation.New
+      ) {
         publishModal
           .find("div[data-id=configUrl]")
           .text("Currently published at: ")
