@@ -70,7 +70,7 @@ class TestBundle(TestCase):
                     u"version": self.python_version(),
                     u"package_manager": {
                         u"name": u"pip",
-                        u"version": u"10.0.1",  # this is the version in our docker image
+                        u"version": u"9.0.1",  # this is the version in our docker image
                         u"package_file": u"requirements.txt"
                     }
                 },
@@ -131,7 +131,7 @@ class TestBundle(TestCase):
                     u"version": self.python_version(),
                     u"package_manager": {
                         u"name": u"pip",
-                        u"version": u"10.0.1",  # this is the version in our docker image
+                        u"version": u"9.0.1",  # this is the version in our docker image
                         u"package_file": u"requirements.txt"
                     }
                 },
