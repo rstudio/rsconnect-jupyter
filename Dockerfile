@@ -16,5 +16,5 @@ RUN useradd --password password \
     builder
 
 USER ${NB_UID}:${NB_GID}
-RUN cd /home/builder \
-    && conda create --yes --name py${PY_VERSION} python=${PY_VERSION} jupyter
+RUN bash -c 'cd /home/builder \
+    && conda create --yes --name py${PY_VERSION/./} python=${PY_VERSION} jupyter'
