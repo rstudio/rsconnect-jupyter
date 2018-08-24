@@ -1,4 +1,5 @@
 from setuptools import setup
+import os
 import sys
 
 
@@ -15,8 +16,13 @@ def ipython_dependency():
         return ['ipython']
 
 
+with open('version.txt', 'r') as f:
+    VERSION = f.read().strip()
+
+BUILD = os.environ.get('BUILD_NUMBER', '9999')
+
 setup(name='rsconnect',
-      version='1.0.0',
+      version='{version}.{build}'.format(version=VERSION, build=BUILD),
       description='Jupyter Notebook integration with RStudio Connect',
       long_description=readme(),
       url='http://github.com/rstudio/rsconnect-jupyter',

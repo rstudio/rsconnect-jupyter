@@ -5,6 +5,7 @@ NB_GID=$(shell id -g)
 
 PY2=rstudio/rsconnect-jupyter-py2
 PY3=rstudio/rsconnect-jupyter-py3
+VERSION=$(shell cat version.txt).$(shell printenv BUILD_NUMBER || echo 9999)
 
 clean:
 	rm -rf build/ dist/ rsconnect.egg-info/
@@ -96,7 +97,7 @@ dist-run3:
 	make DOCKER_IMAGE=$(PY3) PY_VERSION=3 TARGET=dist-run launch
 
 dist-run: dist
-	pip install dist/rsconnect-1.0.0-py2.py3-none-any.whl
+	pip install dist/rsconnect-$(VERSION)-py2.py3-none-any.whl
 	jupyter-nbextension install --symlink --user --py rsconnect
 	jupyter-nbextension enable --py rsconnect
 	jupyter-serverextension enable --py rsconnect

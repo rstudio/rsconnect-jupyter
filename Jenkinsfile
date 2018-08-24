@@ -91,6 +91,18 @@ def buildAndTest(pyVersion) {
   return img
 }
 
+def publishArtifacts() {
+    // Promote master builds to S3
+    cmd = '~/.local/bin/aws s3 cp --exclude "*" --include "*.whl" dist/ s3://studio-rsconnect-jupyter/'
+
+    if (isUserBranch) {
+        print "S3 sync DRY RUN for user branch ${env.BRANCH_NAME}"
+        sh (cmd + ' --dryrun')
+    } else {
+        print "S3 sync for ${env.BRANCH_NAME}"
+        sh cmd
+    }
+}
 
 try {
   node(nodename) {
@@ -122,6 +134,7 @@ try {
               print "building python wheel package"
               sh 'make dist'
               archiveArtifacts artifacts: 'dist/*.whl'
+              publishArtifacts()
             }
           }
         )
