@@ -982,6 +982,7 @@ define([
     var newLocationRadio = $(
       '<div class="radio"><label><input type="radio" name="location" value="new"><span id="new-location"</span></label></div>'
     );
+    var divider = $("<p>Or update:</p>");
     newLocationRadio
       .find("#new-location")
       .text('New location with title "' + title + '"');
@@ -994,6 +995,9 @@ define([
         app.app_mode
       );
     });
+    if (radios.length > 0) {
+      radios.unshift(divider);
+    }
     radios.unshift(newLocationRadio);
 
     var selectedAppMode = appMode;
