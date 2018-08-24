@@ -93,7 +93,7 @@ def buildAndTest(pyVersion) {
 
 def publishArtifacts() {
     // Promote master builds to S3
-    cmd = '~/.local/bin/aws s3 cp --exclude "*" --include "*.whl" dist/ s3://studio-rsconnect-jupyter/'
+    cmd = '~/.local/bin/aws s3 cp --exclude "*" --include "*.whl" dist/ s3://rstudio-rsconnect-jupyter/'
 
     if (isUserBranch) {
         print "S3 sync DRY RUN for user branch ${env.BRANCH_NAME}"
