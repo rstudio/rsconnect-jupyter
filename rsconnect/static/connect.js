@@ -700,9 +700,6 @@ define([
         // add default title
         txtTitle = publishModal.find("[name=title]");
         txtTitle.val(initialTitle);
-        if (selectedDeployLocation) {
-          txtTitle.prop("disabled", true);
-        }
 
         txtTitle.change(function() {
           btnPublish.text("Next");
@@ -713,6 +710,11 @@ define([
         txtApiKey.change(function() {
           maybeUpdateAppTitle();
         });
+
+        if (selectedDeployLocation) {
+          txtTitle.prop("disabled", true);
+          txtApiKey.prop("disabled", true);
+        }
 
         // app mode
         var appModeChoices = publishModal.find(".rsc-appmode");
