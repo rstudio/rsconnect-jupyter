@@ -41,6 +41,7 @@ tests: test2 test3.5 test3.6 test3.7
 test:
 # TODO run in container
 	python -V
+	python -Wi setup.py install
 	python -Wi setup.py test
 
 test%:
