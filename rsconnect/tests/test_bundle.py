@@ -55,7 +55,7 @@ class TestBundle(TestCase):
             reqs = tar.extractfile('requirements.txt').read()
             self.assertEqual(reqs, b'numpy\npandas\nmatplotlib\n')
 
-            manifest = json.load(tar.extractfile('manifest.json'))
+            manifest = json.loads(tar.extractfile('manifest.json').read().decode('utf-8'))
 
             # don't check locale value, just require it be present
             del manifest['locale']
@@ -113,7 +113,7 @@ class TestBundle(TestCase):
             self.assertIn(b'notebook', reqs)
             self.assertIn(b'nbformat', reqs)
 
-            manifest = json.load(tar.extractfile('manifest.json'))
+            manifest = json.loads(tar.extractfile('manifest.json').read().decode('utf-8'))
 
             # don't check requirements.txt since we don't know the checksum
             del manifest['files']['requirements.txt']
@@ -194,7 +194,7 @@ class TestBundle(TestCase):
                 'manifest.json',
             ])
 
-            manifest = json.load(tar.extractfile('manifest.json'))
+            manifest = json.loads(tar.extractfile('manifest.json').read().decode('utf-8'))
 
             self.assertEqual(manifest, {
                 u"version": 1,
