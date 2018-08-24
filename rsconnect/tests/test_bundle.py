@@ -59,6 +59,7 @@ class TestBundle(TestCase):
 
             # don't check locale value, just require it be present
             del manifest['locale']
+            del manifest['python']['package_manager']['version']
 
             self.assertEqual(manifest, {
                 u"version": 1,
@@ -70,7 +71,6 @@ class TestBundle(TestCase):
                     u"version": self.python_version(),
                     u"package_manager": {
                         u"name": u"pip",
-                        u"version": u"9.0.1",  # this is the version in our docker image
                         u"package_file": u"requirements.txt"
                     }
                 },
@@ -120,6 +120,7 @@ class TestBundle(TestCase):
 
             # also don't check locale value, just require it be present
             del manifest['locale']
+            del manifest['python']['package_manager']['version']
 
             self.assertEqual(manifest, {
                 u"version": 1,
@@ -131,7 +132,6 @@ class TestBundle(TestCase):
                     u"version": self.python_version(),
                     u"package_manager": {
                         u"name": u"pip",
-                        u"version": u"9.0.1",  # this is the version in our docker image
                         u"package_file": u"requirements.txt"
                     }
                 },
