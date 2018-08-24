@@ -539,11 +539,14 @@ define([
       var a = $("<a></a>")
         .addClass("list-group-item")
         .toggleClass("active", active)
+        .toggleClass("disabled", !!selectedDeployLocation)
         .attr("href", "#")
         .text(config.servers[id].serverName)
         .append(title)
-        .append(btnRemove)
-        .on("click", function() {
+        .append(btnRemove);
+
+      if (!selectedDeployLocation) {
+        a.on("click", function() {
           var $this = $(this);
           $this
             .toggleClass("active")
@@ -562,7 +565,7 @@ define([
             btnPublish.addClass("disabled");
           }
         });
-
+      }
       return a;
     }
 
