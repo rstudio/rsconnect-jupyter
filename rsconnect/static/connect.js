@@ -743,14 +743,6 @@ define([
             "you’ll be able to pick a new mode and publish.";
 
           appModeChoices.attr("title", msg);
-          appModeChoices.on("click", function() {
-            appModeChoices
-              .parent()
-              .find(".help-block")
-              .text(
-                'To change the app type: enter a unique title, click Publish, then select "New location".'
-              );
-          });
         }
 
         var form = publishModal.find("form").on("submit", function(e) {
