@@ -729,6 +729,13 @@ define([
           });
         } else {
           appModeChoices.addClass("disabled");
+          var msg =
+            "You can't change the mode of an existing deployment. " +
+            "To deploy a new deployment, change the title, " +
+            'click "Next", select "New location", and then ' +
+            "you’ll be able to pick a new mode and publish.";
+
+          appModeChoices.attr("title", msg);
           appModeChoices.on("click", function() {
             appModeChoices
               .parent()
