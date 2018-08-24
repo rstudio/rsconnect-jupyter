@@ -697,6 +697,9 @@ define([
         // add default title
         txtTitle = publishModal.find("[name=title]");
         txtTitle.val(initialTitle);
+        txtTitle.change(function() {
+          btnPublish.text("Next");
+        });
         maybeShowConfigUrl();
 
         txtApiKey = publishModal.find("[name=api-key]").val(userProvidedApiKey);
