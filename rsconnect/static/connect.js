@@ -979,8 +979,12 @@ define([
         .append(label);
       return div;
     }
-    var newLocationRadio =
-      '<div class="radio"><label><input type="radio" name="location" value="new"> New location</label></div>';
+    var newLocationRadio = $(
+      '<div class="radio"><label><input type="radio" name="location" value="new"><span id="new-location"</span></label></div>'
+    );
+    newLocationRadio
+      .find("#new-location")
+      .text('New location with title "' + title + '"');
 
     var radios = searchResults.map(function(app) {
       return mkRadio(
