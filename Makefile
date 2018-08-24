@@ -52,6 +52,12 @@ notebook3:
 test:
 # TODO run in container
 	python setup.py test
+	python -V
+	python -Wi setup.py install
+	python -Wi setup.py test
+
+test%:
+	make DOCKER_IMAGE=rstudio/rsconnect-jupyter-py$* PY_VERSION=$* TARGET=test launch
 
 dist:
 # wheels don't get built if _any_ file it tries to touch has a timestamp < 1980

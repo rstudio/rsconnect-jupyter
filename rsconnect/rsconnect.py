@@ -106,7 +106,7 @@ class RSConnect:
     def json_response(self):
         response = self.conn.getresponse()
         self._update_cookie(response)
-        raw = response.read()
+        raw = response.read(decode_content=True)
 
         if response.status >= 500:
             logger.error('Received HTTP 500: %s', raw)
