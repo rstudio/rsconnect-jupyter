@@ -1,4 +1,4 @@
-.PHONY: clean images image% launch notebook% package dist run test test% shell shell% dist-run dist-run%
+.PHONY: clean all-images image% launch notebook% package dist run test all-tests test% shell shell% dist-run dist-run%
 
 NB_UID=$(shell id -u)
 NB_GID=$(shell id -g)
@@ -9,7 +9,7 @@ VERSION=$(shell cat version.txt).$(shell printenv BUILD_NUMBER || echo 9999)
 clean:
 	rm -rf build/ dist/ rsconnect.egg-info/
 
-images: image2 image3.5 image3.6 image3.7
+all-images: image2 image3.5 image3.6 image3.7
 
 image%:
 	docker build \
@@ -36,7 +36,7 @@ launch:
 notebook%:
 	make DOCKER_IMAGE=$(IMAGE)$* PY_VERSION=$* TARGET=run launch
 
-tests: test2 test3.5 test3.6 test3.7
+all-tests: test2 test3.5 test3.6 test3.7
 
 test:
 # TODO run in container
