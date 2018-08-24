@@ -956,6 +956,11 @@ define([
       }
     }
 
+    var btnCancel = $('<a class="btn" aria-hidden="true">Cancel</a>');
+    var btnDeploy = $(
+      '<a class="btn btn-primary disabled" aria-hidden="true">Deploy</a>'
+    );
+
     function mkRadio(value, name, configUrl, appMode) {
       var input = $("<input></input>")
         .attr("type", "radio")
@@ -977,11 +982,19 @@ define([
       var div = $("<div></div>")
         .addClass("radio")
         .append(label);
+
+      div.on("click", function() {
+        btnDeploy.text("Deploy");
+      });
       return div;
     }
     var newLocationRadio = $(
       '<div class="radio"><label><input type="radio" name="location" value="new"><span id="new-location"</span></label></div>'
     );
+    newLocationRadio.on("click", function() {
+      btnDeploy.text("Next");
+    });
+
     var divider = $("<p>Or update:</p>");
     newLocationRadio
       .find("#new-location")
@@ -1032,15 +1045,15 @@ define([
         var selectedLocation = null;
 
         // add footer buttons
-        var btnCancel = $('<a class="btn" aria-hidden="true">Cancel</a>');
-        var btnDeploy = $(
-          '<a class="btn btn-primary disabled" aria-hidden="true">Deploy</a>'
-        );
         btnCancel.on("click", function() {
           backToSelectServerDialog(DeploymentLocation.Canceled);
         });
         btnDeploy.on("click", function() {
           backToSelectServerDialog(selectedLocation);
+        });
+
+        newLocationRadio.on("click", function() {
+          btnDeploy.text("Next");
         });
         searchDialog
           .find(".modal-footer")
