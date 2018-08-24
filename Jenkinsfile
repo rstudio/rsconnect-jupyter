@@ -93,7 +93,7 @@ def buildAndTest(pyVersion) {
 
 def publishArtifacts() {
     // Promote master builds to S3
-    cmd = '~/.local/bin/aws s3 cp --exclude "*" --include "*.whl" dist/ s3://rstudio-rsconnect-jupyter/'
+    cmd = 'aws s3 cp dist/*.whl s3://rstudio-rsconnect-jupyter/'
 
     if (isUserBranch) {
         print "S3 sync DRY RUN for user branch ${env.BRANCH_NAME}"
@@ -134,10 +134,14 @@ try {
               print "building python wheel package"
               sh 'make dist'
               archiveArtifacts artifacts: 'dist/*.whl'
-              publishArtifacts()
+              stash includes: 'dist/*.whl', name: 'wheel'
             }
           }
         )
+      }
+      stage('S3 upload') {
+        unstash 'wheel'
+        publishArtifacts()
       }
     }
   }
