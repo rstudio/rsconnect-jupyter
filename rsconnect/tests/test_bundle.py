@@ -55,10 +55,11 @@ class TestBundle(TestCase):
             reqs = tar.extractfile('requirements.txt').read()
             self.assertEqual(reqs, b'numpy\npandas\nmatplotlib\n')
 
-            manifest = json.load(tar.extractfile('manifest.json'))
+            manifest = json.loads(tar.extractfile('manifest.json').read().decode('utf-8'))
 
             # don't check locale value, just require it be present
             del manifest['locale']
+            del manifest['python']['package_manager']['version']
 
             self.assertEqual(manifest, {
                 u"version": 1,
@@ -70,7 +71,6 @@ class TestBundle(TestCase):
                     u"version": self.python_version(),
                     u"package_manager": {
                         u"name": u"pip",
-                        u"version": u"10.0.1",  # this is the version in our docker image
                         u"package_file": u"requirements.txt"
                     }
                 },
@@ -113,13 +113,14 @@ class TestBundle(TestCase):
             self.assertIn(b'notebook', reqs)
             self.assertIn(b'nbformat', reqs)
 
-            manifest = json.load(tar.extractfile('manifest.json'))
+            manifest = json.loads(tar.extractfile('manifest.json').read().decode('utf-8'))
 
             # don't check requirements.txt since we don't know the checksum
             del manifest['files']['requirements.txt']
 
             # also don't check locale value, just require it be present
             del manifest['locale']
+            del manifest['python']['package_manager']['version']
 
             self.assertEqual(manifest, {
                 u"version": 1,
@@ -131,7 +132,6 @@ class TestBundle(TestCase):
                     u"version": self.python_version(),
                     u"package_manager": {
                         u"name": u"pip",
-                        u"version": u"10.0.1",  # this is the version in our docker image
                         u"package_file": u"requirements.txt"
                     }
                 },
@@ -194,7 +194,7 @@ class TestBundle(TestCase):
                 'manifest.json',
             ])
 
-            manifest = json.load(tar.extractfile('manifest.json'))
+            manifest = json.loads(tar.extractfile('manifest.json').read().decode('utf-8'))
 
             self.assertEqual(manifest, {
                 u"version": 1,

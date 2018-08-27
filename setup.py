@@ -33,6 +33,7 @@ setup(name='rsconnect',
       install_requires=[
           'notebook',
           'nbformat',
+          'nbconvert>=5.0',
           'six'
       ] + ipython_dependency(),
       include_package_data=True,
