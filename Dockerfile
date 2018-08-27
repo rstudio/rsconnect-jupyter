@@ -19,4 +19,4 @@ RUN conda update conda
 
 USER ${NB_UID}:${NB_GID}
 RUN bash -c 'cd /home/builder \
-    && conda create --yes --name py${PY_VERSION/./} python=${PY_VERSION} jupyter'
+    && conda create --yes --channel conda-forge --name py${PY_VERSION/./} python=${PY_VERSION} jupyter'
