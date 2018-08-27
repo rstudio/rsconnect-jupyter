@@ -715,7 +715,10 @@ define([
           maybeUpdateAppTitle();
         });
 
-        if (selectedDeployLocation) {
+        if (
+          selectedDeployLocation &&
+          selectedDeployLocation !== DeploymentLocation.Canceled
+        ) {
           txtTitle.prop("disabled", true);
           txtApiKey.prop("disabled", true);
         }
