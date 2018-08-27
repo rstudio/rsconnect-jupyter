@@ -73,12 +73,18 @@ define([
         metadata.rsconnect.previousServerId in this.servers
           ? metadata.rsconnect.previousServerId
           : null;
+    } else {
+      var saved = localStorage.getItem("servers");
+      if (saved) {
+        this.servers = JSON.parse(saved);
+      }
     }
 
     this.save = this.save.bind(this);
     this.updateServer = this.updateServer.bind(this);
     this.verifyServer = this.verifyServer.bind(this);
     this.addServer = this.addServer.bind(this);
+    this.saveServersInBrowser = this.saveServersInBrowser.bind(this);
     this.getApp = this.getApp.bind(this);
     this.removeServer = this.removeServer.bind(this);
     this.inspectEnvironment = this.inspectEnvironment.bind(this);
@@ -137,6 +143,7 @@ define([
             server: server,
             serverName: serverName
           };
+          self.saveServersInBrowser();
           return self.save();
         })
         .then(function() {
@@ -159,6 +166,22 @@ define([
       });
     },
 
+    saveServersInBrowser: function() {
+      var toSave = {};
+
+      for (var serverId in this.servers) {
+        var src = this.servers[serverId];
+
+        var dst = {
+          server: src.server,
+          serverName: src.serverName
+        };
+
+        toSave[serverId] = dst;
+      }
+      localStorage.setItem("servers", JSON.stringify(toSave));
+    },
+
     updateServer: function(id, appId, notebookTitle, appMode, configUrl) {
       this.servers[id].appId = appId;
       this.servers[id].notebookTitle = notebookTitle;
@@ -169,6 +192,7 @@ define([
 
     removeServer: function(id) {
       delete this.servers[id];
+      this.saveServersInBrowser();
       return this.save();
     },
 
