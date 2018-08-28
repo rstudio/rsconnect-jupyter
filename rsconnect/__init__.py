@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 
@@ -31,7 +32,14 @@ def _jupyter_nbextension_paths():
         require="rsconnect/index")]
 
 
-api_keys = {}
+def md5(s):
+    if hasattr(s, 'encode'):
+        s = s.encode('utf-8')
+
+    h = hashlib.md5()
+    h.update(s)
+    return h.hexdigest()
+
 
 # https://github.com/jupyter/notebook/blob/master/notebook/base/handlers.py
 class EndpointHandler(APIHandler):
@@ -127,11 +135,13 @@ class EndpointHandler(APIHandler):
 
         if action == 'get_api_key':
             server_address = data['server_address']
-            api_key = api_keys.get(server_address)
+            address_hash = md5(server_address)
+            api_key = self.get_secure_cookie('key_' + address_hash, max_age_days=3650)
+
             self.log.info("get_api_key: %s %s", server_address, api_key)
             self.finish(json.dumps({
                 'server_address': server_address,
-                'api_key': api_key
+                'api_key': api_key and api_key.decode('utf-8')
             }))
             return
 
@@ -139,7 +149,8 @@ class EndpointHandler(APIHandler):
             server_address = data['server_address']
             api_key = data['api_key']
             self.log.info("set_api_key: %s %s", server_address, api_key)
-            api_keys[server_address] = api_key
+            address_hash = md5(server_address)
+            self.set_secure_cookie('key_' + address_hash, api_key, expires_days=3650)
             return
 
 
