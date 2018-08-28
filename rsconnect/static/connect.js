@@ -84,7 +84,8 @@ define([
     this.updateServer = this.updateServer.bind(this);
     this.verifyServer = this.verifyServer.bind(this);
     this.addServer = this.addServer.bind(this);
-    this.saveServersInBrowser = this.saveServersInBrowser.bind(this);
+    this.fetchConfig = this.fetchConfig.bind(this);
+    this.saveConfig = this.saveConfig.bind(this);
     this.getApp = this.getApp.bind(this);
     this.removeServer = this.removeServer.bind(this);
     this.inspectEnvironment = this.inspectEnvironment.bind(this);
@@ -143,8 +144,7 @@ define([
             server: server,
             serverName: serverName
           };
-          self.saveServersInBrowser();
-          return self.save();
+          return self.saveConfig().then(self.save);
         })
         .then(function() {
           return id;
@@ -166,7 +166,7 @@ define([
       });
     },
 
-    saveServersInBrowser: function() {
+    saveConfig: function() {
       var toSave = {};
 
       for (var serverId in this.servers) {
@@ -179,7 +179,32 @@ define([
 
         toSave[serverId] = dst;
       }
-      localStorage.setItem("servers", JSON.stringify(toSave));
+      debug.info("saving config:", toSave);
+      return Utils.ajax({
+        url: "/api/config/rsconnect_jupyter",
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        data: JSON.stringify(toSave)
+      });
+    },
+
+    fetchConfig: function() {
+      var self = this;
+      return Utils.ajax({
+        url: "/api/config/rsconnect_jupyter",
+        method: "GET"
+      }).then(function(data) {
+        debug.info("fetched config:", data);
+        if (!self.servers) {
+          self.servers = {};
+        }
+
+        for (var serverId in data) {
+          if (!self.servers[serverId]) {
+            self.servers[serverId] = data[serverId];
+          }
+        }
+      });
     },
 
     updateServer: function(id, appId, notebookTitle, appMode, configUrl) {
@@ -192,8 +217,7 @@ define([
 
     removeServer: function(id) {
       delete this.servers[id];
-      this.saveServersInBrowser();
-      return this.save();
+      return this.saveConfig().then(this.save);
     },
 
     inspectEnvironment: function() {
@@ -1073,6 +1097,7 @@ define([
     // save before publishing so the server can pick up changes
     Jupyter.notebook
       .save_notebook()
+      .then(config.fetchConfig())
       .then(function() {
         if (Object.keys(config.servers).length === 0) {
           showAddServerDialog(false).then(showSelectServerDialog);
