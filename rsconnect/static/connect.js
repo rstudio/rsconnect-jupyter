@@ -636,7 +636,7 @@ define([
         "        </div>",
         "    </div>",
         '    <div class="form-group">',
-        "        <label>API Key</label>",
+        '        <label>API Key</label>  <a href="http://docs.rstudio.com/connect/user/api-keys.html" target="_rsconnect"><i class="fa fa-question-circle rsc-fa-icon" target="_rsconnect"></i></a>',
         '        <input class="form-control" name="api-key" type="password" maxlength="32" required>',
         '        <span class="help-block"></span>',
         "    </div>",
