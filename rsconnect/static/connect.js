@@ -73,11 +73,6 @@ define([
         metadata.rsconnect.previousServerId in this.servers
           ? metadata.rsconnect.previousServerId
           : null;
-    } else {
-      var saved = localStorage.getItem("servers");
-      if (saved) {
-        this.servers = JSON.parse(saved);
-      }
     }
 
     this.save = this.save.bind(this);
