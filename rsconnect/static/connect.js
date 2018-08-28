@@ -91,6 +91,8 @@ define([
     this.inspectEnvironment = this.inspectEnvironment.bind(this);
     this.publishContent = this.publishContent.bind(this);
     this.getNotebookTitle = this.getNotebookTitle.bind(this);
+    this.loadApiKey = this.loadApiKey.bind(this);
+    this.saveApiKey = this.saveApiKey.bind(this);
   }
 
   RSConnect.prototype = {
@@ -185,6 +187,33 @@ define([
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         data: JSON.stringify(toSave)
+      });
+    },
+
+    loadApiKey: function(server_address) {
+      var data = {
+        server_address: server_address
+      };
+
+      return Utils.ajax({
+        url: "/rsconnect_jupyter/get_api_key",
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        data: JSON.stringify(data)
+      });
+    },
+
+    saveApiKey: function(server_address, api_key) {
+      var data = {
+        server_address: server_address,
+        api_key: api_key
+      };
+
+      return Utils.ajax({
+        url: "/rsconnect_jupyter/set_api_key",
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        data: JSON.stringify(data)
       });
     },
 
@@ -605,6 +634,16 @@ define([
             btnPublish.removeClass("disabled");
             maybeShowConfigUrl();
             maybeUpdateAppTitle();
+            fetchApiKey();
+
+            config
+              .loadApiKey(config.servers[selectedEntryId].server)
+              .then(function(data) {
+                var api_key = data.api_key;
+                if (api_key && !txtApiKey.val()) {
+                  txtApiKey.val(api_key);
+                }
+              });
           } else {
             selectedEntryId = null;
             btnPublish.addClass("disabled");
@@ -660,6 +699,17 @@ define([
           }
         }
       }
+    }
+
+    function fetchApiKey() {
+      config
+        .loadApiKey(config.servers[selectedEntryId].server)
+        .then(function(data) {
+          var api_key = data.api_key;
+          if (api_key && !txtApiKey.val()) {
+            txtApiKey.val(api_key);
+          }
+        });
     }
 
     var publishModal = Dialog.modal({
@@ -751,6 +801,8 @@ define([
         txtApiKey.change(function() {
           maybeUpdateAppTitle();
         });
+
+        fetchApiKey();
 
         // app mode
         var appModeChoices = publishModal.find(".rsc-appmode");
@@ -851,6 +903,11 @@ define([
               })
               .fail(handleFailure)
               .then(function(result) {
+                config.saveApiKey(
+                  config.servers[selectedEntryId].server,
+                  txtApiKey.val()
+                );
+
                 notify.set_message(
                   " Successfully published content",
                   // timeout in milliseconds after which the notification
@@ -967,7 +1024,10 @@ define([
         if (selectedDeployLocation === DeploymentLocation.Canceled) {
           // pretend like nothing happened since Canceled is a no-op
           selectedDeployLocation = null;
-        } else if (selectedDeployLocation !== DeploymentLocation.New) {
+        } else if (
+          selectedDeployLocation &&
+          selectedDeployLocation !== DeploymentLocation.New
+        ) {
           form.trigger("submit");
         }
       }

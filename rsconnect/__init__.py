@@ -31,6 +31,8 @@ def _jupyter_nbextension_paths():
         require="rsconnect/index")]
 
 
+api_keys = {}
+
 # https://github.com/jupyter/notebook/blob/master/notebook/base/handlers.py
 class EndpointHandler(APIHandler):
 
@@ -121,6 +123,23 @@ class EndpointHandler(APIHandler):
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
             self.finish(json.dumps(retval))
+            return
+
+        if action == 'get_api_key':
+            server_address = data['server_address']
+            api_key = api_keys.get(server_address)
+            self.log.info("get_api_key: %s %s", server_address, api_key)
+            self.finish(json.dumps({
+                'server_address': server_address,
+                'api_key': api_key
+            }))
+            return
+
+        if action == 'set_api_key':
+            server_address = data['server_address']
+            api_key = data['api_key']
+            self.log.info("set_api_key: %s %s", server_address, api_key)
+            api_keys[server_address] = api_key
             return
 
 
