@@ -630,15 +630,6 @@ define([
             maybeShowConfigUrl();
             maybeUpdateAppTitle();
             fetchApiKey();
-
-            config
-              .loadApiKey(config.servers[selectedEntryId].server)
-              .then(function(data) {
-                var api_key = data.api_key;
-                if (api_key && !txtApiKey.val()) {
-                  txtApiKey.val(api_key);
-                }
-              });
           } else {
             selectedEntryId = null;
             btnPublish.addClass("disabled");
@@ -797,7 +788,9 @@ define([
           maybeUpdateAppTitle();
         });
 
-        fetchApiKey();
+        if (!userProvidedApiKey) {
+          fetchApiKey();
+        }
 
         // app mode
         var appModeChoices = publishModal.find(".rsc-appmode");
