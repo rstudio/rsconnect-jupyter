@@ -689,14 +689,16 @@ define([
     }
 
     function fetchApiKey() {
-      config
-        .loadApiKey(config.servers[selectedEntryId].server)
-        .then(function(data) {
-          var api_key = data.api_key;
-          if (api_key && !txtApiKey.val()) {
-            txtApiKey.val(api_key);
-          }
-        });
+      if (config.servers && config.servers[selectedEntryId]) {
+        config
+          .loadApiKey(config.servers[selectedEntryId].server)
+          .then(function(data) {
+            var api_key = data.api_key;
+            if (api_key && !txtApiKey.val()) {
+              txtApiKey.val(api_key);
+            }
+          });
+      }
     }
 
     var publishModal = Dialog.modal({
