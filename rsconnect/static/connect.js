@@ -129,23 +129,24 @@ define([
 
     addServer: function(server, serverName) {
       var self = this;
-      var id = uuidv4();
       if (server[server.length - 1] !== "/") {
         server += "/";
       }
 
       // verify the server exists, then save
-      return this.verifyServer(server)
-        .then(function() {
-          self.servers[id] = {
-            server: server,
-            serverName: serverName
-          };
-          return self.saveConfig().then(self.save);
-        })
-        .then(function() {
-          return id;
-        });
+      return this.verifyServer(server).then(function(data) {
+        var id = data.address_hash;
+        self.servers[id] = {
+          server: server,
+          serverName: serverName
+        };
+        return self
+          .saveConfig()
+          .then(self.save)
+          .then(function() {
+            return id;
+          });
+      });
     },
 
     getApp: function(serverId, apiKey, appId) {

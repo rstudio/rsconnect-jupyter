@@ -49,8 +49,13 @@ class EndpointHandler(APIHandler):
         data = self.get_json_body()
 
         if action == 'verify_server':
-            if verify_server(data['server_address']):
-                self.finish(json.dumps({'status': 'Provided server is running RStudio Connect'}))
+            server_address = data['server_address']
+            if verify_server(server_address):
+                address_hash = md5(server_address)
+                self.finish(json.dumps({
+                    'status': 'Provided server is running RStudio Connect',
+                    'address_hash': address_hash,
+                }))
             else:
                 raise web.HTTPError(400, u'Unable to verify the provided server is running RStudio Connect')
             return
