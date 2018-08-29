@@ -747,14 +747,18 @@ define([
               .removeClass("active");
           });
         } else {
-          appModeChoices.addClass("disabled");
           var msg =
             "You can't change the mode of an existing deployment. " +
             "To deploy a new deployment, change the title, " +
             'click "Next", select "New location", and then ' +
             "you’ll be able to pick a new mode and publish.";
 
-          appModeChoices.attr("title", msg);
+          appModeChoices
+            .addClass("disabled")
+            .data("toggle", "popover")
+            .data("placement", "top")
+            .data("content", msg)
+            .popover();
         }
 
         var form = publishModal.find("form").on("submit", function(e) {
