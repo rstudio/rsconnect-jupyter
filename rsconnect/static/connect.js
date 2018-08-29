@@ -636,7 +636,7 @@ define([
         "        </div>",
         "    </div>",
         '    <div class="form-group">',
-        '        <label>API Key</label>  <a href="http://docs.rstudio.com/connect/user/api-keys.html" target="_rsconnect"><i class="fa fa-question-circle rsc-fa-icon" target="_rsconnect"></i></a>',
+        '        <label>API Key</label><a href="http://docs.rstudio.com/connect/user/api-keys.html" target="_rsconnect"><i class="fa fa-question-circle rsc-fa-icon" target="_rsconnect"></i></a>',
         '        <input class="form-control" name="api-key" type="password" maxlength="32" required>',
         '        <span class="help-block"></span>',
         "    </div>",
@@ -645,7 +645,7 @@ define([
         '        <input class="form-control" name="title" type="text" minlength="3" maxlength="64" required>',
         '        <span class="help-block"></span>',
         "    </div>",
-        '    <div class="form-group">',
+        '    <div class="form-group" id="rsc-publish-source">',
         "        <label>Publish Source Code</label>",
         '        <div class="list-group">',
         '            <a href="#" id="rsc-publish-with-source" class="list-group-item rsc-appmode" data-appmode="jupyter-static">',
@@ -747,14 +747,18 @@ define([
               .removeClass("active");
           });
         } else {
+          appModeChoices.addClass("disabled");
+
           var msg =
             "You can't change the mode of an existing deployment. " +
             "To deploy a new deployment, change the title, " +
             'click "Next", select "New location", and then ' +
             "you’ll be able to pick a new mode and publish.";
 
-          appModeChoices
-            .addClass("disabled")
+          var helpIcon = $('<i class="fa fa-question-circle rsc-fa-icon"></i>');
+          $("#rsc-publish-source > label").append(helpIcon);
+
+          $("#rsc-publish-source")
             .data("toggle", "popover")
             .data("placement", "top")
             .data("content", msg)
