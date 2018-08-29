@@ -999,9 +999,6 @@ define([
     var newLocationRadio = $(
       '<div class="radio"><label><input type="radio" name="location" value="new"><span id="new-location"</span></label></div>'
     );
-    newLocationRadio.on("click", function() {
-      btnDeploy.text("Next");
-    });
 
     var divider = $("<p>Or update:</p>");
     newLocationRadio
