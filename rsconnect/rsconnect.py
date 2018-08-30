@@ -106,12 +106,12 @@ class RSConnect:
     def json_response(self):
         response = self.conn.getresponse()
         self._update_cookie(response)
-        raw = response.read()
+        raw = response.read().decode('utf-8')
 
         if response.status >= 500:
             logger.error('Received HTTP 500: %s', raw)
             try:
-                message = json.loads(raw.decode('utf-8'))['error']
+                message = json.loads(raw)['error']
             except:
                 message = 'Unexpected response code: %d' % (response.status)
             raise RSConnectException(message)
