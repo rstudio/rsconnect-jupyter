@@ -612,11 +612,14 @@ define([
       var a = $("<a></a>")
         .addClass("list-group-item")
         .toggleClass("active", active)
+        .toggleClass("disabled", !!selectedDeployLocation)
         .attr("href", "#")
         .text(config.servers[id].serverName)
         .append(title)
-        .append(btnRemove)
-        .on("click", function() {
+        .append(btnRemove);
+
+      if (!selectedDeployLocation) {
+        a.on("click", function() {
           var $this = $(this);
           $this
             .toggleClass("active")
@@ -636,7 +639,7 @@ define([
             btnPublish.addClass("disabled");
           }
         });
-
+      }
       return a;
     }
 
@@ -648,7 +651,11 @@ define([
 
     function maybeShowConfigUrl() {
       var entry = config.servers[selectedEntryId];
-      if (entry && entry.configUrl) {
+      if (
+        entry &&
+        entry.configUrl &&
+        selectedDeployLocation !== DeploymentLocation.New
+      ) {
         publishModal
           .find("div[data-id=configUrl]")
           .text("Currently published at: ")
@@ -716,7 +723,7 @@ define([
         "        </div>",
         "    </div>",
         '    <div class="form-group">',
-        "        <label>API Key</label>",
+        '        <label>API Key</label><a href="http://docs.rstudio.com/connect/user/api-keys.html" target="_rsconnect"><i class="fa fa-question-circle rsc-fa-icon" target="_rsconnect"></i></a>',
         '        <input class="form-control" name="api-key" type="password" maxlength="32" required>',
         '        <span class="help-block"></span>',
         "    </div>",
@@ -725,7 +732,7 @@ define([
         '        <input class="form-control" name="title" type="text" minlength="3" maxlength="64" required>',
         '        <span class="help-block"></span>',
         "    </div>",
-        '    <div class="form-group">',
+        '    <div class="form-group" id="rsc-publish-source">',
         "        <label>Publish Source Code</label>",
         '        <div class="list-group">',
         '            <a href="#" id="rsc-publish-with-source" class="list-group-item rsc-appmode" data-appmode="jupyter-static">',
@@ -784,6 +791,10 @@ define([
         // add default title
         txtTitle = publishModal.find("[name=title]");
         txtTitle.val(initialTitle);
+
+        txtTitle.change(function() {
+          btnPublish.text("Next");
+        });
         maybeShowConfigUrl();
 
         txtApiKey = publishModal.find("[name=api-key]").val(userProvidedApiKey);
@@ -793,6 +804,14 @@ define([
 
         if (!userProvidedApiKey) {
           fetchApiKey();
+        }
+
+        if (
+          selectedDeployLocation &&
+          selectedDeployLocation !== DeploymentLocation.Canceled
+        ) {
+          txtTitle.prop("disabled", true);
+          txtApiKey.prop("disabled", true);
         }
 
         // app mode
@@ -820,14 +839,21 @@ define([
           });
         } else {
           appModeChoices.addClass("disabled");
-          appModeChoices.on("click", function() {
-            appModeChoices
-              .parent()
-              .find(".help-block")
-              .text(
-                'To change the app type: enter a unique title, click Publish, then select "New location".'
-              );
-          });
+
+          var msg =
+            "You can't change the mode of an existing deployment. " +
+            "To deploy a new deployment, change the title, " +
+            'click "Next", select "New location", and then ' +
+            "you’ll be able to pick a new mode and publish.";
+
+          var helpIcon = $('<i class="fa fa-question-circle rsc-fa-icon"></i>');
+          $("#rsc-publish-source > label").append(helpIcon);
+
+          $("#rsc-publish-source")
+            .data("toggle", "popover")
+            .data("placement", "top")
+            .data("content", msg)
+            .popover();
         }
 
         var form = publishModal.find("form").on("submit", function(e) {
@@ -1045,6 +1071,11 @@ define([
       }
     }
 
+    var btnCancel = $('<a class="btn" aria-hidden="true">Cancel</a>');
+    var btnDeploy = $(
+      '<a class="btn btn-primary disabled" aria-hidden="true">Deploy</a>'
+    );
+
     function mkRadio(value, name, configUrl, appMode) {
       var input = $("<input></input>")
         .attr("type", "radio")
@@ -1066,10 +1097,20 @@ define([
       var div = $("<div></div>")
         .addClass("radio")
         .append(label);
+
+      div.on("click", function() {
+        btnDeploy.text("Deploy");
+      });
       return div;
     }
-    var newLocationRadio =
-      '<div class="radio"><label><input type="radio" name="location" value="new"> New location</label></div>';
+    var newLocationRadio = $(
+      '<div class="radio"><label><input type="radio" name="location" value="new"><span id="new-location"</span></label></div>'
+    );
+
+    var divider = $("<p>Or update:</p>");
+    newLocationRadio
+      .find("#new-location")
+      .text('New location with title "' + title + '"');
 
     var radios = searchResults.map(function(app) {
       return mkRadio(
@@ -1079,6 +1120,9 @@ define([
         app.app_mode
       );
     });
+    if (radios.length > 0) {
+      radios.unshift(divider);
+    }
     radios.unshift(newLocationRadio);
 
     var selectedAppMode = appMode;
@@ -1113,15 +1157,15 @@ define([
         var selectedLocation = null;
 
         // add footer buttons
-        var btnCancel = $('<a class="btn" aria-hidden="true">Cancel</a>');
-        var btnDeploy = $(
-          '<a class="btn btn-primary disabled" aria-hidden="true">Deploy</a>'
-        );
         btnCancel.on("click", function() {
           backToSelectServerDialog(DeploymentLocation.Canceled);
         });
         btnDeploy.on("click", function() {
           backToSelectServerDialog(selectedLocation);
+        });
+
+        newLocationRadio.on("click", function() {
+          btnDeploy.text("Next");
         });
         searchDialog
           .find(".modal-footer")

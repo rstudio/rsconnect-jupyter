@@ -124,11 +124,17 @@ try {
 
       stage('Docker build and test') {
         parallel(
-          'python2': {
-            buildAndTest("2")
+          'python2.7': {
+            buildAndTest("2.7")
           },
-          'python3': {
-            img = buildAndTest("3")
+          'python3.4': {
+            img = buildAndTest("3.4")
+          },
+          'python3.5': {
+            img = buildAndTest("3.5")
+          },
+          'python3.6': {
+            img = buildAndTest("3.6")
 
             img.inside("-v ${env.WORKSPACE}:/rsconnect") {
               print "building python wheel package"
@@ -136,6 +142,9 @@ try {
               archiveArtifacts artifacts: 'dist/*.whl'
               stash includes: 'dist/*.whl', name: 'wheel'
             }
+          },
+          'python3.7': {
+            img = buildAndTest("3.7")
           }
         )
       }
