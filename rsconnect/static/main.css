@@ -24,3 +24,9 @@
 .rsc-appmode.disabled {
     opacity: 0.5;
 }
+
+.rsc-fa-icon {
+    font-size: 18px;
+    color: black;
+    padding-left: 10px;
+}
