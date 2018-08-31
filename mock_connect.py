@@ -1,4 +1,14 @@
 
+# Installation:
+# virtualenv flask
+# source flask/bin/activate
+# pip install flask
+
+# To run:
+# FLASK_APP=mock_connect.py flask run --host=0.0.0.0
+
+# Use the API key below (0123456789abcdef0123456789abcdef) in rsconnect-jupyter
+
 import io
 import tarfile
 from datetime import datetime
