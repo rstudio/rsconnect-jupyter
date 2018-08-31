@@ -7,8 +7,8 @@ from notebook.base.handlers import APIHandler
 from notebook.utils import url_path_join
 from tornado import web
 
-from rsconnect.api import app_get, app_search, deploy, verify_server, RSConnectException
-from rsconnect.bundle import make_html_bundle, make_source_bundle
+from .api import app_get, app_search, deploy, verify_server, RSConnectException
+from .bundle import make_html_bundle, make_source_bundle
 
 __version__ = '1.0.0'
 
