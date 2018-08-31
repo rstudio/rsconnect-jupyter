@@ -254,7 +254,13 @@ def deploy(app):
     manifest = read_manifest(tarball)
     pprint(manifest)
 
-    app['app_mode'] = app_modes[manifest['metadata']['appmode']]
+    old_app_mode = app['app_mode']
+    new_app_mode = app_modes[manifest['metadata']['appmode']]
+
+    if old_app_mode is not None and old_app_mode != new_app_mode:
+        return error(400, 'Cannot change app mode once deployed')  # message and status code probably wrong 
+
+    app['app_mode'] = new_app_mode
     app['bundle_id'] = bundle_id
     app['last_deployed_time'] = timestamp()
 
