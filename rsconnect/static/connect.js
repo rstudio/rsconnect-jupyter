@@ -277,7 +277,11 @@ define([
     },
 
     getNotebookName: function(title) {
-      return title.replace(/[^a-zA-Z0-9_-]+/g, "_");
+      return (
+        title.replace(/[^a-zA-Z0-9_-]+/g, "_").substring(0, 50) +
+        "-" +
+        Date.now()
+      );
     },
 
     getNotebookTitle: function(id) {
