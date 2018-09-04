@@ -277,7 +277,13 @@ define([
     },
 
     getNotebookName: function(title) {
-      return title.replace(/[^a-zA-Z0-9_-]+/g, "_");
+      // slugify title and make it unique, also ensuring that it
+      // fits in the 64 character limit after the timestamp is appended.
+      return (
+        title.replace(/[^a-zA-Z0-9_-]+/g, "_").substring(0, 50) +
+        "-" +
+        Date.now()
+      );
     },
 
     getNotebookTitle: function(id) {
