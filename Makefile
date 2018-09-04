@@ -1,4 +1,4 @@
-.PHONY: clean all-images image% launch notebook% package dist run test all-tests test% shell shell% dist-run dist-run%
+.PHONY: clean all-images image% launch notebook% package dist run test all-tests test% shell shell% dist-run dist-run% mock-server
 
 NB_UID=$(shell id -u)
 NB_GID=$(shell id -g)
@@ -81,3 +81,15 @@ dist-run: dist
 	jupyter-nbextension enable --py rsconnect
 	jupyter-serverextension enable --py rsconnect
 	jupyter-notebook -y --notebook-dir=/notebooks --ip='*' --port=9999 --no-browser --NotebookApp.token=''
+
+build/mock-connect/bin/flask:
+	bash -c '\
+		mkdir -p build && \
+		virtualenv build/mock-connect && \
+		. build/mock-connect/bin/activate && \
+		echo $(PATH) && \
+		pip install flask && \
+		hash -r'
+
+mock-server: build/mock-connect/bin/flask
+	FLASK_APP=mock_connect.py flask run --host=0.0.0.0
