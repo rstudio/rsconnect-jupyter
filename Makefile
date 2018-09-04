@@ -87,9 +87,9 @@ build/mock-connect/bin/flask:
 		mkdir -p build && \
 		virtualenv build/mock-connect && \
 		. build/mock-connect/bin/activate && \
-		echo $(PATH) && \
-		pip install flask && \
-		hash -r'
+		pip install flask'
 
 mock-server: build/mock-connect/bin/flask
-	FLASK_APP=mock_connect.py flask run --host=0.0.0.0
+	bash -c '\
+		. build/mock-connect/bin/activate && \
+		FLASK_APP=mock_connect.py flask run --host=0.0.0.0'
