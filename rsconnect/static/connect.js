@@ -705,9 +705,11 @@ define([
         txtTitle = publishModal.find("[name=title]");
         txtTitle.val(initialTitle);
 
-        txtTitle.change(function() {
+        function updateDeployNextButton() {
           btnPublish.text("Next");
-        });
+        }
+        txtTitle.change(updateDeployNextButton);
+        txtTitle.on("keypress", updateDeployNextButton);
         maybeShowConfigUrl();
 
         txtApiKey = publishModal.find("[name=api-key]").val(userProvidedApiKey);
