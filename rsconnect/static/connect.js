@@ -700,10 +700,7 @@ define([
         config
           .loadApiKey(config.servers[selectedEntryId].server)
           .then(function(data) {
-            var api_key = data.api_key;
-            if (api_key && !txtApiKey.val()) {
-              txtApiKey.val(api_key);
-            }
+            txtApiKey.val(data.api_key || "");
           });
       }
     }
