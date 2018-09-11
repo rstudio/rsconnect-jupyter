@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 
@@ -31,6 +32,15 @@ def _jupyter_nbextension_paths():
         require="rsconnect/index")]
 
 
+def md5(s):
+    if hasattr(s, 'encode'):
+        s = s.encode('utf-8')
+
+    h = hashlib.md5()
+    h.update(s)
+    return h.hexdigest()
+
+
 # https://github.com/jupyter/notebook/blob/master/notebook/base/handlers.py
 class EndpointHandler(APIHandler):
 
@@ -39,8 +49,13 @@ class EndpointHandler(APIHandler):
         data = self.get_json_body()
 
         if action == 'verify_server':
-            if verify_server(data['server_address']):
-                self.finish(json.dumps({'status': 'Provided server is running RStudio Connect'}))
+            server_address = data['server_address']
+            if verify_server(server_address):
+                address_hash = md5(server_address)
+                self.finish(json.dumps({
+                    'status': 'Provided server is running RStudio Connect',
+                    'address_hash': address_hash,
+                }))
             else:
                 raise web.HTTPError(400, u'Unable to verify the provided server is running RStudio Connect')
             return
@@ -121,6 +136,24 @@ class EndpointHandler(APIHandler):
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
             self.finish(json.dumps(retval))
+            return
+
+        if action == 'get_api_key':
+            server_address = data['server_address']
+            address_hash = md5(server_address)
+            api_key = self.get_secure_cookie('key_' + address_hash, max_age_days=3650)
+
+            self.finish(json.dumps({
+                'server_address': server_address,
+                'api_key': api_key and api_key.decode('utf-8')
+            }))
+            return
+
+        if action == 'set_api_key':
+            server_address = data['server_address']
+            api_key = data['api_key']
+            address_hash = md5(server_address)
+            self.set_secure_cookie('key_' + address_hash, api_key, expires_days=3650)
             return
 
 

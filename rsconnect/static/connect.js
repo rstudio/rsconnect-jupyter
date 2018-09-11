@@ -75,19 +75,23 @@ define([
           : null;
     }
 
-    this.save = this.save.bind(this);
+    this.saveNotebookMetadata = this.saveNotebookMetadata.bind(this);
     this.updateServer = this.updateServer.bind(this);
     this.verifyServer = this.verifyServer.bind(this);
     this.addServer = this.addServer.bind(this);
+    this.fetchConfig = this.fetchConfig.bind(this);
+    this.saveConfig = this.saveConfig.bind(this);
     this.getApp = this.getApp.bind(this);
     this.removeServer = this.removeServer.bind(this);
     this.inspectEnvironment = this.inspectEnvironment.bind(this);
     this.publishContent = this.publishContent.bind(this);
     this.getNotebookTitle = this.getNotebookTitle.bind(this);
+    this.loadApiKey = this.loadApiKey.bind(this);
+    this.saveApiKey = this.saveApiKey.bind(this);
   }
 
   RSConnect.prototype = {
-    save: function() {
+    saveNotebookMetadata: function() {
       var result = $.Deferred();
       var self = this;
       // overwrite metadata (user may have changed it)
@@ -125,23 +129,24 @@ define([
 
     addServer: function(server, serverName) {
       var self = this;
-      var id = uuidv4();
       if (server[server.length - 1] !== "/") {
         server += "/";
       }
 
       // verify the server exists, then save
-      return this.verifyServer(server)
-        .then(function() {
-          self.servers[id] = {
-            server: server,
-            serverName: serverName
-          };
-          return self.save();
-        })
-        .then(function() {
-          return id;
-        });
+      return this.verifyServer(server).then(function(data) {
+        var id = data.address_hash;
+        self.servers[id] = {
+          server: server,
+          serverName: serverName
+        };
+        return self
+          .saveConfig()
+          .then(self.saveNotebookMetadata)
+          .then(function() {
+            return id;
+          });
+      });
     },
 
     getApp: function(serverId, apiKey, appId) {
@@ -159,17 +164,85 @@ define([
       });
     },
 
+    saveConfig: function() {
+      var toSave = {};
+
+      for (var serverId in this.servers) {
+        var src = this.servers[serverId];
+
+        var dst = {
+          server: src.server,
+          serverName: src.serverName
+        };
+
+        toSave[serverId] = dst;
+      }
+      debug.info("saving config:", toSave);
+      return Utils.ajax({
+        url: "/api/config/rsconnect_jupyter",
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        data: JSON.stringify(toSave)
+      });
+    },
+
+    loadApiKey: function(server_address) {
+      var data = {
+        server_address: server_address
+      };
+
+      return Utils.ajax({
+        url: "/rsconnect_jupyter/get_api_key",
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        data: JSON.stringify(data)
+      });
+    },
+
+    saveApiKey: function(server_address, api_key) {
+      var data = {
+        server_address: server_address,
+        api_key: api_key
+      };
+
+      return Utils.ajax({
+        url: "/rsconnect_jupyter/set_api_key",
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        data: JSON.stringify(data)
+      });
+    },
+
+    fetchConfig: function() {
+      var self = this;
+      return Utils.ajax({
+        url: "/api/config/rsconnect_jupyter",
+        method: "GET"
+      }).then(function(data) {
+        debug.info("fetched config:", data);
+        if (!self.servers) {
+          self.servers = {};
+        }
+
+        for (var serverId in data) {
+          if (!self.servers[serverId]) {
+            self.servers[serverId] = data[serverId];
+          }
+        }
+      });
+    },
+
     updateServer: function(id, appId, notebookTitle, appMode, configUrl) {
       this.servers[id].appId = appId;
       this.servers[id].notebookTitle = notebookTitle;
       this.servers[id].appMode = appMode;
       this.servers[id].configUrl = configUrl;
-      return this.save();
+      return this.saveNotebookMetadata();
     },
 
     removeServer: function(id) {
       delete this.servers[id];
-      return this.save();
+      return this.saveConfig().then(this.saveNotebookMetadata);
     },
 
     inspectEnvironment: function() {
@@ -566,6 +639,7 @@ define([
             btnPublish.removeClass("disabled");
             maybeShowConfigUrl();
             maybeUpdateAppTitle();
+            fetchApiKey();
           } else {
             selectedEntryId = null;
             btnPublish.addClass("disabled");
@@ -624,6 +698,16 @@ define([
             });
           }
         }
+      }
+    }
+
+    function fetchApiKey() {
+      if (config.servers && config.servers[selectedEntryId]) {
+        config
+          .loadApiKey(config.servers[selectedEntryId].server)
+          .then(function(data) {
+            txtApiKey.val(data.api_key || "");
+          });
       }
     }
 
@@ -722,6 +806,10 @@ define([
         txtApiKey.change(function() {
           maybeUpdateAppTitle();
         });
+
+        if (!userProvidedApiKey) {
+          fetchApiKey();
+        }
 
         if (
           selectedDeployLocation &&
@@ -837,6 +925,11 @@ define([
               })
               .fail(handleFailure)
               .then(function(result) {
+                config.saveApiKey(
+                  config.servers[selectedEntryId].server,
+                  txtApiKey.val()
+                );
+
                 notify.set_message(
                   " Successfully published content",
                   // timeout in milliseconds after which the notification
@@ -953,7 +1046,10 @@ define([
         if (selectedDeployLocation === DeploymentLocation.Canceled) {
           // pretend like nothing happened since Canceled is a no-op
           selectedDeployLocation = null;
-        } else if (selectedDeployLocation !== DeploymentLocation.New) {
+        } else if (
+          selectedDeployLocation &&
+          selectedDeployLocation !== DeploymentLocation.New
+        ) {
           form.trigger("submit");
         }
       }
@@ -1101,6 +1197,7 @@ define([
     // save before publishing so the server can pick up changes
     Jupyter.notebook
       .save_notebook()
+      .then(config.fetchConfig())
       .then(function() {
         if (Object.keys(config.servers).length === 0) {
           showAddServerDialog(false).then(showSelectServerDialog);
