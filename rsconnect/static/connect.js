@@ -75,7 +75,7 @@ define([
           : null;
     }
 
-    this.save = this.save.bind(this);
+    this.saveNotebookMetadata = this.saveNotebookMetadata.bind(this);
     this.updateServer = this.updateServer.bind(this);
     this.verifyServer = this.verifyServer.bind(this);
     this.addServer = this.addServer.bind(this);
@@ -91,7 +91,7 @@ define([
   }
 
   RSConnect.prototype = {
-    save: function() {
+    saveNotebookMetadata: function() {
       var result = $.Deferred();
       var self = this;
       // overwrite metadata (user may have changed it)
@@ -142,7 +142,7 @@ define([
         };
         return self
           .saveConfig()
-          .then(self.save)
+          .then(self.saveNotebookMetadata)
           .then(function() {
             return id;
           });
@@ -237,12 +237,12 @@ define([
       this.servers[id].notebookTitle = notebookTitle;
       this.servers[id].appMode = appMode;
       this.servers[id].configUrl = configUrl;
-      return this.save();
+      return this.saveNotebookMetadata();
     },
 
     removeServer: function(id) {
       delete this.servers[id];
-      return this.saveConfig().then(this.save);
+      return this.saveConfig().then(this.saveNotebookMetadata);
     },
 
     inspectEnvironment: function() {
