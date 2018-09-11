@@ -763,14 +763,16 @@ define([
             'click "Next", select "New location", and then ' +
             "you’ll be able to pick a new mode and publish.";
 
-          var helpIcon = $('<i class="fa fa-question-circle rsc-fa-icon"></i>');
-          $("#rsc-publish-source > label").append(helpIcon);
-
-          $("#rsc-publish-source")
-            .data("toggle", "popover")
-            .data("placement", "top")
+          var helpIcon = $(
+            [
+              '<a tabindex="0" role="button" data-toggle="popover" data-trigger="focus">',
+              '<i class="fa fa-question-circle rsc-fa-icon"></i>'
+            ].join("")
+          )
             .data("content", msg)
             .popover();
+
+          $("#rsc-publish-source > label").append(helpIcon);
         }
 
         var form = publishModal.find("form").on("submit", function(e) {
