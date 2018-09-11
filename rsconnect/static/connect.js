@@ -1007,7 +1007,7 @@ define([
         .addClass("radio")
         .append(label);
 
-      div.on("click", function() {
+      label.on("click", function() {
         btnDeploy.text("Deploy");
       });
       return div;
@@ -1073,7 +1073,7 @@ define([
           backToSelectServerDialog(selectedLocation);
         });
 
-        newLocationRadio.on("click", function() {
+        newLocationRadio.find("label").on("click", function() {
           btnDeploy.text("Next");
         });
         searchDialog
