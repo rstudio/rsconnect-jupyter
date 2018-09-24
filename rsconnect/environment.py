@@ -112,6 +112,9 @@ def pip_freeze(dirname):
         msg = pip_stderr or ('exited with code %d' % pip_status)
         raise EnvironmentException('Error during pip freeze: %s' % msg)
 
+    # exclude rsconnect package
+    pip_stdout = '\n'.join(filter(lambda s:'rsconnect-jupyter' not in s, pip_stdout.splitlines()))
+
     return {
         'filename': 'requirements.txt',
         'contents': pip_stdout,
