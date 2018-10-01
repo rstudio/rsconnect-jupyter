@@ -75,7 +75,7 @@ dist-run%:
 	make DOCKER_IMAGE=$(IMAGE)$* PY_VERSION=$* TARGET=dist-run launch
 
 dist-run: dist
-	pip install dist/rsconnect-1.0.0-py2.py3-none-any.whl
+	pip install dist/rsconnect-1.0.1-py2.py3-none-any.whl
 	jupyter-nbextension install --symlink --user --py rsconnect
 	jupyter-nbextension enable --py rsconnect
 	jupyter-serverextension enable --py rsconnect
