@@ -7,7 +7,7 @@ def readme():
 
 
 setup(name='rsconnect',
-      version='1.0.0',
+      version='1.0.1',
       description='Jupyter Notebook integration with RStudio Connect',
       long_description=readme(),
       url='http://github.com/rstudio/rsconnect-jupyter',

@@ -1,34 +1,23 @@
-.PHONY: clean images image2 image3 launch notebook2 notebook3 package dist test dist run shell shell2 shell3
+.PHONY: clean all-images image% launch notebook% package dist run test all-tests test% shell shell% dist-run dist-run%
 
 NB_UID=$(shell id -u)
 NB_GID=$(shell id -g)
 
-PY2=rstudio/rsconnect-jupyter-py2
-PY3=rstudio/rsconnect-jupyter-py3
+IMAGE=rstudio/rsconnect-jupyter-py
 
 clean:
 	rm -rf build/ dist/ rsconnect.egg-info/
 
-images: image2 image3
+all-images: image2 image3.5 image3.6 image3.7
 
-image2:
+image%:
 	docker build \
-		--tag $(PY2) \
+		--tag $(IMAGE)$* \
 		--file Dockerfile \
 		--build-arg BASE_IMAGE=continuumio/miniconda:4.4.10 \
 		--build-arg NB_UID=$(NB_UID) \
 		--build-arg NB_GID=$(NB_GID) \
-		--build-arg PY_VERSION=2 \
-		.
-
-image3:
-	docker build \
-		--tag $(PY3) \
-		--file Dockerfile \
-		--build-arg BASE_IMAGE=continuumio/miniconda3:4.4.10 \
-		--build-arg NB_UID=$(NB_UID) \
-		--build-arg NB_GID=$(NB_GID) \
-		--build-arg PY_VERSION=3 \
+		--build-arg PY_VERSION=$* \
 		.
 
 launch:
@@ -43,15 +32,18 @@ launch:
 		/rsconnect/run.sh $(TARGET)
 
 
-notebook2:
-	make DOCKER_IMAGE=$(PY2) PY_VERSION=2 TARGET=run launch
+notebook%:
+	make DOCKER_IMAGE=$(IMAGE)$* PY_VERSION=$* TARGET=run launch
 
-notebook3:
-	make DOCKER_IMAGE=$(PY3) PY_VERSION=3 TARGET=run launch
+all-tests: test2 test3.5 test3.6 test3.7
 
 test:
 # TODO run in container
-	python setup.py test
+	python -V
+	python -Wi setup.py test
+
+test%:
+	make DOCKER_IMAGE=rstudio/rsconnect-jupyter-py$* PY_VERSION=$* TARGET=test launch
 
 dist:
 # wheels don't get built if _any_ file it tries to touch has a timestamp < 1980
@@ -59,7 +51,7 @@ dist:
 	SOURCE_DATE_EPOCH="$(shell date +%s)"; python setup.py bdist_wheel
 
 package:
-	make DOCKER_IMAGE=$(PY3) PY_VERSION=3 TARGET=dist launch
+	make DOCKER_IMAGE=$(IMAGE)3 PY_VERSION=3 TARGET=dist launch
 
 run:
 # link python package
@@ -76,8 +68,15 @@ run:
 shell:
 	bash
 
-shell2:
-	make DOCKER_IMAGE=$(PY2) PY_VERSION=2 TARGET=shell launch
+shell%:
+	make DOCKER_IMAGE=$(IMAGE)$* PY_VERSION=$* TARGET=shell launch
 
-shell3:
-	make DOCKER_IMAGE=$(PY3) PY_VERSION=3 TARGET=shell launch
+dist-run%:
+	make DOCKER_IMAGE=$(IMAGE)$* PY_VERSION=$* TARGET=dist-run launch
+
+dist-run: dist
+	pip install dist/rsconnect-1.0.1-py2.py3-none-any.whl
+	jupyter-nbextension install --symlink --user --py rsconnect
+	jupyter-nbextension enable --py rsconnect
+	jupyter-serverextension enable --py rsconnect
+	jupyter-notebook -y --notebook-dir=/notebooks --ip='*' --port=9999 --no-browser --NotebookApp.token=''
