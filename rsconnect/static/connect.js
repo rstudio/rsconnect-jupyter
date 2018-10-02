@@ -51,11 +51,12 @@ define([
 
   function RSConnect(c) {
     /* sample value of `Jupyter.notebook.metadata`:
-       { previousServerId: "abc-def-ghi-jkl"
+       { version: 1,
+         previousServerId: "abc-def-ghi-jkl",
          servers: {
-           "xyz-uvw": { server: "http://172.0.0.3:3939/", serverName: "dev" }
-           "rst-opq": { server: "http://somewhere/connect/", serverName: "prod", notebookTitle:"Meow", appId: 42, appMode: "static" }
-         }
+           "xyz-uvw": { server: "http://172.0.0.3:3939/", serverName: "dev" },
+           "rst-opq": { server: "http://somewhere/connect/", serverName: "prod", notebookTitle:"Meow", appId: 42, appMode: "static" },
+         },
        }
     */
 
@@ -96,6 +97,7 @@ define([
       var self = this;
       // overwrite metadata (user may have changed it)
       Jupyter.notebook.metadata.rsconnect = {
+        version: 1,
         previousServerId: self.previousServerId,
         servers: self.servers
       };
