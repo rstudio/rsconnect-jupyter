@@ -228,7 +228,6 @@ def deploy(uri, api_key, app_id, app_name, app_title, tarball):
             raise RSConnectException('Failed to deploy successfully')
 
         # app deployed successfully
-        api.app_publish(app['id'], 'acl')
         config = api.app_config(app['id'])
         return {
             'app_id': app['id'],
