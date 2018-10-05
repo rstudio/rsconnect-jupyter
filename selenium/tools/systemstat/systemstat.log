@@ -1,0 +1,42 @@
+2018-10-04 14:56:53,945 starting /usr/local/bin/pytest
+2018-10-04 14:56:53,945 command line options: ['--junitxml=result.xml', '--tb=short', '--verbose', '-m', 'systemstat']
+2018-10-04 14:56:53,945 starting at 2018-10-04 14:56:53.945427
+2018-10-04 14:56:53,945 ending at 2018-10-04 14:58:53.945427
+2018-10-04 14:56:53,948 initialization options
+2018-10-04 14:56:53,948 sleep: 1.0
+2018-10-04 14:56:53,948 wait: 120.0
+2018-10-04 14:56:53,948 starting /usr/local/bin/pytest
+2018-10-04 14:56:53,948 starting /usr/local/bin/pytest
+2018-10-04 14:56:53,948 command line options: ['--junitxml=result.xml', '--tb=short', '--verbose', '-m', 'systemstat']
+2018-10-04 14:56:53,948 command line options: ['--junitxml=result.xml', '--tb=short', '--verbose', '-m', 'systemstat']
+2018-10-04 14:56:53,948 starting at 2018-10-04 14:56:53.948890
+2018-10-04 14:56:53,948 starting at 2018-10-04 14:56:53.948890
+2018-10-04 14:56:53,949 ending at 2018-10-04 14:58:53.948890
+2018-10-04 14:56:53,949 ending at 2018-10-04 14:58:53.948890
+2018-10-04 14:56:53,954 initialization options
+2018-10-04 14:56:53,954 initialization options
+2018-10-04 14:56:53,954 sleep: 1.0
+2018-10-04 14:56:53,954 sleep: 1.0
+2018-10-04 14:56:53,954 wait: 120.0
+2018-10-04 14:56:53,954 wait: 120.0
+2018-10-04 14:56:53,954 starting /usr/local/bin/pytest
+2018-10-04 14:56:53,954 starting /usr/local/bin/pytest
+2018-10-04 14:56:53,954 starting /usr/local/bin/pytest
+2018-10-04 14:56:53,954 command line options: ['--junitxml=result.xml', '--tb=short', '--verbose', '-m', 'systemstat']
+2018-10-04 14:56:53,954 command line options: ['--junitxml=result.xml', '--tb=short', '--verbose', '-m', 'systemstat']
+2018-10-04 14:56:53,954 command line options: ['--junitxml=result.xml', '--tb=short', '--verbose', '-m', 'systemstat']
+2018-10-04 14:56:53,955 starting at 2018-10-04 14:56:53.955108
+2018-10-04 14:56:53,955 starting at 2018-10-04 14:56:53.955108
+2018-10-04 14:56:53,955 starting at 2018-10-04 14:56:53.955108
+2018-10-04 14:56:53,955 ending at 2018-10-04 14:58:53.955108
+2018-10-04 14:56:53,955 ending at 2018-10-04 14:58:53.955108
+2018-10-04 14:56:53,955 ending at 2018-10-04 14:58:53.955108
+2018-10-04 14:56:56,967 initialization options
+2018-10-04 14:56:56,967 initialization options
+2018-10-04 14:56:56,967 initialization options
+2018-10-04 14:56:56,968 sleep: 1.0
+2018-10-04 14:56:56,968 sleep: 1.0
+2018-10-04 14:56:56,968 sleep: 1.0
+2018-10-04 14:56:56,968 wait: 4.0
+2018-10-04 14:56:56,968 wait: 4.0
+2018-10-04 14:56:56,968 wait: 4.0

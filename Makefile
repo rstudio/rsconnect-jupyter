@@ -46,6 +46,12 @@ test:
 test%:
 	make DOCKER_IMAGE=rstudio/rsconnect-jupyter-py$* PY_VERSION=$* TARGET=test launch
 
+test-selenium:
+	$(MAKE) -C selenium clean test-env-up jupyter-up test || EXITCODE=$$? ; \
+	$(MAKE) -C selenium jupyter-down || true ; \
+	$(MAKE) -C selenium test-env-down || true ; \
+	exit $$EXITCODE
+
 dist:
 # wheels don't get built if _any_ file it tries to touch has a timestamp < 1980
 # (system files) so use the current timestamp as a point of reference instead
@@ -64,7 +70,7 @@ run:
 # enable python extension
 	jupyter-serverextension enable --py rsconnect
 # start notebook
-	jupyter-notebook -y --notebook-dir=/notebooks --ip='*' --port=9999 --no-browser --NotebookApp.token=''
+	jupyter-notebook -y --notebook-dir=/notebooks --ip='0.0.0.0' --port=9999 --no-browser --NotebookApp.token=''
 
 shell:
 	bash
@@ -80,7 +86,7 @@ dist-run: dist
 	jupyter-nbextension install --symlink --user --py rsconnect
 	jupyter-nbextension enable --py rsconnect
 	jupyter-serverextension enable --py rsconnect
-	jupyter-notebook -y --notebook-dir=/notebooks --ip='*' --port=9999 --no-browser --NotebookApp.token=''
+	jupyter-notebook -y --notebook-dir=/notebooks --ip='0.0.0.0' --port=9999 --no-browser --NotebookApp.token=''
 
 build/mock-connect/bin/flask:
 	bash -c '\
