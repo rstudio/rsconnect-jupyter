@@ -942,7 +942,7 @@ define([
                   // click handler
                   function() {
                     // note: logs_url is included in result.config
-                    window.open(result.config.config_url, "rsconnect");
+                    window.open(result.config.config_url, "rsc-" + uuidv4());
                   },
                   // options
                   {
