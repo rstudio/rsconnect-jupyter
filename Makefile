@@ -1,4 +1,4 @@
-.PHONY: clean all-images image% launch notebook% package dist run test all-tests test% shell shell% dist-run dist-run% docs-build
+.PHONY: clean all-images image% launch notebook% package dist run test all-tests test% shell shell% dist-run dist-run% mock-server docs-build docs-image
 
 NB_UID=$(shell id -u)
 NB_GID=$(shell id -g)
@@ -82,6 +82,17 @@ dist-run: dist
 	jupyter-serverextension enable --py rsconnect
 	jupyter-notebook -y --notebook-dir=/notebooks --ip='*' --port=9999 --no-browser --NotebookApp.token=''
 
+build/mock-connect/bin/flask:
+	bash -c '\
+		mkdir -p build && \
+		virtualenv build/mock-connect && \
+		. build/mock-connect/bin/activate && \
+		pip install flask'
+
+mock-server: build/mock-connect/bin/flask
+	bash -c '\
+		. build/mock-connect/bin/activate && \
+		FLASK_APP=mock_connect.py flask run --host=0.0.0.0'
 
 ## Specify that Docker runs with the calling user's uid/gid to avoid file
 ## permission issues on Linux dev hosts.
