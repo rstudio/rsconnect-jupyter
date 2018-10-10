@@ -18,6 +18,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     libcurl4-gnutls-dev \
     libssl-dev \
     libxml2-dev \
+    make \
     curl && \
     rm -rf /var/lib/apt/lists/*
 
