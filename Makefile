@@ -1,4 +1,4 @@
-.PHONY: clean all-images image% launch notebook% package dist run test all-tests test% shell shell% dist-run dist-run%
+.PHONY: clean all-images image% launch notebook% package dist run test all-tests test% shell shell% dist-run dist-run% docs-build
 
 NB_UID=$(shell id -u)
 NB_GID=$(shell id -g)
@@ -81,3 +81,33 @@ dist-run: dist
 	jupyter-nbextension enable --py rsconnect
 	jupyter-serverextension enable --py rsconnect
 	jupyter-notebook -y --notebook-dir=/notebooks --ip='*' --port=9999 --no-browser --NotebookApp.token=''
+
+
+## Specify that Docker runs with the calling user's uid/gid to avoid file
+## permission issues on Linux dev hosts.
+DOCKER_RUN_AS=
+ifeq (Linux,$(shell uname))
+	DOCKER_RUN_AS=-u $(shell id -u):$(shell id -g)
+endif
+
+## Inside Jenkins (when JOB_NAME is defined), we are in the right type of
+## Docker container. Otherwise, launch pandoc inside a
+## rstudio/connect:docs container.
+BUILD_CMD=bash -c 'cd docs; pandoc README.md -o ../dist/rsconnect-jupyter-${VERSION}.pdf'
+BUILD_DOC=${BUILD_CMD}
+
+ifeq (${JOB_NAME},)
+	BUILD_DOC=docker run --rm=true ${DOCKER_RUN_AS} \
+		-e RSCONNECT_JUPYTER_VERSION=${VERSION} \
+		${DOCKER_ARGS} \
+		-v $(CURDIR):/rsconnect \
+		-w /rsconnect \
+		rstudio/connect:docs ${BUILD_CMD}
+endif
+
+docs-build:
+	${BUILD_DOC}
+
+
+dist/rsconnect-jupyter-${VERSION}.pdf: docs/README.md docs/*.gif
+	${BUILD_DOC}
