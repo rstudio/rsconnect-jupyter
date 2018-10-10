@@ -102,8 +102,11 @@ ifeq (${JOB_NAME},)
 		${DOCKER_ARGS} \
 		-v $(CURDIR):/rsconnect \
 		-w /rsconnect \
-		rstudio/connect:docs ${BUILD_CMD}
+		rsconnect-jupyter-docs ${BUILD_CMD}
 endif
+
+docs-image:
+	docker build -t rsconnect-jupyter-docs ./docs
 
 docs-build:
 	${BUILD_DOC}

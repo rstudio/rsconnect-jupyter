@@ -149,8 +149,16 @@ try {
         )
       }
       stage('Docs build') {
-        sh 'make docs-build'
-        stash includes: 'dist/*.pdf', name: 'docs'
+        docs_image = pullBuildPush(
+          image_name: 'jenkins/rsconnect-jupyter-docs',
+          docker_context: './docs',
+          push: !isUserBranch
+        )
+        docs_image.inside("-v ${env.WORKSPACE}:/rsconnect") {
+          sh 'make docs-build'
+          archiveArtifacts artifacts: 'dist/*.pdf'
+          stash includes: 'dist/*.pdf', name: 'docs'
+        }
       }
       stage('S3 upload') {
         unstash 'wheel'
