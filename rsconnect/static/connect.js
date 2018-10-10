@@ -642,6 +642,11 @@ define([
             maybeShowConfigUrl();
             maybeUpdateAppTitle();
             fetchApiKey();
+
+            // select associated appmode, if any
+            var entry = config.servers[selectedEntryId];
+            appMode = selectedAppMode || (entry && entry.appMode) || "static";
+            selectPreviousAppMode();
           } else {
             selectedEntryId = null;
             btnPublish.addClass("disabled");
@@ -652,10 +657,19 @@ define([
     }
 
     // will be filled during dialog open
+    var appModeChoices = null;
     var txtApiKey = null;
     var txtTitle = null;
     var initialTitle =
       userEditedTitle || config.getNotebookTitle(selectedEntryId);
+
+    function selectPreviousAppMode() {
+      appModeChoices.removeClass("active").addClass(function() {
+        if ($(this).data("appmode") === appMode) {
+          return "active";
+        }
+      });
+    }
 
     function maybeShowConfigUrl() {
       var entry = config.servers[selectedEntryId];
@@ -822,33 +836,21 @@ define([
         }
 
         // app mode
-        var appModeChoices = publishModal.find(".rsc-appmode");
+        appModeChoices = publishModal.find(".rsc-appmode");
+        selectPreviousAppMode();
 
-        appModeChoices.addClass(function() {
-          if ($(this).data("appmode") === appMode) {
-            return "active";
-          }
+        appModeChoices.on("click", function() {
+          appMode = $(this).data("appmode");
+
+          $(this)
+            .addClass("active")
+            .siblings()
+            .removeClass("active");
         });
 
-        // User can freely choose app mode on the initial publication only,
-        // or if publishing to a New location
-        if (
-          !previousAppMode ||
-          selectedDeployLocation === DeploymentLocation.New
-        ) {
-          appModeChoices.on("click", function() {
-            appMode = $(this).data("appmode");
-
-            $(this)
-              .addClass("active")
-              .siblings()
-              .removeClass("active");
-          });
-        } else {
-          appModeChoices.addClass("disabled");
-
+        // setup app mode choices help icon
+        (function() {
           var msg =
-            "You can't change the mode of an existing deployment. " +
             "To deploy a new deployment, change the title, " +
             'click "Next", select "New location", and then ' +
             "you’ll be able to pick a new mode and publish.";
@@ -863,7 +865,7 @@ define([
             .popover();
 
           $("#rsc-publish-source > label").append(helpIcon);
-        }
+        })();
 
         var form = publishModal.find("form").on("submit", function(e) {
           e.preventDefault();
