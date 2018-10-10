@@ -93,7 +93,7 @@ def buildAndTest(pyVersion) {
 
 def publishArtifacts() {
     // Promote master builds to S3
-    cmd = 'aws s3 cp dist/*.whl s3://rstudio-rsconnect-jupyter/'
+    cmd = 'aws s3 cp dist/*.whl dist/*.pdf s3://rstudio-rsconnect-jupyter/'
 
     if (isUserBranch) {
         print "S3 sync DRY RUN for user branch ${env.BRANCH_NAME}"
@@ -148,8 +148,13 @@ try {
           }
         )
       }
+      stage('Docs build') {
+        sh 'make docs-build'
+        stash includes: 'dist/*.pdf', name: 'docs'
+      }
       stage('S3 upload') {
         unstash 'wheel'
+        unstash 'docs'
         publishArtifacts()
       }
     }
