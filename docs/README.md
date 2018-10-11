@@ -94,7 +94,7 @@ server.
 
 ### Publishing options
 
-You will then be prompted to enter your API Key which will be used to publish
+You will be prompted to enter your API Key, which will be used to publish
 the notebook under your account to the selected RStudio Connect server.
 
 See the [RStudio Connect User
