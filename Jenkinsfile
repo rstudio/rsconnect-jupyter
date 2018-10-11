@@ -152,7 +152,8 @@ try {
       }
       stage('Docs build') {
         docs_image = pullBuildPush(
-          image_name: 'jenkins/rsconnect-jupyter-docs',
+          image_name: 'jenkins/rsconnect-jupyter',
+          image_tag: 'docs',
           docker_context: './docs',
           push: !isUserBranch
         )
