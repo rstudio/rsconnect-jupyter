@@ -93,14 +93,16 @@ def buildAndTest(pyVersion) {
 
 def publishArtifacts() {
     // Promote master builds to S3
-    cmd = 'aws s3 cp dist/*.whl s3://rstudio-rsconnect-jupyter/'
+    for(filename in ['dist/*.whl', 'dist/*.pdf']) {
+      cmd = "aws s3 cp ${filename} s3://rstudio-rsconnect-jupyter/"
 
-    if (isUserBranch) {
-        print "S3 sync DRY RUN for user branch ${env.BRANCH_NAME}"
-        sh (cmd + ' --dryrun')
-    } else {
-        print "S3 sync for ${env.BRANCH_NAME}"
-        sh cmd
+      if (isUserBranch) {
+          print "S3 cp DRY RUN for user branch ${env.BRANCH_NAME}"
+          sh (cmd + ' --dryrun')
+      } else {
+          print "S3 cp for ${env.BRANCH_NAME}"
+          sh cmd
+      }
     }
 }
 
@@ -148,8 +150,21 @@ try {
           }
         )
       }
+      stage('Docs build') {
+        docs_image = pullBuildPush(
+          image_name: 'jenkins/rsconnect-jupyter-docs',
+          docker_context: './docs',
+          push: !isUserBranch
+        )
+        docs_image.inside("-v ${env.WORKSPACE}:/rsconnect") {
+          sh 'make docs-build'
+          archiveArtifacts artifacts: 'dist/*.pdf'
+          stash includes: 'dist/*.pdf', name: 'docs'
+        }
+      }
       stage('S3 upload') {
         unstash 'wheel'
+        unstash 'docs'
         publishArtifacts()
       }
     }

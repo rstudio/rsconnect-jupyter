@@ -1,4 +1,4 @@
-.PHONY: clean all-images image% launch notebook% package dist run test all-tests test% shell shell% dist-run dist-run% mock-server
+.PHONY: clean all-images image% launch notebook% package dist run test all-tests test% shell shell% dist-run dist-run% mock-server docs-build docs-image
 
 NB_UID=$(shell id -u)
 NB_GID=$(shell id -g)
@@ -93,3 +93,35 @@ mock-server: build/mock-connect/bin/flask
 	bash -c '\
 		. build/mock-connect/bin/activate && \
 		FLASK_APP=mock_connect.py flask run --host=0.0.0.0'
+
+## Specify that Docker runs with the calling user's uid/gid to avoid file
+## permission issues on Linux dev hosts.
+DOCKER_RUN_AS=
+ifeq (Linux,$(shell uname))
+	DOCKER_RUN_AS=-u $(shell id -u):$(shell id -g)
+endif
+
+## Inside Jenkins (when JOB_NAME is defined), we are in the right type of
+## Docker container. Otherwise, launch pandoc inside a
+## rstudio/connect:docs container.
+BUILD_CMD=bash -c 'cd docs; pandoc README.md -o ../dist/rsconnect-jupyter-${VERSION}.pdf'
+BUILD_DOC=${BUILD_CMD}
+
+ifeq (${JOB_NAME},)
+	BUILD_DOC=docker run --rm=true ${DOCKER_RUN_AS} \
+		-e RSCONNECT_JUPYTER_VERSION=${VERSION} \
+		${DOCKER_ARGS} \
+		-v $(CURDIR):/rsconnect \
+		-w /rsconnect \
+		rsconnect-jupyter-docs ${BUILD_CMD}
+endif
+
+docs-image:
+	docker build -t rsconnect-jupyter-docs ./docs
+
+docs-build:
+	${BUILD_DOC}
+
+
+dist/rsconnect-jupyter-${VERSION}.pdf: docs/README.md docs/*.gif
+	${BUILD_DOC}
