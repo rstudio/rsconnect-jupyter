@@ -38,25 +38,18 @@ pip install rsconnect-1.0.0-py2.py3-none-any.whl
 Enable the `rsconnect` extension with the following commands:
 
 ```
-# Install `rsconnect` as a jupyter extension for your user. If you wish
-# to allow the extension to be available for all users who access
-# Jupyter Notebooks, remove the `--user` flag
-jupyter-nbextension install --user --py rsconnect
+# Install `rsconnect` as a jupyter extension
+jupyter-nbextension install --sys-prefix --py rsconnect
 
 # Enable JavaScript extension
-jupyter-nbextension enable --py rsconnect
+jupyter-nbextension enable --sys-prefix --py rsconnect
 
 # Enable Python extension
-jupyter-serverextension enable --py rsconnect
+jupyter-serverextension enable --sys-prefix --py rsconnect
 ```
 
 Note: The above commands only need to be run once when installing
 `rsconnect`.
-
-Note: If using multiple installations of Jupyter Notebook on a system, extension
-configuration information (available/enabled status) will be shared since
-Jupyter Notebook stores this data in the users `$HOME` directory. This is a
-known limitation of Jupyter Notebook.
 
 Note: If you run into an issue during installation please let us know by filing
 a bug [here](https://github.com/rstudio/rsconnect-jupyter/issues).
@@ -67,10 +60,10 @@ First disable and remove the `rsconnect` notebook extension:
 
 ```
 # Disable Python extensions found in `rsconnect`
-jupyter-serverextension disable --py rsconnect
+jupyter-serverextension disable --sys-prefix --py rsconnect
 
 # Remove JavaScript extension
-jupyter-nbextension uninstall --py rsconnect
+jupyter-nbextension uninstall --sys-prefix --py rsconnect
 ```
 
 Finally, uninstall the `rsconnect` python package:
