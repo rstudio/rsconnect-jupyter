@@ -1,6 +1,6 @@
 [`rsconnect`](https://www.github.com/rstudio/rsconnect-jupyter/) is a
 plugin for [Jupyter Notebook](https://jupyter.org/) that enables
-publishing notebook renders (HTML) to [RStudio
+publishing notebooks to [RStudio
 Connect](https://www.rstudio.com/products/connect/).
 
 # Requirements
@@ -84,11 +84,15 @@ to publish the current notebook to RStudio Connect.
 
 ![blue toolbar icon used for publishing the notebook](publish-icon.gif)
 
+### Entering server information
+
 If this is your first time publishing this notebook, you will be
 prompted to enter the location and a nickname for the RStudio Connect
 server.
 
 ![initial dialog that prompts for the location of RStudio Connect](add-dialog.gif)
+
+### Publishing options
 
 You will then be prompted to enter your API Key which will be used to publish
 the notebook under your account to the selected RStudio Connect server.
@@ -97,12 +101,23 @@ See the [RStudio Connect User
 Guide](http://docs.rstudio.com/connect/user/api-keys.html) for
 instructions on generating API Keys for your user.
 
-![publish dialog that prompts for an API key](manage.gif)
+![publish dialog that prompts for an API key](manage.png)
 
+There are two different publication modes. Selecting "Publish finished document only" will publish an HTML snapshot of the notebook to Connect. HTML snapshots are static and cannot be scheduled or re-run on the Connect server.
+
+If you select "Publish document with source code", the notebook file and a list of the Python packages installed in your environment will be sent to Connect. This enables Connect to recreate the environment and re-run the notebook at a later time.
+
+
+### Handling conflicts
 If content that matches your notebook's title is found on RStudio Connect, you
 may choose to overwrite the existing content or create new content.
 
 ![dialog that prompts for overwriting or publishing new content](overwrite.png)
+
+Choosing "New location" will create a new document in Connect. You can choose either publication mode - an HTML snapshot or a document with source code.
+
+Updating an existing document will not change its publication mode.
+
 
 Upon successful publishing of the document a notification will be
 shown in toolbar.  Clicking the notification will open the published
