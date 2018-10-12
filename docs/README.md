@@ -107,6 +107,14 @@ There are two different publication modes. Selecting "Publish finished document 
 
 If you select "Publish document with source code", the notebook file and a list of the Python packages installed in your environment will be sent to Connect. This enables Connect to recreate the environment and re-run the notebook at a later time.
 
+#### Environment detection with pip
+
+The list of packages sent along with the notebook comes from the python environment where the notebook kernel is running. In order for environment inspection to work, the `rsconnect` package must be installed in the kernel environment; that is, the environment where the `ipykernel` package is installed. In most cases that will be the same as the notebook server environment where `jupyter` is installed.
+
+If there is a `requirements.txt` file in the same directory as the notebook file, its contents will be used. This allows you to directly control which packages will be installed on the Connect server before the notebook is rendered. If you use this option, you must ensure that all necessary packages are listed in the `requirements.txt` file.
+
+If there isn't a requirements file, the command `pip freeze` will be used to inspect the environment. The output of `pip freeze` lists all packages currently installed, as well as their versions, which enables RStudio Connect to recreate the same environment.
+
 
 ### Handling conflicts
 If content that matches your notebook's title is found on RStudio Connect, you
