@@ -17,7 +17,7 @@ JUPYTER_LOG=jupyter-py${PY_VERSION}.log
 JUPYTER_PORT=9999
 JUPYTER_SCHEME=http
 JUPYTER_IMAGE=rstudio/rsconnect-jupyter-py${PY_VERSION}
-LOGS_DIR=${WORKDIR}
+LOGS_DIR=${RSCONNECT_DIR}/selenium
 NB_UID=$(shell id -u)
 NB_GID=$(shell id -g)
 NETWORK=${PROJECT}_default
@@ -32,11 +32,9 @@ RSCONNECT_DIR=/rsconnect
 SCALE=1
 SCALE_FIREFOX=${SCALE}
 SCALE_CHROME=${SCALE}
-SEL_VERSION=3.8.1-dubnium
+SELENIUM_VERSION=3.8.1-dubnium
 TMP_PIPE=tmp.pipe
-TRE_DOCKERFILE_DIR=docker/tre
-TRE_IMAGE?=rstudio/quality:tre
-WORKDIR=/opt/work
+TRE_IMAGE?=rstudio/checkrs-tew:0.1.0
 
 # Allocate a tty and keep stdin open when running locally
 # Jenkins nodes don't have input tty, so we set this to ""
@@ -46,11 +44,10 @@ DOCKER_RUN_COMMAND=docker run --rm --init \
 	    ${DOCKER_TTY_FLAGS} \
 	    --name=tre-${HOURMINSEC} \
 	    --network=$(NETWORK) \
-	    --volume=${CURDIR}:${WORKDIR} \
 	    --volume=$(CURDIR)/..:${RSCONNECT_DIR} \
 	    --volume=$(CURDIR)/../notebooks$(PY_VERSION):${NOTEBOOKS_DIR} \
 	    --user=`id -u`:`id -g` \
-	    --workdir=${WORKDIR} \
+	    --workdir=${RSCONNECT_DIR}/selenium \
 	    ${TRE_IMAGE}
 
 TEST_RUNNER_COMMAND=pytest \
@@ -78,16 +75,13 @@ endif
 
 all: build
 
-build: build-tre build-mock-connect
-
-build-tre:
-	docker build -t ${TRE_IMAGE} ${TRE_DOCKERFILE_DIR}
+build: build-mock-connect
 
 build-mock-connect:
 	docker build -t ${CONNECT_IMAGE} ${CONNECT_DOCKERFILE_DIR}
 
 clean:
-	rm -f *.png *.log ${TMP_PIPE};
+	rm -f *.png *.log *.xml ${TMP_PIPE};
 	rm -rf .pytest_cache;
 
 distclean: clean
@@ -127,9 +121,9 @@ wait-for-systems-up:
 	@docker run --rm \
 	    --name=systemstat \
 	    --network=$(NETWORK) \
-	    --volume=${CURDIR}:${WORKDIR} \
+	    --volume=${CURDIR}/..:${RSCONNECT_DIR} \
 	    --user=`id -u`:`id -g` \
-	    --workdir=${WORKDIR} \
+	    --workdir=${RSCONNECT_DIR}/selenium \
 	    ${TRE_IMAGE} \
 	    ./wait_for_systems_up.sh \
 	        -g '${GRID_SCHEME}://${GRID_HOST}:${GRID_PORT}' \
@@ -141,19 +135,19 @@ wait-for-systems-up:
 grid-up: network-up
 	NETWORK=${NETWORK} \
 	GRID_TIMEOUT=${GRID_TIMEOUT} \
-	SEL_VERSION=${SEL_VERSION} \
+	SELENIUM_VERSION=${SELENIUM_VERSION} \
 	docker-compose -f ${DCYML_GRID} -p ${PROJECT} up -d --scale firefox=${SCALE_FIREFOX} --scale chrome=${SCALE_CHROME}
 
 grid-down:
 	NETWORK=${NETWORK} \
 	GRID_TIMEOUT=${GRID_TIMEOUT} \
-	SEL_VERSION=${SEL_VERSION} \
+	SELENIUM_VERSION=${SELENIUM_VERSION} \
 	docker-compose -f ${DCYML_GRID} -p ${PROJECT} down
 
 grid-restart:
 	NETWORK=${NETWORK} \
 	GRID_TIMEOUT=${GRID_TIMEOUT} \
-	SEL_VERSION=${SEL_VERSION} \
+	SELENIUM_VERSION=${SELENIUM_VERSION} \
 	docker-compose -f ${DCYML_GRID} -p ${PROJECT} restart
 
 network-up:
@@ -233,7 +227,6 @@ connect-down:
 .PHONY: all
 .PHONY: build
 .PHONY: build-mock-connect
-.PHONY: build-tre
 .PHONY: clean
 .PHONY: connect-down
 .PHONY: connect-up

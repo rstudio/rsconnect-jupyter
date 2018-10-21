@@ -1,9 +1,9 @@
 NETWORK=${PROJECT}_default
-PROJECT=rsqanet_systemstat
+PROJECT=rscjnet_systemstat
 PYTEST_DOCKER_CMD_FLAGS=
 PYTESTOPTS=
 RESULT_XML?=result.xml
-TRE_IMAGE?=rstudio/quality:tre
+TRE_IMAGE?=rstudio/checkrs-tew:0.1.0
 WORKDIR=/opt/work
 
 PYTEST_DOCKER_CMD=docker run --rm -it \
@@ -20,7 +20,7 @@ PYTEST_DOCKER_CMD=docker run --rm -it \
 all:
 
 clean:
-	rm -f *.log *.xml *.pyc ${RESULT_XML};
+	rm -f *.log *.xml *.pyc;
 	rm -rf .pytest_cache;
 
 distclean: clean
