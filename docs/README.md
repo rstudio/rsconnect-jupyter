@@ -32,7 +32,7 @@ source bin/activate
 Install the `rsconnect` package with the following command:
 
 ```
-pip install rsconnect-1.0.0-py2.py3-none-any.whl
+pip install rsconnect-1.1.0-py2.py3-none-any.whl
 ```
 
 Enable the `rsconnect` extension with the following commands:
