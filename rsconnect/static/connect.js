@@ -899,6 +899,7 @@ define([
               txtTitle,
               "Failed to publish. " + xhr.responseJSON.message
             );
+            togglePublishButton(true);
           }
 
           function publish() {
@@ -978,9 +979,6 @@ define([
                     txtTitle.val(),
                     currentAppId
                   )
-                  .always(function() {
-                    togglePublishButton(true);
-                  })
                   .fail(handleFailure)
                   .then(function(searchResults) {
                     if (searchResults.length === 0) {
