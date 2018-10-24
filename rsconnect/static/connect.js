@@ -812,10 +812,13 @@ define([
         txtTitle.val(initialTitle);
 
         function updateDeployNextButton() {
-          btnPublish.text("Next");
+          if (txtTitle.val() === initialTitle) {
+            btnPublish.text("Publish");
+          } else {
+            btnPublish.text("Next");
+          }
         }
-        txtTitle.change(updateDeployNextButton);
-        txtTitle.on("keypress", updateDeployNextButton);
+        txtTitle.on("input", updateDeployNextButton);
         maybeShowConfigUrl();
 
         txtApiKey = publishModal.find("[name=api-key]").val(userProvidedApiKey);
@@ -899,6 +902,7 @@ define([
               txtTitle,
               "Failed to publish. " + xhr.responseJSON.message
             );
+            togglePublishButton(true);
           }
 
           function publish() {
@@ -978,9 +982,6 @@ define([
                     txtTitle.val(),
                     currentAppId
                   )
-                  .always(function() {
-                    togglePublishButton(true);
-                  })
                   .fail(handleFailure)
                   .then(function(searchResults) {
                     if (searchResults.length === 0) {
