@@ -498,6 +498,11 @@ define([
           serverModal.find(".form-group").removeClass("has-error");
           serverModal.find(".help-block").text("");
 
+          var server = $txtServer.val();
+          if (server.indexOf("http") !== 0) {
+            $txtServer.val("http://" + server);
+          }
+
           var validServer = $txtServer.val().length > 0;
           // if browser supports <input type=url> then use its checkValidity function
           if ($txtServer.get(0).checkValidity) {
