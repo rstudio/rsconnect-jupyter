@@ -812,7 +812,7 @@ define([
         txtTitle.val(initialTitle);
 
         function updateDeployNextButton() {
-          lastPublishedTitle =
+          var lastPublishedTitle =
             config.servers &&
             config.servers[selectedEntryId] &&
             config.servers[selectedEntryId].notebookTitle;
