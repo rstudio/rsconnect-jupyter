@@ -46,23 +46,33 @@ def wait_until(predicate, timeout, period=0.1):
 def verify_server(server_address):
     r = urlparse(server_address)
     conn = None
+    settings_path = '__api__/server_settings'
     try:
         if r.scheme == 'http':
             conn = http.HTTPConnection(r.hostname, port=(r.port or http.HTTP_PORT), timeout=10)
         else:
             conn = http.HTTPSConnection(r.hostname, port=(r.port or http.HTTPS_PORT), timeout=10)
-        conn.request('GET', url_path_join(r.path or '/', '__api__/server_settings'))
+
+        conn.request('GET', url_path_join(r.path or '/', settings_path))
         response = conn.getresponse()
+
         if response.status >= 400:
             logger.error('Response from Connect server: %s %s' % (response.status, response.reason))
             return False
+        elif response.status >= 300:
+            # process redirects now so we don't have to later
+            target = response.getheader('Location')
+            if target.endswith(settings_path):
+                target = target[:-len(settings_path)]
+            logger.warning('Redirected to: %s' % target)
+            return target
     except (http.HTTPException, OSError, socket.error) as exc:
         logger.error('Error connecting to Connect: %s' % str(exc))
-        return False
+        return None
     finally:
         if conn is not None:
             conn.close()
-    return True
+    return server_address
 
 
 class RSConnect:

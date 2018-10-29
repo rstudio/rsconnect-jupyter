@@ -139,7 +139,7 @@ define([
       return this.verifyServer(server).then(function(data) {
         var id = data.address_hash;
         self.servers[id] = {
-          server: server,
+          server: data.server_address,
           serverName: serverName
         };
         return self
