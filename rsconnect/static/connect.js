@@ -1052,6 +1052,7 @@ define([
           .find(".modal-footer")
           .append(btnCancel)
           .append(btnPublish);
+        updateDeployNextButton();
 
         // if we came back from content selection dialog we should take some
         // action (if not canceled)
