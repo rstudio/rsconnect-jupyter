@@ -1,0 +1,4 @@
+result.xml
+*.png
+*.log
+.pytest_cache

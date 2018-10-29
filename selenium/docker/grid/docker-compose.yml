@@ -1,0 +1,36 @@
+version: "3"
+services:
+  selenium-hub:
+    image: selenium/hub:${SELENIUM_VERSION}
+    container_name: selenium-hub
+    ports:
+      - "4444:4444"
+    environment:
+      - GRID_TIMEOUT=${GRID_TIMEOUT}
+  chrome:
+    image: selenium/node-chrome-debug:${SELENIUM_VERSION}
+    ports:
+      - "5900"
+    depends_on:
+      - selenium-hub
+    environment:
+      - HUB_PORT_4444_TCP_ADDR=selenium-hub
+      - HUB_PORT_4444_TCP_PORT=4444
+    volumes:
+      - "/dev/shm:/dev/shm"
+  firefox:
+    image: selenium/node-firefox-debug:${SELENIUM_VERSION}
+    ports:
+      - "5900"
+    depends_on:
+      - selenium-hub
+    environment:
+      - HUB_PORT_4444_TCP_ADDR=selenium-hub
+      - HUB_PORT_4444_TCP_PORT=4444
+    volumes:
+      - "/dev/shm:/dev/shm"
+networks:
+  default:
+    external:
+      name: ${NETWORK}
+
