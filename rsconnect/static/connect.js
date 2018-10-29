@@ -812,7 +812,12 @@ define([
         txtTitle.val(initialTitle);
 
         function updateDeployNextButton() {
-          if (txtTitle.val() === initialTitle) {
+          lastPublishedTitle =
+            config.servers &&
+            config.servers[selectedEntryId] &&
+            config.servers[selectedEntryId].notebookTitle;
+
+          if (!lastPublishedTitle || txtTitle.val() === lastPublishedTitle) {
             btnPublish.text("Publish");
           } else {
             btnPublish.text("Next");
