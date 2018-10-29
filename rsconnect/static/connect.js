@@ -812,7 +812,12 @@ define([
         txtTitle.val(initialTitle);
 
         function updateDeployNextButton() {
-          if (txtTitle.val() === initialTitle) {
+          var lastPublishedTitle =
+            config.servers &&
+            config.servers[selectedEntryId] &&
+            config.servers[selectedEntryId].notebookTitle;
+
+          if (!lastPublishedTitle || txtTitle.val() === lastPublishedTitle) {
             btnPublish.text("Publish");
           } else {
             btnPublish.text("Next");
@@ -1047,6 +1052,7 @@ define([
           .find(".modal-footer")
           .append(btnCancel)
           .append(btnPublish);
+        updateDeployNextButton();
 
         // if we came back from content selection dialog we should take some
         // action (if not canceled)
