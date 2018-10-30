@@ -62,9 +62,14 @@ def verify_server(server_address):
         elif response.status >= 300:
             # process redirects now so we don't have to later
             target = response.getheader('Location')
+            logger.warning('Redirected to: %s' % target)
+
             if target.endswith(settings_path):
                 target = target[:-len(settings_path)]
-            logger.warning('Redirected to: %s' % target)
+            else:
+                parsed = urlparse(target)
+                target = '%s://%s/' % (parsed.scheme, parsed.netloc)
+
             return target
     except (http.HTTPException, OSError, socket.error) as exc:
         logger.error('Error connecting to Connect: %s' % str(exc))
