@@ -120,7 +120,7 @@ define([
 
     verifyServer: function(server) {
       return Utils.ajax({
-        url: "/rsconnect_jupyter/verify_server",
+        url: Jupyter.notebook.base_url + "rsconnect_jupyter/verify_server",
         method: "POST",
         headers: { "Content-Type": "application/json" },
         data: JSON.stringify({
@@ -155,7 +155,7 @@ define([
       var entry = this.servers[serverId];
 
       return Utils.ajax({
-        url: "/rsconnect_jupyter/app_get",
+        url: Jupyter.notebook.base_url + "rsconnect_jupyter/app_get",
         method: "POST",
         headers: { "Content-Type": "application/json" },
         data: JSON.stringify({
@@ -181,7 +181,7 @@ define([
       }
       debug.info("saving config:", toSave);
       return Utils.ajax({
-        url: "/api/config/rsconnect_jupyter",
+        url: Jupyter.notebook.base_url + "api/config/rsconnect_jupyter",
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         data: JSON.stringify(toSave)
@@ -194,7 +194,7 @@ define([
       };
 
       return Utils.ajax({
-        url: "/rsconnect_jupyter/get_api_key",
+        url: Jupyter.notebook.base_url + "rsconnect_jupyter/get_api_key",
         method: "POST",
         headers: { "Content-Type": "application/json" },
         data: JSON.stringify(data)
@@ -208,7 +208,7 @@ define([
       };
 
       return Utils.ajax({
-        url: "/rsconnect_jupyter/set_api_key",
+        url: Jupyter.notebook.base_url + "rsconnect_jupyter/set_api_key",
         method: "POST",
         headers: { "Content-Type": "application/json" },
         data: JSON.stringify(data)
@@ -218,7 +218,7 @@ define([
     fetchConfig: function() {
       var self = this;
       return Utils.ajax({
-        url: "/api/config/rsconnect_jupyter",
+        url: Jupyter.notebook.base_url + "api/config/rsconnect_jupyter",
         method: "GET"
       }).then(function(data) {
         debug.info("fetched config:", data);
@@ -306,7 +306,7 @@ define([
         };
 
         var xhr = Utils.ajax({
-          url: "/rsconnect_jupyter/deploy",
+          url: Jupyter.notebook.base_url + "rsconnect_jupyter/deploy",
           method: "POST",
           headers: { "Content-Type": "application/json" },
           data: JSON.stringify(data)
@@ -339,7 +339,7 @@ define([
       var entry = this.servers[serverId];
 
       return Utils.ajax({
-        url: "/rsconnect_jupyter/app_search",
+        url: Jupyter.notebook.base_url + "rsconnect_jupyter/app_search",
         method: "POST",
         headers: { "Content-Type": "application/json" },
         data: JSON.stringify({
