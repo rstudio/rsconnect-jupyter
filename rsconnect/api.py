@@ -11,10 +11,10 @@ except ImportError:
 
 try:
     # python3
-    from urllib.parse import urlparse, urlencode
+    from urllib.parse import urlparse, urlencode, urljoin
 except ImportError:
     from urllib import urlencode
-    from urlparse import urlparse
+    from urlparse import urlparse, urljoin
 
 class RSConnectException(Exception):
     def __init__(self, message):
@@ -43,7 +43,14 @@ def wait_until(predicate, timeout, period=0.1):
     return False
 
 
+settings_path = '__api__/server_settings'
+max_redirects = 5
+
 def verify_server(server_address):
+    server_url = urljoin(server_address, settings_path)
+    return _verify_server(server_url, max_redirects)
+
+def _verify_server(server_address, max_redirects):
     r = urlparse(server_address)
     conn = None
     try:
@@ -51,18 +58,40 @@ def verify_server(server_address):
             conn = http.HTTPConnection(r.hostname, port=(r.port or http.HTTP_PORT), timeout=10)
         else:
             conn = http.HTTPSConnection(r.hostname, port=(r.port or http.HTTPS_PORT), timeout=10)
-        conn.request('GET', url_path_join(r.path or '/', '__api__/server_settings'))
+
+        conn.request('GET', server_address)
         response = conn.getresponse()
+
         if response.status >= 400:
             logger.error('Response from Connect server: %s %s' % (response.status, response.reason))
             return False
+        elif response.status >= 300:
+            # process redirects now so we don't have to later
+            target = response.getheader('Location')
+            logger.warning('Redirected to: %s' % target)
+
+            if max_redirects > 0:
+                return _verify_server(urljoin(server_address, target), max_redirects - 1)
+            else:
+                logger.error('Too many redirects')
+                return None
+        else:
+            content_type = response.getheader('Content-Type')
+            if not content_type.startswith('application/json'):
+                logger.error('Unexpected Content-Type %s from %s' % (content_type, server_address))
+                return None
+
     except (http.HTTPException, OSError, socket.error) as exc:
         logger.error('Error connecting to Connect: %s' % str(exc))
-        return False
+        return None
     finally:
         if conn is not None:
             conn.close()
-    return True
+
+    if server_address.endswith(settings_path):
+        return server_address[:-len(settings_path)]
+    else:
+        return server_address
 
 
 class RSConnect:

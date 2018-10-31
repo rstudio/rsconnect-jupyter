@@ -139,7 +139,7 @@ define([
       return this.verifyServer(server).then(function(data) {
         var id = data.address_hash;
         self.servers[id] = {
-          server: server,
+          server: data.server_address,
           serverName: serverName
         };
         return self
@@ -497,6 +497,11 @@ define([
           e.preventDefault();
           serverModal.find(".form-group").removeClass("has-error");
           serverModal.find(".help-block").text("");
+
+          var server = $txtServer.val();
+          if (server.indexOf("http") !== 0) {
+            $txtServer.val("http://" + server);
+          }
 
           var validServer = $txtServer.val().length > 0;
           // if browser supports <input type=url> then use its checkValidity function
