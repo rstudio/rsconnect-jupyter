@@ -9,7 +9,7 @@ from .pages.publish_content_form import PublishContentForm
 from conftest import generate_random_string
 
 
-pytestmark = [ pytest.mark.rsconnet_jupyter,
+pytestmark = [ pytest.mark.rsconnect_jupyter,
                pytest.mark.add_server,
              ]
 

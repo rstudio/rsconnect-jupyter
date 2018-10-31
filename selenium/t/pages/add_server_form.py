@@ -5,37 +5,24 @@ from .form_base import FormBase
 class AddServerForm(FormBase):
 
     def __init__(self):
-        self._locators = {
-            "close"    : by.css(".modal-content .close"),
-            "address"  : by.css("#rsc-server"),
-            "name"     : by.css("#rsc-servername"),
-            "cancel"   : by.css(".modal-footer .btn:nth-of-type(1)"),
-            "submit"   : by.css(".modal-footer .btn:nth-of-type(2)"),
-        }
-
         self._fields = ['address', 'name']
-
 
     @property
     def close(self):
-        return s(self._locators['close'])
-
+        return s(by.css(".modal-content .close"))
 
     @property
     def address(self):
-        return s(self._locators['address'])
-
+        return s(by.css("#rsc-server"))
 
     @property
     def name(self):
-        return s(self._locators['name'])
-
+        return s(by.css("#rsc-servername"))
 
     @property
     def cancel(self):
-        return s(self._locators['cancel'])
-
+        return s(by.css(".modal-footer .btn[data-dismiss=modal]"))
 
     @property
     def submit(self):
-        return s(self._locators['submit'])
+        return s(by.css(".modal-footer .btn-primary"))
