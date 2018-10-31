@@ -67,3 +67,9 @@ class TestRepublish(object):
         cs.title.should(have.text('Select deployment location'))
 
         cs.new_location.should(be.visible)
+        cs.new_location.click()
+        cs.submit.click()
+        cs.close.should(be.not_(be.visible))
+
+        m.rsconnect_notification.should(be.visible)
+        m.rsconnect_notification.should(have.text('Successfully published content'))
