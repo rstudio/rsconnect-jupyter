@@ -141,3 +141,48 @@ publishing they should provide their API key and will be able to choose a
 content location to publish to if the notebook title is the same.
 
 You may share notebooks if appropriate.
+
+# Installation in JupyterHub
+
+In JupyterHub, install the `rsconnect` package into the environment where the Jupyter notebook server and kernel are installed. Typically those will be the same environment. If you've configured separate kernel environments, install the `rsconnect` package in the notebook server environment as well as each kernel environment.
+
+## JupyterHub Example Configuration
+
+This example uses the Jupyterhub docker image as a base and installs the `rsconnect` package:
+
+```
+FROM jupyterhub/jupyterhub
+
+# Install Jupyter notebook into the existing base conda environment
+RUN conda install notebook
+
+# Download and install rsconnect in the same environment
+ARG RSCONNECT_VERSION=1.1.0.62
+ARG REPOSITORY=https://s3.amazonaws.com/rstudio-rsconnect-jupyter
+
+RUN wget ${REPOSITORY}/rsconnect-${RSCONNECT_VERSION}-py2.py3-none-any.whl
+RUN pip install rsconnect-${RSCONNECT_VERSION}-py2.py3-none-any.whl && \
+	jupyter-nbextension install --sys-prefix --py rsconnect && \
+	jupyter-nbextension enable --sys-prefix --py rsconnect && \
+	jupyter-serverextension enable --sys-prefix --py rsconnect
+
+RUN jupyterhub --generate-config
+
+# create test users
+RUN useradd -m -s /bin/bash user1 && \
+	useradd -m -s /bin/bash user2 && \
+	useradd -m -s /bin/bash user3 && \
+	bash -c 'echo -en "password\npassword" | passwd user1' && \
+	bash -c 'echo -en "password\npassword" | passwd user2' && \
+	bash -c 'echo -en "password\npassword" | passwd user3'
+
+CMD ["jupyterhub"]
+```
+
+Run these commands to build and start the container:
+```
+docker build -t jupyterhub:rsconnect .
+docker run --rm -p 8000:8000 --name jupyterhub jupyterhub:rsconnect
+```
+
+Connect to Jupyterhub on http://localhost:8000 and log in as one of the test users. From there, you can create a notebook and publish it to RStudio Connect. Note that the current Jupyterhub docker image uses Python 3.6.5, so you will need a compatible Python version installed on your RStudio Connect server.
