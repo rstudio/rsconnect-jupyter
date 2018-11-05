@@ -157,7 +157,9 @@ FROM jupyterhub/jupyterhub
 RUN conda install notebook
 
 # Download and install rsconnect in the same environment
-ARG RSCONNECT_VERSION=1.1.0.62
+# Update this to specify the desired version of the rsconnect package,
+# or pass `--build-arg RSCONNECT_VERSION=...` to docker build.
+ARG RSCONNECT_VERSION=1.1.0.64
 ARG REPOSITORY=https://s3.amazonaws.com/rstudio-rsconnect-jupyter
 
 RUN wget ${REPOSITORY}/rsconnect-${RSCONNECT_VERSION}-py2.py3-none-any.whl
