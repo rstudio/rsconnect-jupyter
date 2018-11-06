@@ -1,6 +1,9 @@
 #!/bin/sh
 
-if [ -z $1 ] ; then
+if [ `grep $1 versions` ] ; then
+	sudo conda create -y -p /opt/Python/$1 python=$1
+    sudo -H /opt/Python/$1/bin/pip install virtualenv
+else
 	echo Please run with a valid Python Version
 	exit 1
 fi
@@ -8,15 +11,6 @@ fi
 # setup miniconda
 sudo curl -o miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
 sudo sh miniconda.sh -b -u -p /opt/Python/miniconda
-
-# check supported python versions
-cat /Users/kgartland/Documents/versions | while read VERSION
-do
-	if [ $1 == $VERSION ] ; then
-    	sudo conda create -y -p /opt/Python/$VERSION python=$VERSION
-    	sudo -H /opt/Python/$VERSION/bin/pip install virtualenv
-    fi
-done
 
 # setup virtualenv
 PYTHONMAJOR=${1:0:3}
@@ -45,11 +39,15 @@ if [ -z $2 ] ; then
 	done < AWS_OUTPUT
 
 	echo installing the latest version of the jupyter plugin: ${CONTENT_ARRAY[${#CONTENT_ARRAY[@]}-1]}...
-	sudo -H /opt/Python/$1/bin/pip install https://s3.amazonaws.com/rstudio-rsconnect-jupyter/${CONTENT_ARRAY[${#CONTENT_ARRAY[@]}-1]}
+	sudo -H /opt/Python/$1/bin/pip install https://s3.amazonaws.com/rstudio-rsconnect-jupyter/${CONTENT_ARRAY[${#CONTENT_ARRAY[@]}-1]} || 
+	echo "Latest notebook not available, try again." 
+	exit 1
 
 else 
 	echo installing jupyter plugin version $2: https://s3.amazonaws.com/rstudio-rsconnect-jupyter/rsconnect-1.1.0.$2-py2.py3-none-any.whl
-	sudo -H /opt/Python/$1/bin/pip install https://s3.amazonaws.com/rstudio-rsconnect-jupyter/rsconnect-1.1.0.$2-py2.py3-none-any.whl
+	sudo -H /opt/Python/$1/bin/pip install https://s3.amazonaws.com/rstudio-rsconnect-jupyter/rsconnect-1.1.0.$2-py2.py3-none-any.whl || 
+	echo "$2 may not be a valid notebook version." 
+	exit 1
 fi
 
 # install and run jupyter
