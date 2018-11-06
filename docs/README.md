@@ -151,7 +151,7 @@ In JupyterHub, install the `rsconnect` package into the environment where the Ju
 This example uses the Jupyterhub docker image as a base and installs the `rsconnect` package:
 
 ```
-FROM jupyterhub/jupyterhub
+FROM jupyterhub/jupyterhub:0.9.4
 
 # Install Jupyter notebook into the existing base conda environment
 RUN conda install notebook
