@@ -168,8 +168,6 @@ RUN pip install rsconnect-${RSCONNECT_VERSION}-py2.py3-none-any.whl && \
 	jupyter-nbextension enable --sys-prefix --py rsconnect && \
 	jupyter-serverextension enable --sys-prefix --py rsconnect
 
-RUN jupyterhub --generate-config
-
 # create test users
 RUN useradd -m -s /bin/bash user1 && \
 	useradd -m -s /bin/bash user2 && \
