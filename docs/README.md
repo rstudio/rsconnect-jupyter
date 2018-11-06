@@ -103,15 +103,15 @@ instructions on generating API Keys for your user.
 
 ![publish dialog that prompts for an API key](manage.png)
 
-There are two different publication modes. Selecting "Publish finished document only" will publish an HTML snapshot of the notebook to Connect. HTML snapshots are static and cannot be scheduled or re-run on the Connect server.
+There are two different publication modes. Selecting "Publish finished document only" will publish an HTML snapshot of the notebook to RStudio Connect. HTML snapshots are static and cannot be scheduled or re-run on the RStudio Connect server.
 
-If you select "Publish document with source code", the notebook file and a list of the Python packages installed in your environment will be sent to Connect. This enables Connect to recreate the environment and re-run the notebook at a later time.
+If you select "Publish document with source code", the notebook file and a list of the Python packages installed in your environment will be sent to RStudio Connect. This enables RStudio Connect to recreate the environment and re-run the notebook at a later time.
 
 #### Environment detection with pip
 
 The list of packages sent along with the notebook comes from the python environment where the notebook kernel is running. In order for environment inspection to work, the `rsconnect` package must be installed in the kernel environment; that is, the environment where the `ipykernel` package is installed. In most cases that will be the same as the notebook server environment where `jupyter` is installed.
 
-If there is a `requirements.txt` file in the same directory as the notebook file, its contents will be used. This allows you to directly control which packages will be installed on the Connect server before the notebook is rendered. If you use this option, you must ensure that all necessary packages are listed in the `requirements.txt` file.
+If there is a `requirements.txt` file in the same directory as the notebook file, its contents will be used. This allows you to directly control which packages will be installed on the RStudio Connect server before the notebook is rendered. If you use this option, you must ensure that all necessary packages are listed in the `requirements.txt` file.
 
 If there isn't a requirements file, the command `pip freeze` will be used to inspect the environment. The output of `pip freeze` lists all packages currently installed, as well as their versions, which enables RStudio Connect to recreate the same environment.
 
@@ -122,7 +122,7 @@ may choose to overwrite the existing content or create new content.
 
 ![dialog that prompts for overwriting or publishing new content](overwrite.png)
 
-Choosing "New location" will create a new document in Connect. You can choose either publication mode - an HTML snapshot or a document with source code.
+Choosing "New location" will create a new document in RStudio Connect. You can choose either publication mode - an HTML snapshot or a document with source code.
 
 Updating an existing document will not change its publication mode.
 
@@ -141,3 +141,48 @@ publishing they should provide their API key and will be able to choose a
 content location to publish to if the notebook title is the same.
 
 You may share notebooks if appropriate.
+
+# Installation in JupyterHub
+
+In JupyterHub, install the `rsconnect` package into the environment where the Jupyter notebook server and kernel are installed. Typically those will be the same environment. If you've configured separate kernel environments, install the `rsconnect` package in the notebook server environment as well as each kernel environment.
+
+## JupyterHub Example Configuration
+
+This example uses the Jupyterhub docker image as a base and installs the `rsconnect` package:
+
+```
+FROM jupyterhub/jupyterhub:0.9.4
+
+# Install Jupyter notebook into the existing base conda environment
+RUN conda install notebook
+
+# Download and install rsconnect in the same environment
+# Update this to specify the desired version of the rsconnect package,
+# or pass `--build-arg RSCONNECT_VERSION=...` to docker build.
+ARG RSCONNECT_VERSION=1.1.0.64
+ARG REPOSITORY=https://s3.amazonaws.com/rstudio-rsconnect-jupyter
+
+RUN wget ${REPOSITORY}/rsconnect-${RSCONNECT_VERSION}-py2.py3-none-any.whl
+RUN pip install rsconnect-${RSCONNECT_VERSION}-py2.py3-none-any.whl && \
+	jupyter-nbextension install --sys-prefix --py rsconnect && \
+	jupyter-nbextension enable --sys-prefix --py rsconnect && \
+	jupyter-serverextension enable --sys-prefix --py rsconnect
+
+# create test users
+RUN useradd -m -s /bin/bash user1 && \
+	useradd -m -s /bin/bash user2 && \
+	useradd -m -s /bin/bash user3 && \
+	bash -c 'echo -en "password\npassword" | passwd user1' && \
+	bash -c 'echo -en "password\npassword" | passwd user2' && \
+	bash -c 'echo -en "password\npassword" | passwd user3'
+
+CMD ["jupyterhub"]
+```
+
+Run these commands to build and start the container:
+```
+docker build -t jupyterhub:rsconnect .
+docker run --rm -p 8000:8000 --name jupyterhub jupyterhub:rsconnect
+```
+
+Connect to Jupyterhub on http://localhost:8000 and log in as one of the test users. From there, you can create a notebook and publish it to RStudio Connect. Note that the current Jupyterhub docker image uses Python 3.6.5, so you will need a compatible Python version installed on your RStudio Connect server.
