@@ -18,6 +18,8 @@ Download the `rsconnect` python package from
 [https://s3.amazonaws.com/rstudio-rsconnect-jupyter/rsconnect-RSCONNECT_VERSION-py2.py3-none-any.whl](https://s3.amazonaws.com/rstudio-rsconnect-jupyter/rsconnect-RSCONNECT_VERSION-py2.py3-none-any.whl)
 (packaged as a [wheel](https://pythonwheels.com/) file).
 
+If you are installing `rsconnect` for use in Jupyterhub, please see the [Jupyterhub](#Installation-In-Jupyterhub) section below.
+
 We recommend working within a `virtualenv`.  If you
 are unfamiliar, these commands create and activate a `virtualenv`
 at `/my/path`:
