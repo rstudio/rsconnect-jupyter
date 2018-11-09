@@ -110,16 +110,14 @@ endif
 ## Inside Jenkins (when JOB_NAME is defined), we are in the right type of
 ## Docker container. Otherwise, launch pandoc inside a
 ## rstudio/connect:docs container.
-BUILD_CMD=bash -c 'cd docs; pandoc -f markdown-implicit_figures README.md -o ../dist/rsconnect-jupyter-${VERSION}.pdf'
-BUILD_DOC=${BUILD_CMD}
-
+BUILD_DOC=./docs/build-doc.sh
 ifeq (${JOB_NAME},)
 	BUILD_DOC=docker run --rm=true ${DOCKER_RUN_AS} \
-		-e RSCONNECT_JUPYTER_VERSION=${VERSION} \
+		-e VERSION=${VERSION} \
 		${DOCKER_ARGS} \
 		-v $(CURDIR):/rsconnect \
 		-w /rsconnect \
-		rsconnect-jupyter-docs ${BUILD_CMD}
+		rsconnect-jupyter-docs docs/build-doc.sh
 endif
 
 docs-image:
