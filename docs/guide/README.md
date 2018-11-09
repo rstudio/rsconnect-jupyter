@@ -1,14 +1,17 @@
-[`rsconnect`](https://www.github.com/rstudio/rsconnect-jupyter/) is a
+---
+title: rsconnect User Guide
+---
+[rsconnect](https://www.github.com/rstudio/rsconnect-jupyter/) is a
 plugin for [Jupyter Notebook](https://jupyter.org/) that enables
 publishing notebooks to [RStudio
 Connect](https://www.rstudio.com/products/connect/).
 
 # Requirements
 
-- Python 2.7 or Python 3.4 and higher
+- Python 2.7.9 or Python 3.4.0 and higher
 - Jupyter Notebook 5.x
-- `pip`
-- [`wheel`](https://pypi.org/project/wheel/)
+- [pip](https://pypi.org/project/pip/)
+- [wheel](https://pypi.org/project/wheel/)
 
 If using `conda`, `pip` and `wheel` should already be installed.
 
@@ -24,7 +27,7 @@ We recommend working within a `virtualenv`.  If you
 are unfamiliar, these commands create and activate a `virtualenv`
 at `/my/path`:
 
-```
+```bash
 pip install virtualenv
 virtualenv /my/path
 source /my/path/bin/activate
@@ -32,13 +35,13 @@ source /my/path/bin/activate
 
 Install the `rsconnect` package with the following command:
 
-```
+```bash
 pip install rsconnect-RSCONNECT_VERSION-py2.py3-none-any.whl
 ```
 
 Enable the `rsconnect` extension with the following commands:
 
-```
+```bash
 # Install `rsconnect` as a jupyter extension
 jupyter-nbextension install --sys-prefix --py rsconnect
 
@@ -59,7 +62,7 @@ a bug [here](https://github.com/rstudio/rsconnect-jupyter/issues).
 
 First disable and remove the `rsconnect` notebook extension:
 
-```
+```bash
 # Disable Python extensions found in `rsconnect`
 jupyter-serverextension disable --sys-prefix --py rsconnect
 
@@ -69,7 +72,7 @@ jupyter-nbextension uninstall --sys-prefix --py rsconnect
 
 Finally, uninstall the `rsconnect` python package:
 
-```
+```bash
 pip uninstall rsconnect
 ```
 
@@ -158,7 +161,7 @@ This example uses Docker, but you can install the `rsconnect` package in any Jup
 
 Example Dockerfile:
 
-```
+```dockerfile
 FROM jupyterhub/jupyterhub:0.9.4
 
 # Install Jupyter notebook into the existing base conda environment
@@ -188,7 +191,7 @@ CMD ["jupyterhub"]
 ```
 
 Run these commands to build and start the container:
-```
+```bash
 docker build -t jupyterhub:rsconnect .
 docker run --rm -p 8000:8000 --name jupyterhub jupyterhub:rsconnect
 ```

@@ -93,7 +93,7 @@ def buildAndTest(pyVersion) {
 
 def publishArtifacts() {
     // Promote master builds to S3
-    for(filename in ['dist/*.whl', 'dist/*.pdf']) {
+    for(filename in ['dist/*.whl', 'dist/*.pdf', 'dist/*.html']) {
       cmd = "aws s3 cp ${filename} s3://rstudio-rsconnect-jupyter/"
 
       if (isUserBranch) {
@@ -159,8 +159,8 @@ try {
         )
         docs_image.inside("-v ${env.WORKSPACE}:/rsconnect") {
           sh 'make docs-build'
-          archiveArtifacts artifacts: 'dist/*.pdf'
-          stash includes: 'dist/*.pdf', name: 'docs'
+          archiveArtifacts artifacts: 'dist/*.pdf,dist/*.html'
+          stash includes: 'dist/*.pdf,dist/*.html', name: 'docs'
         }
       }
       stage('S3 upload') {
