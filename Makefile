@@ -111,8 +111,6 @@ endif
 ## Docker container. Otherwise, launch pandoc inside a
 ## rstudio/connect:docs container.
 
-BUILD_DOC=${BUILD_CMD}
-
 BUILD_DOC=./docs/build-doc.sh
 ifeq (${JOB_NAME},)
 	BUILD_DOC=docker run --rm=true ${DOCKER_RUN_AS} \
