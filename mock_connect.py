@@ -100,7 +100,7 @@ def authenticated(f):
 def json(f):
     @wraps(f)
     def wrapper(*args, **kw):
-        return jsonify(dumps(f(*args, **kw), indent=4, sort_keys=True))
+        return jsonify(f(*args, **kw))
     return wrapper
 
 def item_by_id(d):
