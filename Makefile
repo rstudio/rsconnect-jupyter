@@ -110,7 +110,7 @@ endif
 ## Inside Jenkins (when JOB_NAME is defined), we are in the right type of
 ## Docker container. Otherwise, launch pandoc inside a
 ## rstudio/connect:docs container.
-BUILD_DOC=./docs/build-doc.sh
+BUILD_DOC=env VERSION=${VERSION} ./docs/build-doc.sh
 ifeq (${JOB_NAME},)
 	BUILD_DOC=docker run --rm=true ${DOCKER_RUN_AS} \
 		-e VERSION=${VERSION} \

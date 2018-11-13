@@ -2,7 +2,6 @@
 
 set -ex
 
-mkdir -p dist/html
 cd docs/guide
 
 pandoc -f markdown-implicit_figures \
