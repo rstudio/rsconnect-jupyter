@@ -2,7 +2,6 @@
 
 set -ex
 
-mkdir -p dist/html
 cd docs/guide
 
 sed s/RSCONNECT_VERSION/${VERSION}/g < README.md > ../../build/docs-README.md
