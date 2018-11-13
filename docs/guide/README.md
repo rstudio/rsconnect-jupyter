@@ -18,24 +18,25 @@ If using `conda`, `pip` and `wheel` should already be installed.
 # Installation
 
 Download the `rsconnect` python package from
-[here](https://github.com/rstudio/rsconnect-jupyter/releases)
+[https://s3.amazonaws.com/rstudio-rsconnect-jupyter/rsconnect-RSCONNECT_VERSION-py2.py3-none-any.whl](https://s3.amazonaws.com/rstudio-rsconnect-jupyter/rsconnect-RSCONNECT_VERSION-py2.py3-none-any.whl)
 (packaged as a [wheel](https://pythonwheels.com/) file).
 
-We recommend working within a `virtualenv` (especially on Mac).  If you
+If you are installing `rsconnect` for use in Jupyterhub, please see the [Jupyterhub](#Installation-In-Jupyterhub) section below.
+
+We recommend working within a `virtualenv`.  If you
 are unfamiliar, these commands create and activate a `virtualenv`
 at `/my/path`:
 
 ```bash
 pip install virtualenv
 virtualenv /my/path
-cd /my/path
-source bin/activate
+source /my/path/bin/activate
 ```
 
 Install the `rsconnect` package with the following command:
 
 ```bash
-pip install rsconnect-1.1.0-py2.py3-none-any.whl
+pip install rsconnect-RSCONNECT_VERSION-py2.py3-none-any.whl
 ```
 
 Enable the `rsconnect` extension with the following commands:
@@ -147,11 +148,18 @@ You may share notebooks if appropriate.
 
 # Installation in JupyterHub
 
-In JupyterHub, install the `rsconnect` package into the environment where the Jupyter notebook server and kernel are installed. Typically those will be the same environment. If you've configured separate kernel environments, install the `rsconnect` package in the notebook server environment as well as each kernel environment.
+In JupyterHub, follow the directions [above](#Installation) to install the `rsconnect` package into the Python environment where the Jupyter notebook server and kernel are installed. Typically those will be the same environment. If you've configured separate kernel environments, install the `rsconnect` package in the notebook server environment as well as each kernel environment.
+
+The exact install location depends on your Jupyterhub configuration.
+
 
 ## JupyterHub Example Configuration
 
-This example uses the Jupyterhub docker image as a base and installs the `rsconnect` package:
+This section presents a simple working example of a Jupyterhub configuration with `rsconnect` installed.
+
+This example uses Docker, but you can install the `rsconnect` package in any Jupyterhub installation. Docker is not required.
+
+Example Dockerfile:
 
 ```dockerfile
 FROM jupyterhub/jupyterhub:0.9.4
@@ -161,12 +169,12 @@ RUN conda install notebook
 
 # Download and install rsconnect in the same environment
 # Update this to specify the desired version of the rsconnect package,
-# or pass `--build-arg RSCONNECT_VERSION=...` to docker build.
-ARG RSCONNECT_VERSION=1.1.0.64
+# or pass `--build-arg VERSION=...` to docker build.
+ARG VERSION=RSCONNECT_VERSION
 ARG REPOSITORY=https://s3.amazonaws.com/rstudio-rsconnect-jupyter
 
-RUN wget ${REPOSITORY}/rsconnect-${RSCONNECT_VERSION}-py2.py3-none-any.whl
-RUN pip install rsconnect-${RSCONNECT_VERSION}-py2.py3-none-any.whl && \
+RUN wget ${REPOSITORY}/rsconnect-${VERSION}-py2.py3-none-any.whl
+RUN pip install rsconnect-${VERSION}-py2.py3-none-any.whl && \
 	jupyter-nbextension install --sys-prefix --py rsconnect && \
 	jupyter-nbextension enable --sys-prefix --py rsconnect && \
 	jupyter-serverextension enable --sys-prefix --py rsconnect

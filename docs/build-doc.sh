@@ -4,12 +4,14 @@ set -ex
 
 cd docs/guide
 
+sed s/RSCONNECT_VERSION/${VERSION}/g < README.md > ../../build/docs-README.md
+
 pandoc -f markdown-implicit_figures \
     --self-contained \
     -o ../../dist/rsconnect-jupyter-${VERSION}.html \
     -H style.css \
-    README.md
+    ../../build/docs-README.md
 
 pandoc -f markdown-implicit_figures \
     -o ../../dist/rsconnect-jupyter-${VERSION}.pdf \
-    README.md
+    ../../build/docs-README.md
