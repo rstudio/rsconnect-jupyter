@@ -16,7 +16,7 @@ from json import dumps, loads
 from functools import wraps
 from pprint import pprint
 
-from flask import Flask, Blueprint, abort, after_this_request, g, request, url_for
+from flask import Flask, Blueprint, abort, after_this_request, g, request, url_for, jsonify
 
 def error(code, reason):
     def set_code(response):
@@ -79,7 +79,7 @@ users = {
         "confirmed": True,
         "created_time": "2018-08-29T19:25:23.68280816Z",
         "password": "",
-        "email": "admin@example.com"        
+        "email": "admin@example.com"
     }
 }
 
@@ -100,7 +100,7 @@ def authenticated(f):
 def json(f):
     @wraps(f)
     def wrapper(*args, **kw):
-        return dumps(f(*args, **kw), indent=4, sort_keys=True)
+        return jsonify(dumps(f(*args, **kw), indent=4, sort_keys=True))
     return wrapper
 
 def item_by_id(d):
@@ -244,7 +244,7 @@ app_modes = {
 def deploy(app):
     bundle_id = request.get_json(force=True).get('bundle')
     if bundle_id is None:
-        return error(400, 'bundle_id is required')  # message and status code probably wrong 
+        return error(400, 'bundle_id is required')  # message and status code probably wrong
 
     if bundle_id not in bundles:
         return error(404, 'bundle %s not found' % bundle_id)  # message and status code probably wrong
@@ -258,7 +258,7 @@ def deploy(app):
     new_app_mode = app_modes[manifest['metadata']['appmode']]
 
     if old_app_mode is not None and old_app_mode != new_app_mode:
-        return error(400, 'Cannot change app mode once deployed')  # message and status code probably wrong 
+        return error(400, 'Cannot change app mode once deployed')  # message and status code probably wrong
 
     app['app_mode'] = new_app_mode
     app['bundle_id'] = bundle_id
