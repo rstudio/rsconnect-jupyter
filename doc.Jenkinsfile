@@ -1,3 +1,6 @@
+// The pipeline in this file syncs documentation from the project's s3 bucket to
+// docs.rstudio.com where documentation is publicly visible. This pipeline
+// should be manually triggered on Jenkins when a release is cut.
 pipeline {
     agent { node('docker') }
     parameters {
