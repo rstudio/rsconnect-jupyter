@@ -36,8 +36,8 @@ pipeline {
                 }
             }
             steps {
-                sh "aws cp s3://rstudio-rsconnect-jupyter/rsconnect-jupyter-${RELEASE_VERSION}.html s3://docs.rstudio.com/rsconnect-jupyter/ --dryrun"
-                sh "aws cp s3://docs.rstudio.com/rsconnect-jupyter/rsconnect-jupyter-${RELEASE_VERSION}.html s3://docs.rstudio.com/rsconnect-jupyter/index.html --dryrun"
+                sh "aws cp s3://rstudio-rsconnect-jupyter/rsconnect-jupyter-${RELEASE_VERSION}.html s3://docs.rstudio.com/rsconnect-jupyter/"
+                sh "aws cp s3://docs.rstudio.com/rsconnect-jupyter/rsconnect-jupyter-${RELEASE_VERSION}.html s3://docs.rstudio.com/rsconnect-jupyter/index.html"
             }
         }
     }
