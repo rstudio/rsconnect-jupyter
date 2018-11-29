@@ -8,7 +8,7 @@ import sys
 
 
 version_re = re.compile(r'\d+\.\d+(\.\d+)?')
-exec_dir = os.path.join(sys.exec_prefix, 'bin')
+exec_dir = os.path.dirname(sys.executable)
 
 
 class EnvironmentException(Exception):
