@@ -250,9 +250,13 @@ define([
     inspectEnvironment: function() {
       var path = Jupyter.notebook.notebook_name;
 
-      // TODO: cannot assume rsconnect is installed in the kernel environment
-      var cmd = "!python -m rsconnect.environment ${PWD}/" + path;
-      console.log("executing: " + cmd);
+      try {
+        // cannot assume rsconnect is installed in the kernel environment
+        var cmd = ["!", Jupyter.notebook.kernel_selector.kernelspecs[Jupyter.notebook.kernel.name].spec.argv[0], " -m rsconnect.environment ${PWD}/", path].join("");
+        console.log("executing: " + cmd);
+      } catch (e) {
+        return $.Deferred().reject(e);
+      }
 
       var result = $.Deferred();
       var content = "";
@@ -760,12 +764,12 @@ define([
         "        <label>Publish Source Code</label>",
         '        <div class="list-group">',
         '            <a href="#" id="rsc-publish-with-source" class="list-group-item rsc-appmode" data-appmode="jupyter-static">',
-        '                <img src="/nbextensions/rsconnect/images/publishDocWithSource.png" class="rsc-image">',
+        '                <img src="' + Jupyter.notebook.base_url + 'nbextensions/rsconnect/images/publishDocWithSource.png" class="rsc-image">',
         '                <span class="rsc-label">Publish document with source code</span><br/>',
         '                <span class="rsc-text-light">Choose this option if you want to create a scheduled report or rebuild your document on the server</span>',
         "            </a>",
         '            <a href="#" id="rsc-publish-without-source" class="list-group-item rsc-appmode" data-appmode="static">',
-        '                <img src="/nbextensions/rsconnect/images/publishDocWithoutSource.png" class="rsc-image">',
+        '                <img src="' + Jupyter.notebook.base_url + 'nbextensions/rsconnect/images/publishDocWithoutSource.png" class="rsc-image">',
         '                <span class="rsc-label">Publish finished document only</span><br/>',
         '                <span class="rsc-text-light">Choose this option to publish a snapshot of the notebook as it appears in Jupyter</span>',
         "            </a>",
@@ -910,7 +914,7 @@ define([
             addValidationMarkup(
               false,
               txtTitle,
-              "Failed to publish. " + xhr.responseJSON.message
+              xhr.responseJSON.message
             );
             togglePublishButton(true);
           }
