@@ -250,9 +250,13 @@ define([
     inspectEnvironment: function() {
       var path = Jupyter.notebook.notebook_name;
 
-      // TODO: cannot assume rsconnect is installed in the kernel environment
-      var cmd = "!python -m rsconnect.environment ${PWD}/" + path;
-      console.log("executing: " + cmd);
+      try {
+        // cannot assume rsconnect is installed in the kernel environment
+        var cmd = ["!", Jupyter.notebook.kernel_selector.kernelspecs[Jupyter.notebook.kernel.name].spec.argv[0], " -m rsconnect.environment ${PWD}/", path].join("");
+        console.log("executing: " + cmd);
+      } catch (e) {
+        return $.Deferred().reject(e);
+      }
 
       var result = $.Deferred();
       var content = "";
