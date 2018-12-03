@@ -254,7 +254,10 @@ def deploy(uri, api_key, app_id, app_name, app_title, tarball):
 
         if task['code'] != 0:
             # app failed to deploy
-            raise RSConnectException('Failed to deploy successfully')
+            err_msg = 'Failed to deploy successfully'
+            if 'error' in task:
+                err_msg += ': ' + task['error']
+            raise RSConnectException(err_msg)
 
         # app deployed successfully
         config = api.app_config(app['id'])

@@ -914,7 +914,7 @@ define([
             addValidationMarkup(
               false,
               txtTitle,
-              "Failed to publish. " + xhr.responseJSON.message
+              xhr.responseJSON.message
             );
             togglePublishButton(true);
           }
