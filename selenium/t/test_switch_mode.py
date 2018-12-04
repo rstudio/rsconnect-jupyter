@@ -58,4 +58,4 @@ class TestSwitchMode(object):
         pf.publish_with_source.click()
         pf.submit.click()
 
-        pf.title_error.should(have.text('Failed to publish. Cannot change app mode once deployed'))
+        pf.title_error.should(have.text('Cannot change app mode once deployed'))
