@@ -82,7 +82,7 @@ def buildAndTest(pyVersion) {
     push: !isUserBranch
   )
 
-  img.inside("-v ${env.WORKSPACE}:/rsconnect") {
+  img.inside("-v ${env.WORKSPACE}:/rsconnect_jupyter") {
     withEnv(["PY_VERSION=${pyVersion}"]) {
       print "running tests: python${pyVersion}"
       sh '/rsconnect_jupyter/run.sh test'
