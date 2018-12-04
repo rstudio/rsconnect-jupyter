@@ -9,7 +9,7 @@ then
     exit $?
 fi
 
-cd /rsconnect
+cd /rsconnect_jupyter
 export PATH=/opt/conda/bin:$PATH
 source activate "py${PY_VERSION/./}"
-make -f /rsconnect/Makefile $1
+make -f /rsconnect_jupyter/Makefile $1

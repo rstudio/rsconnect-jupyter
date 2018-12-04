@@ -251,8 +251,7 @@ define([
       var path = Jupyter.notebook.notebook_name;
 
       try {
-        // cannot assume rsconnect is installed in the kernel environment
-        var cmd = ["!", Jupyter.notebook.kernel_selector.kernelspecs[Jupyter.notebook.kernel.name].spec.argv[0], " -m rsconnect.environment ${PWD}/", path].join("");
+        var cmd = ["!", Jupyter.notebook.kernel_selector.kernelspecs[Jupyter.notebook.kernel.name].spec.argv[0], " -m rsconnect_jupyter.environment ${PWD}/", path].join("");
         console.log("executing: " + cmd);
       } catch (e) {
         return $.Deferred().reject(e);
@@ -764,12 +763,12 @@ define([
         "        <label>Publish Source Code</label>",
         '        <div class="list-group">',
         '            <a href="#" id="rsc-publish-with-source" class="list-group-item rsc-appmode" data-appmode="jupyter-static">',
-        '                <img src="' + Jupyter.notebook.base_url + 'nbextensions/rsconnect/images/publishDocWithSource.png" class="rsc-image">',
+        '                <img src="' + Jupyter.notebook.base_url + 'nbextensions/rsconnect_jupyter/images/publishDocWithSource.png" class="rsc-image">',
         '                <span class="rsc-label">Publish document with source code</span><br/>',
         '                <span class="rsc-text-light">Choose this option if you want to create a scheduled report or rebuild your document on the server</span>',
         "            </a>",
         '            <a href="#" id="rsc-publish-without-source" class="list-group-item rsc-appmode" data-appmode="static">',
-        '                <img src="' + Jupyter.notebook.base_url + 'nbextensions/rsconnect/images/publishDocWithoutSource.png" class="rsc-image">',
+        '                <img src="' + Jupyter.notebook.base_url + 'nbextensions/rsconnect_jupyter/images/publishDocWithoutSource.png" class="rsc-image">',
         '                <span class="rsc-label">Publish finished document only</span><br/>',
         '                <span class="rsc-text-light">Choose this option to publish a snapshot of the notebook as it appears in Jupyter</span>',
         "            </a>",
@@ -1231,7 +1230,7 @@ define([
         // unlikely but possible if we aren't able to save
         debug.error("Failed to save notebook:", err);
         Dialog.modal({
-          title: "rsconnect-jupyter",
+          title: "rsconnect_jupyter",
           body: "Failed to save this notebook. Error: " + err,
           buttons: { Ok: { class: "btn-primary" } }
         });

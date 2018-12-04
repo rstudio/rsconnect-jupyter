@@ -22,7 +22,7 @@ with open('version.txt', 'r') as f:
 
 BUILD = os.environ.get('BUILD_NUMBER', '9999')
 
-setup(name='rsconnect',
+setup(name='rsconnect_jupyter',
       version='{version}.{build}'.format(version=VERSION, build=BUILD),
       description='Jupyter Notebook integration with RStudio Connect',
       long_description=readme(),
@@ -30,7 +30,7 @@ setup(name='rsconnect',
       author='Jonathan Curran',
       author_email='jonathan.curran@rstudio.com',
       license='GPL-2.0',
-      packages=['rsconnect'],
+      packages=['rsconnect_jupyter'],
       install_requires=[
           'notebook',
           'nbformat',

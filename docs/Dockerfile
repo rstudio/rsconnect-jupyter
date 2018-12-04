@@ -78,4 +78,4 @@ RUN export PANDOC_VERSION=2.1.3 && \
     gzip -d pandoc.gz pandoc-citeproc.gz && \
     chmod 0755 pandoc pandoc-citeproc
 
-WORKDIR /rsconnect
+WORKDIR /rsconnect_jupyter

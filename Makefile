@@ -7,7 +7,7 @@ IMAGE=rstudio/rsconnect-jupyter-py
 VERSION=$(shell cat version.txt).$(shell printenv BUILD_NUMBER || echo 9999)
 
 clean:
-	rm -rf build/ dist/ rsconnect.egg-info/
+	rm -rf build/ dist/ rsconnect_jupyter.egg-info/
 
 all-images: image2 image3.5 image3.6 image3.7
 
@@ -24,13 +24,13 @@ image%:
 launch:
 	docker run --rm -i -t \
 		-v $(CURDIR)/notebooks$(PY_VERSION):/notebooks \
-		-v $(CURDIR):/rsconnect \
+		-v $(CURDIR):/rsconnect_jupyter \
 		-e NB_UID=$(NB_UID) \
 		-e NB_GID=$(NB_GID) \
 		-e PY_VERSION=$(PY_VERSION) \
 		-p :9999:9999 \
 		$(DOCKER_IMAGE) \
-		/rsconnect/run.sh $(TARGET)
+		/rsconnect_jupyter/run.sh $(TARGET)
 
 
 notebook%:
@@ -63,12 +63,12 @@ package:
 run:
 # link python package
 	python setup.py develop
-# install rsconnect as a jupyter extension
-	jupyter-nbextension install --symlink --user --py rsconnect
+# install rsconnect_jupyter as a jupyter extension
+	jupyter-nbextension install --symlink --user --py rsconnect_jupyter
 # enable js extension
-	jupyter-nbextension enable --py rsconnect
+	jupyter-nbextension enable --py rsconnect_jupyter
 # enable python extension
-	jupyter-serverextension enable --py rsconnect
+	jupyter-serverextension enable --py rsconnect_jupyter
 # start notebook
 	jupyter-notebook -y --notebook-dir=/notebooks --ip='0.0.0.0' --port=9999 --no-browser --NotebookApp.token=''
 
@@ -82,10 +82,10 @@ dist-run%:
 	make DOCKER_IMAGE=$(IMAGE)$* PY_VERSION=$* TARGET=dist-run launch
 
 dist-run: dist
-	pip install dist/rsconnect-$(VERSION)-py2.py3-none-any.whl
-	jupyter-nbextension install --symlink --user --py rsconnect
-	jupyter-nbextension enable --py rsconnect
-	jupyter-serverextension enable --py rsconnect
+	pip install dist/rsconnect_jupyter-$(VERSION)-py2.py3-none-any.whl
+	jupyter-nbextension install --symlink --user --py rsconnect_jupyter
+	jupyter-nbextension enable --py rsconnect_jupyter
+	jupyter-serverextension enable --py rsconnect_jupyter
 	jupyter-notebook -y --notebook-dir=/notebooks --ip='0.0.0.0' --port=9999 --no-browser --NotebookApp.token=''
 
 build/mock-connect/bin/flask:
@@ -115,8 +115,8 @@ ifeq (${JOB_NAME},)
 	BUILD_DOC=docker run --rm=true ${DOCKER_RUN_AS} \
 		-e VERSION=${VERSION} \
 		${DOCKER_ARGS} \
-		-v $(CURDIR):/rsconnect \
-		-w /rsconnect \
+		-v $(CURDIR):/rsconnect_jupyter \
+		-w /rsconnect_jupyter \
 		rsconnect-jupyter-docs docs/build-doc.sh
 endif
 

@@ -11,8 +11,8 @@ from os.path import basename, dirname, exists, join
 
 import nbformat
 
-from rsconnect.environment import detect_environment
-from rsconnect.bundle import make_html_bundle, make_source_bundle
+from rsconnect_jupyter.environment import detect_environment
+from rsconnect_jupyter.bundle import make_html_bundle, make_source_bundle
 
 
 class TestBundle(TestCase):
@@ -179,7 +179,7 @@ class TestBundle(TestCase):
                 'open_browser': False,
                 'token': '',
                 'nbserver_extensions': {
-                    'rsconnect': True
+                    'rsconnect_jupyter': True
                 }
             }
         }

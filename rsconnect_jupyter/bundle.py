@@ -12,7 +12,7 @@ from os.path import join, split, splitext
 import nbformat
 from ipython_genutils import text
 
-log = logging.getLogger('rsconnect')
+log = logging.getLogger('rsconnect_jupyter')
 log.setLevel(logging.DEBUG)
 
 
