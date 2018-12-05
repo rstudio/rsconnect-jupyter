@@ -82,10 +82,10 @@ def buildAndTest(pyVersion) {
     push: !isUserBranch
   )
 
-  img.inside("-v ${env.WORKSPACE}:/rsconnect") {
+  img.inside("-v ${env.WORKSPACE}:/rsconnect_jupyter") {
     withEnv(["PY_VERSION=${pyVersion}"]) {
       print "running tests: python${pyVersion}"
-      sh '/rsconnect/run.sh test'
+      sh '/rsconnect_jupyter/run.sh test'
     }
   }
   return img
@@ -136,7 +136,7 @@ try {
           'python3.6': {
             img = buildAndTest("3.6")
 
-            img.inside("-v ${env.WORKSPACE}:/rsconnect") {
+            img.inside("-v ${env.WORKSPACE}:/rsconnect_jupyter") {
               print "building python wheel package"
               sh 'make dist'
               archiveArtifacts artifacts: 'dist/*.whl'
@@ -155,7 +155,7 @@ try {
           docker_context: './docs',
           push: !isUserBranch
         )
-        docs_image.inside("-v ${env.WORKSPACE}:/rsconnect") {
+        docs_image.inside("-v ${env.WORKSPACE}:/rsconnect_jupyter") {
           sh 'make docs-build'
           archiveArtifacts artifacts: 'dist/*.pdf,dist/*.html'
           stash includes: 'dist/*.pdf,dist/*.html', name: 'docs'

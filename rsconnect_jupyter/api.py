@@ -23,7 +23,7 @@ class RSConnectException(Exception):
 
 from notebook.utils import url_path_join
 
-logger = logging.getLogger('rsconnect')
+logger = logging.getLogger('rsconnect_jupyter')
 logger.setLevel(logging.INFO)
 
 

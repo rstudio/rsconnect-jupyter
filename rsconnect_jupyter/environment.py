@@ -81,8 +81,9 @@ def output_file(dirname, filename, package_manager):
         with open(path, 'r') as f:
             data = f.read()
 
+        # TODO TODO TODO TODO
         data = '\n'.join([line for line in data.split('\n')
-                                if 'rsconnect-jupyter' not in line])
+                                if 'rsconnect_jupyter' not in line])
 
         return {
             'filename': filename,

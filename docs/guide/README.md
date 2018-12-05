@@ -1,7 +1,7 @@
 ---
-title: rsconnect User Guide
+title: rsconnect-jupyter User Guide
 ---
-[rsconnect](https://www.github.com/rstudio/rsconnect-jupyter/) is a
+[rsconnect-jupyter](https://www.github.com/rstudio/rsconnect-jupyter/) is a
 plugin for [Jupyter Notebook](https://jupyter.org/) that enables
 publishing notebooks to [RStudio
 Connect](https://www.rstudio.com/products/connect/).
@@ -17,11 +17,12 @@ If using `conda`, `pip` and `wheel` should already be installed.
 
 # Installation
 
-Download the `rsconnect` python package from
-[https://s3.amazonaws.com/rstudio-rsconnect-jupyter/rsconnect-RSCONNECT_VERSION-py2.py3-none-any.whl](https://s3.amazonaws.com/rstudio-rsconnect-jupyter/rsconnect-RSCONNECT_VERSION-py2.py3-none-any.whl)
+Download the `rsconnect-jupyter` python package from
+[https://s3.amazonaws.com/rstudio-rsconnect-jupyter/rsconnect_jupyter-RSCONNECT_VERSION-py2.py3-none-any.whl](https://s3.amazonaws.com/rstudio-rsconnect-jupyter/rsconnect_jupyter-RSCONNECT_VERSION-py2.py3-none-any.whl)
 (packaged as a [wheel](https://pythonwheels.com/) file).
 
-If you are installing `rsconnect` for use in Jupyterhub, please see the [Jupyterhub](#Installation-In-Jupyterhub) section below.
+If you are installing `rsconnect-jupyter` for use in Jupyterhub, please see the
+[Jupyterhub](#Installation-In-Jupyterhub) section below.
 
 We recommend working within a `virtualenv`.  If you
 are unfamiliar, these commands create and activate a `virtualenv`
@@ -33,52 +34,52 @@ virtualenv /my/path
 source /my/path/bin/activate
 ```
 
-Install the `rsconnect` package with the following command:
+Install the `rsconnect-jupyter` package with the following command:
 
 ```bash
-pip install rsconnect-RSCONNECT_VERSION-py2.py3-none-any.whl
+pip install rsconnect_jupyter-RSCONNECT_VERSION-py2.py3-none-any.whl
 ```
 
-Enable the `rsconnect` extension with the following commands:
+Enable the `rsconnect-jupyter` extension with the following commands:
 
 ```bash
-# Install `rsconnect` as a jupyter extension
-jupyter-nbextension install --sys-prefix --py rsconnect
+# Install `rsconnect-jupyter` as a jupyter extension
+jupyter-nbextension install --sys-prefix --py rsconnect_jupyter
 
 # Enable JavaScript extension
-jupyter-nbextension enable --sys-prefix --py rsconnect
+jupyter-nbextension enable --sys-prefix --py rsconnect_jupyter
 
 # Enable Python extension
-jupyter-serverextension enable --sys-prefix --py rsconnect
+jupyter-serverextension enable --sys-prefix --py rsconnect_jupyter
 ```
 
 Note: The above commands only need to be run once when installing
-`rsconnect`.
+`rsconnect_jupyter`.
 
 Note: If you run into an issue during installation please let us know by filing
 a bug [here](https://github.com/rstudio/rsconnect-jupyter/issues).
 
 # Uninstalling
 
-First disable and remove the `rsconnect` notebook extension:
+First disable and remove the `rsconnect-jupyter` notebook extension:
 
 ```bash
-# Disable Python extensions found in `rsconnect`
-jupyter-serverextension disable --sys-prefix --py rsconnect
+# Disable Python extensions found in `rsconnect-jupyter`
+jupyter-serverextension disable --sys-prefix --py rsconnect_jupyter
 
 # Remove JavaScript extension
-jupyter-nbextension uninstall --sys-prefix --py rsconnect
+jupyter-nbextension uninstall --sys-prefix --py rsconnect_jupyter
 ```
 
-Finally, uninstall the `rsconnect` python package:
+Finally, uninstall the `rsconnect-jupyter` python package:
 
 ```bash
-pip uninstall rsconnect
+pip uninstall rsconnect_jupyter
 ```
 
 # Upgrading
 
-To upgrade `rsconnect`, first uninstall the extension and then
+To upgrade `rsconnect-jupyter`, first uninstall the extension and then
 re-install it.
 
 # Usage
@@ -113,11 +114,23 @@ If you select "Publish document with source code", the notebook file and a list 
 
 #### Environment detection with pip
 
-The list of packages sent along with the notebook comes from the python environment where the notebook kernel is running. In order for environment inspection to work, the `rsconnect` package must be installed in the kernel environment; that is, the environment where the `ipykernel` package is installed. In most cases that will be the same as the notebook server environment where `jupyter` is installed.
+The list of packages sent along with the notebook comes from the python
+environment where the notebook kernel is running. In order for environment
+inspection to work, the `rsconnect-jupyter` package must be installed in the
+kernel environment; that is, the environment where the `ipykernel` package is
+installed. In most cases that will be the same as the notebook server
+environment where `jupyter` is installed.
 
-If there is a `requirements.txt` file in the same directory as the notebook file, its contents will be used. This allows you to directly control which packages will be installed on the RStudio Connect server before the notebook is rendered. If you use this option, you must ensure that all necessary packages are listed in the `requirements.txt` file.
+If there is a `requirements.txt` file in the same directory as the notebook
+file, its contents will be used. This allows you to directly control which
+packages will be installed on the RStudio Connect server before the notebook is
+rendered. If you use this option, you must ensure that all necessary packages
+are listed in the `requirements.txt` file.
 
-If there isn't a requirements file, the command `pip freeze` will be used to inspect the environment. The output of `pip freeze` lists all packages currently installed, as well as their versions, which enables RStudio Connect to recreate the same environment.
+If there isn't a requirements file, the command `pip freeze` will be used to
+inspect the environment. The output of `pip freeze` lists all packages currently
+installed, as well as their versions, which enables RStudio Connect to recreate
+the same environment.
 
 
 ### Handling conflicts
@@ -148,16 +161,23 @@ You may share notebooks if appropriate.
 
 # Installation in JupyterHub
 
-In JupyterHub, follow the directions [above](#Installation) to install the `rsconnect` package into the Python environment where the Jupyter notebook server and kernel are installed. Typically those will be the same environment. If you've configured separate kernel environments, install the `rsconnect` package in the notebook server environment as well as each kernel environment.
+In JupyterHub, follow the directions [above](#Installation) to install the
+`rsconnect-jupyter` package into the Python environment where the Jupyter
+notebook server and kernel are installed. Typically those will be the same
+environment. If you've configured separate kernel environments, install the
+`rsconnect-jupyter` package in the notebook server environment as well as each
+kernel environment.
 
 The exact install location depends on your Jupyterhub configuration.
 
 
 ## JupyterHub Example Configuration
 
-This section presents a simple working example of a Jupyterhub configuration with `rsconnect` installed.
+This section presents a simple working example of a Jupyterhub configuration
+with `rsconnect-jupyter` installed.
 
-This example uses Docker, but you can install the `rsconnect` package in any Jupyterhub installation. Docker is not required.
+This example uses Docker, but you can install the `rsconnect-jupyter` package in
+any Jupyterhub installation. Docker is not required.
 
 Example Dockerfile:
 
@@ -167,17 +187,17 @@ FROM jupyterhub/jupyterhub:0.9.4
 # Install Jupyter notebook into the existing base conda environment
 RUN conda install notebook
 
-# Download and install rsconnect in the same environment
-# Update this to specify the desired version of the rsconnect package,
+# Download and install rsconnect-jupyter in the same environment
+# Update this to specify the desired version of the rsconnect-jupyter package,
 # or pass `--build-arg VERSION=...` to docker build.
 ARG VERSION=RSCONNECT_VERSION
 ARG REPOSITORY=https://s3.amazonaws.com/rstudio-rsconnect-jupyter
 
-RUN wget ${REPOSITORY}/rsconnect-${VERSION}-py2.py3-none-any.whl
-RUN pip install rsconnect-${VERSION}-py2.py3-none-any.whl && \
-	jupyter-nbextension install --sys-prefix --py rsconnect && \
-	jupyter-nbextension enable --sys-prefix --py rsconnect && \
-	jupyter-serverextension enable --sys-prefix --py rsconnect
+RUN wget ${REPOSITORY}/rsconnect_jupyter-${VERSION}-py2.py3-none-any.whl
+RUN pip install rsconnect_jupyter-${VERSION}-py2.py3-none-any.whl && \
+	jupyter-nbextension install --sys-prefix --py rsconnect_jupyter && \
+	jupyter-nbextension enable --sys-prefix --py rsconnect_jupyter && \
+	jupyter-serverextension enable --sys-prefix --py rsconnect_jupyter
 
 # create test users
 RUN useradd -m -s /bin/bash user1 && \
@@ -192,8 +212,11 @@ CMD ["jupyterhub"]
 
 Run these commands to build and start the container:
 ```bash
-docker build -t jupyterhub:rsconnect .
-docker run --rm -p 8000:8000 --name jupyterhub jupyterhub:rsconnect
+docker build -t jupyterhub:rsconnect-jupyter .
+docker run --rm -p 8000:8000 --name jupyterhub jupyterhub:rsconnect-jupyter
 ```
 
-Connect to Jupyterhub on http://localhost:8000 and log in as one of the test users. From there, you can create a notebook and publish it to RStudio Connect. Note that the current Jupyterhub docker image uses Python 3.6.5, so you will need a compatible Python version installed on your RStudio Connect server.
+Connect to Jupyterhub on http://localhost:8000 and log in as one of the test
+users. From there, you can create a notebook and publish it to RStudio Connect.
+Note that the current Jupyterhub docker image uses Python 3.6.5, so you will
+need a compatible Python version installed on your RStudio Connect server.

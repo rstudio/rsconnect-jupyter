@@ -7,7 +7,7 @@ You'll need the following commands available on your system to run the test case
   * coreutils (id, rm, cd, cat, printf, ...)
   * docker
   * docker-compose
-  * git 
+  * git
   * make
   * python 2.7+
   * vncviewer (macosx users can launch vnc from spotlight, or the ```open```
@@ -234,7 +234,7 @@ from t.pages.publish_content_form import PublishContentForm
 
 
 # set the directory paths for where data files and jupyter notebooks
-data_dir = "/rsconnect/selenium/data"
+data_dir = "/rsconnect_jupyter/selenium/data"
 notebooks_dir = "/notebooks"
 
 # copy the template notbook to a new notebooks directory
@@ -497,7 +497,7 @@ Default Value: `${RSCONNECT_DIR}/selenium`
 
 Example usage:
 ```
-make test LOGS_DIR=/rsconnect/selenium
+make test LOGS_DIR=/rsconnect_jupyter/selenium
 ```
 
 ##### NB_UID
@@ -626,16 +626,16 @@ make test RESULT_XML=result.xml
 
 ##### RSCONNECT_DIR
 
-Name of the directory that the rsconnect-jupyter directory, on the host
+Name of the directory that the rsconnect_jupyter directory, on the host
 machine, will be mounted to, in the Docker container.
 
-Default Value:`/rsconnect`
+Default Value:`/rsconnect_jupyter`
 
 Example usage:
 ```
-make test-env-up RSCONNECT_DIR=/rsconnect
-make jupyter-up RSCONNECT_DIR=/rsconnect
-make test RSCONNECT_DIR=/rsconnect
+make test-env-up RSCONNECT_DIR=/rsconnect_jupyter
+make jupyter-up RSCONNECT_DIR=/rsconnect_jupyter
+make test RSCONNECT_DIR=/rsconnect_jupyter
 ```
 
 ##### SCALE

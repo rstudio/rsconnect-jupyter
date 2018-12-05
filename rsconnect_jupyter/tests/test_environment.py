@@ -4,7 +4,7 @@ import sys
 from unittest import TestCase
 from os.path import dirname, exists, join
 
-from rsconnect.environment import detect_environment
+from rsconnect_jupyter.environment import detect_environment
 
 version_re = re.compile(r'\d+\.\d+(\.\d+)?')
 
@@ -28,9 +28,9 @@ class TestEnvironment(TestCase):
         self.assertIn('.', locale)
 
         self.assertEqual(result, {
-            'package_manager': 'pip', 
+            'package_manager': 'pip',
             'source': 'file',
-            'filename': 'requirements.txt', 
+            'filename': 'requirements.txt',
             'contents': 'numpy\npandas\nmatplotlib\n',
             'python': self.python_version(),
         })
@@ -51,7 +51,7 @@ class TestEnvironment(TestCase):
         self.assertIn('.', locale)
 
         self.assertEqual(result, {
-            'package_manager': 'pip', 
+            'package_manager': 'pip',
             'source': 'pip_freeze',
             'filename': 'requirements.txt',
             'python': self.python_version(),

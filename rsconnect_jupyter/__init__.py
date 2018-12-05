@@ -16,7 +16,7 @@ __version__ = '1.0.0'
 
 def _jupyter_server_extension_paths():
     return [{
-        "module": "rsconnect"
+        "module": "rsconnect_jupyter"
     }]
 
 
@@ -27,9 +27,9 @@ def _jupyter_nbextension_paths():
         # the path is relative to the `rsconnect` directory
         src="static",
         # directory in the `nbextension/` namespace
-        dest="rsconnect",
+        dest="rsconnect_jupyter",
         # _also_ in the `nbextension/` namespace
-        require="rsconnect/index")]
+        require="rsconnect_jupyter/index")]
 
 
 def md5(s):
@@ -161,7 +161,7 @@ class EndpointHandler(APIHandler):
 
 
 def load_jupyter_server_extension(nb_app):
-    nb_app.log.info("rsconnect enabled!")
+    nb_app.log.info("rsconnect_jupyter enabled!")
     web_app = nb_app.web_app
     host_pattern = '.*$'
     action_pattern = r'(?P<action>\w+)'
