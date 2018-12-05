@@ -21,7 +21,7 @@ define([
 
   function init() {
     // construct notification widget
-    notify = Jupyter.notification_area.widget("rsconnect");
+    notify = Jupyter.notification_area.widget("rsconnect_jupyter");
 
     // create an action that can be invoked from many places (e.g. command
     // palette, button click, keyboard shortcut, etc.)
@@ -33,7 +33,7 @@ define([
         handler: debounce(1000, onPublishClicked)
       },
       "publish",
-      "rsconnect"
+      "rsconnect_jupyter"
     );
 
     // add a button that invokes the action

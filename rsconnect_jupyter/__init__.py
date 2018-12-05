@@ -161,7 +161,7 @@ class EndpointHandler(APIHandler):
 
 
 def load_jupyter_server_extension(nb_app):
-    nb_app.log.info("rsconnect enabled!")
+    nb_app.log.info("rsconnect_jupyter enabled!")
     web_app = nb_app.web_app
     host_pattern = '.*$'
     action_pattern = r'(?P<action>\w+)'

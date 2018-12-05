@@ -1,5 +1,5 @@
 ---
-title: rsconnect User Guide
+title: rsconnect_jupyter User Guide
 ---
 [rsconnect_jupyter](https://www.github.com/rstudio/rsconnect-jupyter/) is a
 plugin for [Jupyter Notebook](https://jupyter.org/) that enables
@@ -21,7 +21,8 @@ Download the `rsconnect_jupyter` python package from
 [https://s3.amazonaws.com/rstudio-rsconnect-jupyter/rsconnect_jupyter-RSCONNECT_VERSION-py2.py3-none-any.whl](https://s3.amazonaws.com/rstudio-rsconnect-jupyter/rsconnect_jupyter-RSCONNECT_VERSION-py2.py3-none-any.whl)
 (packaged as a [wheel](https://pythonwheels.com/) file).
 
-If you are installing `rsconnect` for use in Jupyterhub, please see the [Jupyterhub](#Installation-In-Jupyterhub) section below.
+If you are installing `rsconnect_jupyter` for use in Jupyterhub, please see the
+[Jupyterhub](#Installation-In-Jupyterhub) section below.
 
 We recommend working within a `virtualenv`.  If you
 are unfamiliar, these commands create and activate a `virtualenv`
