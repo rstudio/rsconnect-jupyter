@@ -1,3 +1,4 @@
+import collections
 import json
 import logging
 import socket
@@ -16,6 +17,9 @@ except ImportError:
     from urllib import urlencode
     from urlparse import urlparse, urljoin
 
+from six.moves import queue
+
+
 class RSConnectException(Exception):
     def __init__(self, message):
         super(RSConnectException, self).__init__(message)
@@ -25,6 +29,32 @@ from notebook.utils import url_path_join
 
 logger = logging.getLogger('rsconnect_jupyter')
 logger.setLevel(logging.INFO)
+
+class _DeployLog:
+    def __init__(self):
+        self._logs = collections.defaultdict(queue.Queue)
+        self._finished = set()
+
+    def get(self, uuid):
+        if uuid in self._finished:
+            # log marked as finished
+            if uuid in self._logs:
+                # log exists
+                if not self._logs[uuid].empty():
+                    # unread log
+                    return self._logs[uuid]
+                else:
+                    # finished but not removed
+                    del self._logs[uuid]
+            return None
+
+        # log is not finished or is new
+        return self._logs[uuid]
+
+    def finished(self, uuid):
+        self._finished.add(uuid)
+
+DeployLog = _DeployLog()
 
 
 def wait_until(predicate, timeout, period=0.1):
@@ -209,7 +239,7 @@ class RSConnect:
         return self.json_response()
 
 
-def wait_for_task(api, task_id, timeout, period=1.0):
+def wait_for_task(api, task_id, timeout, log_uuid, period=1.0):
     last_status = None
     ending = time.time() + timeout
 
@@ -222,14 +252,21 @@ def wait_for_task(api, task_id, timeout, period=1.0):
             ending = time.time() + timeout
             last_status = task_status['last_status']
 
+            log = DeployLog.get(log_uuid)
+            if log:
+                log.put(task_status['status'])
+
         if task_status['finished']:
+            log = DeployLog.get(log_uuid)
+            if log:
+                DeployLog.finished(log_uuid)
             return task_status
 
         time.sleep(period)
     return None
 
 
-def deploy(uri, api_key, app_id, app_name, app_title, tarball):
+def deploy(uri, api_key, app_id, app_name, app_title, tarball, log_uuid):
     with RSConnect(uri, api_key) as api:
         if app_id is None:
             # create an app if id is not provided
@@ -247,7 +284,7 @@ def deploy(uri, api_key, app_id, app_name, app_title, tarball):
 
         # 10 minute timeout
         timeout = 600
-        task = wait_for_task(api, task_id, timeout)
+        task = wait_for_task(api, task_id, timeout, log_uuid)
 
         if task is None:
             raise RSConnectException('Deployment timed out')

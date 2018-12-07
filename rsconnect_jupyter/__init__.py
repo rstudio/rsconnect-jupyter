@@ -2,13 +2,14 @@ import hashlib
 import json
 import os
 
+from six.moves import queue
 from six.moves.urllib.parse import unquote_plus, urlparse
 
 from notebook.base.handlers import APIHandler
 from notebook.utils import url_path_join
 from tornado import web
 
-from .api import app_get, app_search, deploy, verify_server, RSConnectException
+from .api import app_get, app_search, deploy, verify_server, DeployLog, RSConnectException
 from .bundle import make_html_bundle, make_source_bundle
 
 __version__ = '1.0.0'
@@ -85,6 +86,7 @@ class EndpointHandler(APIHandler):
             api_key = data['api_key']
             app_mode = data['app_mode']
             environment = data.get('environment')
+            log_uuid = data['log_uuid']
 
             model = self.contents_manager.get(path=nb_path)
             if model['type'] != 'notebook':
@@ -122,7 +124,7 @@ class EndpointHandler(APIHandler):
                 raise web.HTTPError(400, 'Invalid app_mode: %s, must be "static" or "jupyter-static"' % app_mode)
 
             try:
-                published_app = deploy(uri, api_key, app_id, nb_name, nb_title, bundle)
+                published_app = deploy(uri, api_key, app_id, nb_name, nb_title, bundle, log_uuid)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
 
@@ -157,6 +159,26 @@ class EndpointHandler(APIHandler):
             api_key = data['api_key']
             address_hash = md5(server_address)
             self.set_secure_cookie('key_' + address_hash, api_key, expires_days=3650)
+            return
+
+        if action == 'deploy_log':
+            uuid = data['log_uuid']
+            log = DeployLog.get(uuid)
+            if not log:
+                # log doesn't exist anymore
+                self.finish(json.dumps({'done': True}))
+                return
+
+            lines = []
+            available = True
+            while available:
+                try:
+                    # try to get log lines
+                    lines += log.get_nowait()
+                except queue.Empty:
+                    # no entries yet
+                    available = False
+            self.finish(json.dumps({'done': False, 'lines': lines}))
             return
 
 
