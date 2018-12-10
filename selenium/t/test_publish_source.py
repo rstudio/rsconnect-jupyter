@@ -26,7 +26,7 @@ class TestPublishSource(object):
 
         # navigate to the notebook
         browser.open_url(jupyter_url + notebook)
-
+        MainToolBar().rsconnect_publish.should(be.visible)
         MainToolBar().rsconnect_publish.click()
 
 

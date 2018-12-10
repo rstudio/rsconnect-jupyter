@@ -9,4 +9,4 @@ class MainToolBar(object):
 
     @property
     def rsconnect_notification(self):
-        return s(by.css("#notification_rsconnect"))
+        return s(by.css("#notification_rsconnect_jupyter"))
