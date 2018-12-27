@@ -8,7 +8,7 @@ import sys
 
 
 version_re = re.compile(r'\d+\.\d+(\.\d+)?')
-exec_dir = os.path.join(sys.exec_prefix, 'bin')
+exec_dir = os.path.dirname(sys.executable)
 
 
 class EnvironmentException(Exception):
@@ -23,7 +23,7 @@ def detect_environment(dirname):
     of `pip freeze` will be used.
 
     Returns a dictionary containing the package spec filename
-    and contents if successful, or a dictionary containing 'error' 
+    and contents if successful, or a dictionary containing 'error'
     on failure.
     """
     result = (output_file(dirname, 'requirements.txt', 'pip') or
@@ -77,7 +77,7 @@ def output_file(dirname, filename, package_manager):
     """Read an existing package spec file.
 
     Returns a dictionary containing the filename and contents
-    if successful, None if the file does not exist, 
+    if successful, None if the file does not exist,
     or a dictionary containing 'error' on failure.
     """
     try:
@@ -87,6 +87,10 @@ def output_file(dirname, filename, package_manager):
 
         with open(path, 'r') as f:
             data = f.read()
+
+        # TODO TODO TODO TODO
+        data = '\n'.join([line for line in data.split('\n')
+                                if 'rsconnect_jupyter' not in line])
 
         return {
             'filename': filename,
@@ -107,7 +111,7 @@ def pip_freeze(dirname):
     """
     try:
         proc = subprocess.Popen(
-            ['pip', 'freeze'], 
+            ['pip', 'freeze'],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
 
         pip_stdout, pip_stderr = proc.communicate()
@@ -118,6 +122,9 @@ def pip_freeze(dirname):
     if pip_status != 0:
         msg = pip_stderr or ('exited with code %d' % pip_status)
         raise EnvironmentException('Error during pip freeze: %s' % msg)
+
+    pip_stdout = '\n'.join([line for line in pip_stdout.split('\n')
+                            if 'rsconnect-jupyter' not in line])
 
     return {
         'filename': 'requirements.txt',
@@ -166,7 +173,7 @@ if __name__ == '__main__':
     try:
         if len(sys.argv) < 2:
             raise EnvironmentException('Usage: %s NOTEBOOK_PATH' % sys.argv[0])
-        
+
         notebook_path = sys.argv[1]
         dirname = os.path.dirname(notebook_path)
         result = detect_environment(dirname)

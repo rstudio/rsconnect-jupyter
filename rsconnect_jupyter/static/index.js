@@ -10,7 +10,7 @@ define([
         // add custom css
         $("<link/>")
           .attr({
-            href: requirejs.toUrl("nbextensions/rsconnect/main.css"),
+            href: requirejs.toUrl("nbextensions/rsconnect_jupyter/main.css"),
             rel: "stylesheet",
             type: "text/css"
           })

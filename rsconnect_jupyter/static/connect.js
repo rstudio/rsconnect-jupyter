@@ -21,7 +21,7 @@ define([
 
   function init() {
     // construct notification widget
-    notify = Jupyter.notification_area.widget("rsconnect");
+    notify = Jupyter.notification_area.widget("rsconnect_jupyter");
 
     // create an action that can be invoked from many places (e.g. command
     // palette, button click, keyboard shortcut, etc.)
@@ -33,7 +33,7 @@ define([
         handler: debounce(1000, onPublishClicked)
       },
       "publish",
-      "rsconnect"
+      "rsconnect_jupyter"
     );
 
     // add a button that invokes the action
@@ -51,11 +51,12 @@ define([
 
   function RSConnect(c) {
     /* sample value of `Jupyter.notebook.metadata`:
-       { previousServerId: "abc-def-ghi-jkl"
+       { version: 1,
+         previousServerId: "abc-def-ghi-jkl",
          servers: {
-           "xyz-uvw": { server: "http://172.0.0.3:3939/", serverName: "dev" }
-           "rst-opq": { server: "http://somewhere/connect/", serverName: "prod", notebookTitle:"Meow", appId: 42, appMode: "static" }
-         }
+           "xyz-uvw": { server: "http://172.0.0.3:3939/", serverName: "dev" },
+           "rst-opq": { server: "http://somewhere/connect/", serverName: "prod", notebookTitle:"Meow", appId: 42, appMode: "static" },
+         },
        }
     */
 
@@ -96,6 +97,7 @@ define([
       var self = this;
       // overwrite metadata (user may have changed it)
       Jupyter.notebook.metadata.rsconnect = {
+        version: 1,
         previousServerId: self.previousServerId,
         servers: self.servers
       };
@@ -118,7 +120,7 @@ define([
 
     verifyServer: function(server) {
       return Utils.ajax({
-        url: "/rsconnect_jupyter/verify_server",
+        url: Jupyter.notebook.base_url + "rsconnect_jupyter/verify_server",
         method: "POST",
         headers: { "Content-Type": "application/json" },
         data: JSON.stringify({
@@ -137,7 +139,7 @@ define([
       return this.verifyServer(server).then(function(data) {
         var id = data.address_hash;
         self.servers[id] = {
-          server: server,
+          server: data.server_address,
           serverName: serverName
         };
         return self
@@ -153,7 +155,7 @@ define([
       var entry = this.servers[serverId];
 
       return Utils.ajax({
-        url: "/rsconnect_jupyter/app_get",
+        url: Jupyter.notebook.base_url + "rsconnect_jupyter/app_get",
         method: "POST",
         headers: { "Content-Type": "application/json" },
         data: JSON.stringify({
@@ -179,7 +181,7 @@ define([
       }
       debug.info("saving config:", toSave);
       return Utils.ajax({
-        url: "/api/config/rsconnect_jupyter",
+        url: Jupyter.notebook.base_url + "api/config/rsconnect_jupyter",
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         data: JSON.stringify(toSave)
@@ -192,7 +194,7 @@ define([
       };
 
       return Utils.ajax({
-        url: "/rsconnect_jupyter/get_api_key",
+        url: Jupyter.notebook.base_url + "rsconnect_jupyter/get_api_key",
         method: "POST",
         headers: { "Content-Type": "application/json" },
         data: JSON.stringify(data)
@@ -206,7 +208,7 @@ define([
       };
 
       return Utils.ajax({
-        url: "/rsconnect_jupyter/set_api_key",
+        url: Jupyter.notebook.base_url + "rsconnect_jupyter/set_api_key",
         method: "POST",
         headers: { "Content-Type": "application/json" },
         data: JSON.stringify(data)
@@ -216,7 +218,7 @@ define([
     fetchConfig: function() {
       var self = this;
       return Utils.ajax({
-        url: "/api/config/rsconnect_jupyter",
+        url: Jupyter.notebook.base_url + "api/config/rsconnect_jupyter",
         method: "GET"
       }).then(function(data) {
         debug.info("fetched config:", data);
@@ -248,9 +250,12 @@ define([
     inspectEnvironment: function() {
       var path = Jupyter.notebook.notebook_name;
 
-      // TODO: cannot assume rsconnect is installed in the kernel environment
-      var cmd = "!python -m rsconnect.environment ${PWD}/" + path;
-      console.log("executing: " + cmd);
+      try {
+        var cmd = ["!", Jupyter.notebook.kernel_selector.kernelspecs[Jupyter.notebook.kernel.name].spec.argv[0], " -m rsconnect_jupyter.environment ${PWD}/", path].join("");
+        console.log("executing: " + cmd);
+      } catch (e) {
+        return $.Deferred().reject(e);
+      }
 
       var result = $.Deferred();
       var content = "";
@@ -304,7 +309,7 @@ define([
         };
 
         var xhr = Utils.ajax({
-          url: "/rsconnect_jupyter/deploy",
+          url: Jupyter.notebook.base_url + "rsconnect_jupyter/deploy",
           method: "POST",
           headers: { "Content-Type": "application/json" },
           data: JSON.stringify(data)
@@ -337,7 +342,7 @@ define([
       var entry = this.servers[serverId];
 
       return Utils.ajax({
-        url: "/rsconnect_jupyter/app_search",
+        url: Jupyter.notebook.base_url + "rsconnect_jupyter/app_search",
         method: "POST",
         headers: { "Content-Type": "application/json" },
         data: JSON.stringify({
@@ -496,6 +501,11 @@ define([
           serverModal.find(".form-group").removeClass("has-error");
           serverModal.find(".help-block").text("");
 
+          var server = $txtServer.val();
+          if (server.indexOf("http") !== 0) {
+            $txtServer.val("http://" + server);
+          }
+
           var validServer = $txtServer.val().length > 0;
           // if browser supports <input type=url> then use its checkValidity function
           if ($txtServer.get(0).checkValidity) {
@@ -640,6 +650,11 @@ define([
             maybeShowConfigUrl();
             maybeUpdateAppTitle();
             fetchApiKey();
+
+            // select associated appmode, if any
+            var entry = config.servers[selectedEntryId];
+            appMode = selectedAppMode || (entry && entry.appMode) || "static";
+            selectPreviousAppMode();
           } else {
             selectedEntryId = null;
             btnPublish.addClass("disabled");
@@ -650,10 +665,19 @@ define([
     }
 
     // will be filled during dialog open
+    var appModeChoices = null;
     var txtApiKey = null;
     var txtTitle = null;
     var initialTitle =
       userEditedTitle || config.getNotebookTitle(selectedEntryId);
+
+    function selectPreviousAppMode() {
+      appModeChoices.removeClass("active").addClass(function() {
+        if ($(this).data("appmode") === appMode) {
+          return "active";
+        }
+      });
+    }
 
     function maybeShowConfigUrl() {
       var entry = config.servers[selectedEntryId];
@@ -739,12 +763,12 @@ define([
         "        <label>Publish Source Code</label>",
         '        <div class="list-group">',
         '            <a href="#" id="rsc-publish-with-source" class="list-group-item rsc-appmode" data-appmode="jupyter-static">',
-        '                <img src="/nbextensions/rsconnect/images/publishDocWithSource.png" class="rsc-image">',
+        '                <img src="' + Jupyter.notebook.base_url + 'nbextensions/rsconnect_jupyter/images/publishDocWithSource.png" class="rsc-image">',
         '                <span class="rsc-label">Publish document with source code</span><br/>',
         '                <span class="rsc-text-light">Choose this option if you want to create a scheduled report or rebuild your document on the server</span>',
         "            </a>",
         '            <a href="#" id="rsc-publish-without-source" class="list-group-item rsc-appmode" data-appmode="static">',
-        '                <img src="/nbextensions/rsconnect/images/publishDocWithoutSource.png" class="rsc-image">',
+        '                <img src="' + Jupyter.notebook.base_url + 'nbextensions/rsconnect_jupyter/images/publishDocWithoutSource.png" class="rsc-image">',
         '                <span class="rsc-label">Publish finished document only</span><br/>',
         '                <span class="rsc-text-light">Choose this option to publish a snapshot of the notebook as it appears in Jupyter</span>',
         "            </a>",
@@ -796,10 +820,18 @@ define([
         txtTitle.val(initialTitle);
 
         function updateDeployNextButton() {
-          btnPublish.text("Next");
+          var lastPublishedTitle =
+            config.servers &&
+            config.servers[selectedEntryId] &&
+            config.servers[selectedEntryId].notebookTitle;
+
+          if (!lastPublishedTitle || txtTitle.val() === lastPublishedTitle) {
+            btnPublish.text("Publish");
+          } else {
+            btnPublish.text("Next");
+          }
         }
-        txtTitle.change(updateDeployNextButton);
-        txtTitle.on("keypress", updateDeployNextButton);
+        txtTitle.on("input", updateDeployNextButton);
         maybeShowConfigUrl();
 
         txtApiKey = publishModal.find("[name=api-key]").val(userProvidedApiKey);
@@ -820,46 +852,36 @@ define([
         }
 
         // app mode
-        var appModeChoices = publishModal.find(".rsc-appmode");
+        appModeChoices = publishModal.find(".rsc-appmode");
+        selectPreviousAppMode();
 
-        appModeChoices.addClass(function() {
-          if ($(this).data("appmode") === appMode) {
-            return "active";
-          }
+        appModeChoices.on("click", function() {
+          appMode = $(this).data("appmode");
+
+          $(this)
+            .addClass("active")
+            .siblings()
+            .removeClass("active");
         });
 
-        // User can freely choose app mode on the initial publication only,
-        // or if publishing to a New location
-        if (
-          !previousAppMode ||
-          selectedDeployLocation === DeploymentLocation.New
-        ) {
-          appModeChoices.on("click", function() {
-            appMode = $(this).data("appmode");
-
-            $(this)
-              .addClass("active")
-              .siblings()
-              .removeClass("active");
-          });
-        } else {
-          appModeChoices.addClass("disabled");
-
+        // setup app mode choices help icon
+        (function() {
           var msg =
-            "You can't change the mode of an existing deployment. " +
             "To deploy a new deployment, change the title, " +
             'click "Next", select "New location", and then ' +
             "you’ll be able to pick a new mode and publish.";
 
-          var helpIcon = $('<i class="fa fa-question-circle rsc-fa-icon"></i>');
-          $("#rsc-publish-source > label").append(helpIcon);
-
-          $("#rsc-publish-source")
-            .data("toggle", "popover")
-            .data("placement", "top")
+          var helpIcon = $(
+            [
+              '<a tabindex="0" role="button" data-toggle="popover" data-trigger="focus">',
+              '<i class="fa fa-question-circle rsc-fa-icon"></i>'
+            ].join("")
+          )
             .data("content", msg)
             .popover();
-        }
+
+          $("#rsc-publish-source > label").append(helpIcon);
+        })();
 
         var form = publishModal.find("form").on("submit", function(e) {
           e.preventDefault();
@@ -891,8 +913,9 @@ define([
             addValidationMarkup(
               false,
               txtTitle,
-              "Failed to publish. " + xhr.responseJSON.message
+              xhr.responseJSON.message
             );
+            togglePublishButton(true);
           }
 
           function publish() {
@@ -938,7 +961,7 @@ define([
                   // click handler
                   function() {
                     // note: logs_url is included in result.config
-                    window.open(result.config.config_url, "rsconnect");
+                    window.open(result.config.config_url, "");
                   },
                   // options
                   {
@@ -972,9 +995,6 @@ define([
                     txtTitle.val(),
                     currentAppId
                   )
-                  .always(function() {
-                    togglePublishButton(true);
-                  })
                   .fail(handleFailure)
                   .then(function(searchResults) {
                     if (searchResults.length === 0) {
@@ -1040,6 +1060,7 @@ define([
           .find(".modal-footer")
           .append(btnCancel)
           .append(btnPublish);
+        updateDeployNextButton();
 
         // if we came back from content selection dialog we should take some
         // action (if not canceled)
@@ -1103,7 +1124,7 @@ define([
         .addClass("radio")
         .append(label);
 
-      div.on("click", function() {
+      label.on("click", function() {
         btnDeploy.text("Deploy");
       });
       return div;
@@ -1169,7 +1190,7 @@ define([
           backToSelectServerDialog(selectedLocation);
         });
 
-        newLocationRadio.on("click", function() {
+        newLocationRadio.find("label").on("click", function() {
           btnDeploy.text("Next");
         });
         searchDialog
@@ -1209,7 +1230,7 @@ define([
         // unlikely but possible if we aren't able to save
         debug.error("Failed to save notebook:", err);
         Dialog.modal({
-          title: "rsconnect-jupyter",
+          title: "rsconnect_jupyter",
           body: "Failed to save this notebook. Error: " + err,
           buttons: { Ok: { class: "btn-primary" } }
         });

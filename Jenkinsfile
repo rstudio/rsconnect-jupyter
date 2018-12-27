@@ -82,10 +82,10 @@ def buildAndTest(pyVersion) {
     push: !isUserBranch
   )
 
-  img.inside("-v ${env.WORKSPACE}:/rsconnect") {
+  img.inside("-v ${env.WORKSPACE}:/rsconnect_jupyter") {
     withEnv(["PY_VERSION=${pyVersion}"]) {
       print "running tests: python${pyVersion}"
-      sh '/rsconnect/run.sh test'
+      sh '/rsconnect_jupyter/run.sh test'
     }
   }
   return img
@@ -93,7 +93,7 @@ def buildAndTest(pyVersion) {
 
 def publishArtifacts() {
     // Promote master builds to S3
-    cmd = 'aws s3 cp dist/*.whl s3://rstudio-rsconnect-jupyter/'
+    cmd = "aws s3 sync dist s3://rstudio-rsconnect-jupyter/"
 
     if (isUserBranch) {
         print "S3 sync DRY RUN for user branch ${env.BRANCH_NAME}"
@@ -136,7 +136,7 @@ try {
           'python3.6': {
             img = buildAndTest("3.6")
 
-            img.inside("-v ${env.WORKSPACE}:/rsconnect") {
+            img.inside("-v ${env.WORKSPACE}:/rsconnect_jupyter") {
               print "building python wheel package"
               sh 'make dist'
               archiveArtifacts artifacts: 'dist/*.whl'
@@ -148,8 +148,22 @@ try {
           }
         )
       }
+      stage('Docs build') {
+        docs_image = pullBuildPush(
+          image_name: 'jenkins/rsconnect-jupyter',
+          image_tag: 'docs',
+          docker_context: './docs',
+          push: !isUserBranch
+        )
+        docs_image.inside("-v ${env.WORKSPACE}:/rsconnect_jupyter") {
+          sh 'make docs-build'
+          archiveArtifacts artifacts: 'dist/*.pdf,dist/*.html'
+          stash includes: 'dist/*.pdf,dist/*.html', name: 'docs'
+        }
+      }
       stage('S3 upload') {
         unstash 'wheel'
+        unstash 'docs'
         publishArtifacts()
       }
     }

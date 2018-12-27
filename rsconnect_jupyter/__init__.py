@@ -16,7 +16,7 @@ __version__ = '1.0.0'
 
 def _jupyter_server_extension_paths():
     return [{
-        "module": "rsconnect"
+        "module": "rsconnect_jupyter"
     }]
 
 
@@ -27,9 +27,9 @@ def _jupyter_nbextension_paths():
         # the path is relative to the `rsconnect` directory
         src="static",
         # directory in the `nbextension/` namespace
-        dest="rsconnect",
+        dest="rsconnect_jupyter",
         # _also_ in the `nbextension/` namespace
-        require="rsconnect/index")]
+        require="rsconnect_jupyter/index")]
 
 
 def md5(s):
@@ -50,11 +50,14 @@ class EndpointHandler(APIHandler):
 
         if action == 'verify_server':
             server_address = data['server_address']
-            if verify_server(server_address):
+            canonical_address = verify_server(server_address)
+
+            if canonical_address:
                 address_hash = md5(server_address)
                 self.finish(json.dumps({
                     'status': 'Provided server is running RStudio Connect',
                     'address_hash': address_hash,
+                    'server_address': canonical_address,
                 }))
             else:
                 raise web.HTTPError(400, u'Unable to verify the provided server is running RStudio Connect')
@@ -158,7 +161,7 @@ class EndpointHandler(APIHandler):
 
 
 def load_jupyter_server_extension(nb_app):
-    nb_app.log.info("rsconnect enabled!")
+    nb_app.log.info("rsconnect_jupyter enabled!")
     web_app = nb_app.web_app
     host_pattern = '.*$'
     action_pattern = r'(?P<action>\w+)'
