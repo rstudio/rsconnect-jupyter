@@ -30,3 +30,10 @@
     color: black;
     padding-left: 10px;
 }
+
+#rsc-log {
+    height: 10rem;
+    margin-top: 1rem;
+    overflow-y: scroll;
+    overflow: break-word;
+}

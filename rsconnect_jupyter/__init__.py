@@ -8,7 +8,7 @@ from notebook.base.handlers import APIHandler
 from notebook.utils import url_path_join
 from tornado import web
 
-from .api import app_get, app_search, deploy, verify_server, RSConnectException
+from .api import app_config, app_get, app_search, deploy, task_get, verify_server, RSConnectException
 from .bundle import make_html_bundle, make_source_bundle
 
 __version__ = '1.0.0'
@@ -122,11 +122,11 @@ class EndpointHandler(APIHandler):
                 raise web.HTTPError(400, 'Invalid app_mode: %s, must be "static" or "jupyter-static"' % app_mode)
 
             try:
-                published_app = deploy(uri, api_key, app_id, nb_name, nb_title, bundle)
+                retval = deploy(uri, api_key, app_id, nb_name, nb_title, bundle)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
 
-            self.finish(published_app)
+            self.finish(retval)
             return
 
         if action == 'app_get':
@@ -158,6 +158,30 @@ class EndpointHandler(APIHandler):
             address_hash = md5(server_address)
             self.set_secure_cookie('key_' + address_hash, api_key, expires_days=3650)
             return
+
+        if action == 'get_log':
+            uri = urlparse(data['server_address'])
+            api_key = data['api_key']
+            task_id = data['task_id']
+            last_status = data['last_status']
+            try:
+                retval = task_get(uri, api_key, task_id, last_status)
+            except RSConnectException as exc:
+                raise web.HTTPError(400, exc.message)
+            self.finish(json.dumps(retval))
+            return
+
+        if action == 'app_config':
+            uri = urlparse(data['server_address'])
+            api_key = data['api_key']
+            app_id = data['app_id']
+            try:
+                retval = app_config(uri, api_key, app_id)
+            except RSConnectException as exc:
+                raise web.HTTPError(400, exc.message)
+            self.finish(json.dumps(retval))
+            return
+
 
 
 def load_jupyter_server_extension(nb_app):

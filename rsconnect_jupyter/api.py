@@ -244,27 +244,22 @@ def deploy(uri, api_key, app_id, app_name, app_title, tarball):
 
         app_bundle = api.app_upload(app['id'], tarball)
         task_id = api.app_deploy(app['id'], app_bundle['id'])['id']
-
-        # 10 minute timeout
-        timeout = 600
-        task = wait_for_task(api, task_id, timeout)
-
-        if task is None:
-            raise RSConnectException('Deployment timed out')
-
-        if task['code'] != 0:
-            # app failed to deploy
-            err_msg = 'Failed to deploy successfully'
-            if 'error' in task:
-                err_msg += ': ' + task['error']
-            raise RSConnectException(err_msg)
-
-        # app deployed successfully
-        config = api.app_config(app['id'])
         return {
+            'task_id': task_id,
             'app_id': app['id'],
-            'config': config,
         }
+
+
+def task_get(uri, api_key, task_id, last_status):
+    with RSConnect(uri, api_key) as api:
+        status = api.task_get(task_id, first_status=last_status)
+        logger.info('Deployment status for %s: %s' % (task_id, status))
+        return status
+
+
+def app_config(uri, api_key, app_id):
+    with RSConnect(uri, api_key) as api:
+        return api.app_config(app_id)
 
 
 APP_MODE_STATIC = 4
