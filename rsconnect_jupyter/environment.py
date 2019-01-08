@@ -31,12 +31,12 @@ def detect_environment(dirname):
 
     if result is None:
         if has_conda(os.environ):
-            result = conda_env_export() 
-            result['conda'] = get_version('conda')
+            result = conda_env_export()
+            result['conda'] = get_version('conda', use_path=True)
         else:
             result = pip_freeze(dirname)
             result['pip'] = get_version('pip')
- 
+
     if result is not None:
         result['python'] = get_python_version()
         result['locale'] = get_default_locale()
@@ -53,17 +53,22 @@ def get_default_locale():
     return '.'.join(locale.getdefaultlocale())
 
 
-def get_version(binary):
+def get_version(binary, use_path=False):
     # use os.path.realpath to traverse any symlinks
     try:
-        binary_path = os.path.realpath(os.path.join(exec_dir, binary))
-        if not os.path.isfile(binary_path):
-            raise EnvironmentException("File not found: %s" % binary_path)
+        if use_path:
+            # invoke directly, will resolve via PATH
+            binary_path = binary
+        else:
+            # require the specific binary in the virtualenv
+            binary_path = os.path.realpath(os.path.join(exec_dir, binary))
+            if not os.path.isfile(binary_path):
+                raise EnvironmentException("File not found: %s" % binary_path)
 
         args = [binary_path, "--version"]
         proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         stdout, stderr = proc.communicate()
-        match = version_re.search(stdout)
+        match = version_re.search(stdout or stderr)
         if match:
             return match.group()
 
@@ -149,7 +154,7 @@ def conda_env_export():
     """
     try:
         proc = subprocess.Popen(
-            ['conda', 'env', 'export'], 
+            ['conda', 'env', 'export'],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
 
         stdout, stderr = proc.communicate()
