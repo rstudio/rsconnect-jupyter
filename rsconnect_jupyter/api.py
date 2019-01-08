@@ -252,9 +252,7 @@ def deploy(uri, api_key, app_id, app_name, app_title, tarball):
 
 def task_get(uri, api_key, task_id, last_status):
     with RSConnect(uri, api_key) as api:
-        status = api.task_get(task_id, first_status=last_status)
-        logger.info('Deployment status for %s: %s' % (task_id, status))
-        return status
+        return api.task_get(task_id, first_status=last_status)
 
 
 def app_config(uri, api_key, app_id):
