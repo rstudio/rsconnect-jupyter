@@ -36,6 +36,14 @@ virtualenv /my/path
 source /my/path/bin/activate
 ```
 
+Install Jupyter inside the `virtualenv`:
+```bash
+pip install jupyter
+```
+
+> Note: be sure to run Jupyter from the virtual environment, not from a global
+> installation.
+
 Install the `rsconnect-jupyter` package with the following command:
 
 ```bash
