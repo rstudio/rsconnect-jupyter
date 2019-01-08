@@ -12,6 +12,8 @@ Connect](https://www.rstudio.com/products/connect/).
 - Jupyter Notebook 5.x
 - [pip](https://pypi.org/project/pip/)
 - [wheel](https://pypi.org/project/wheel/)
+- [RStudio Connect](https://www.rstudio.com/products/connect/download-commercial/) v1.7.0
+  or higher, configured with Python support.
 
 If using `conda`, `pip` and `wheel` should already be installed.
 
