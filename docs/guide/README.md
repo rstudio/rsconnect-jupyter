@@ -12,6 +12,8 @@ Connect](https://www.rstudio.com/products/connect/).
 - Jupyter Notebook 5.x
 - [pip](https://pypi.org/project/pip/)
 - [wheel](https://pypi.org/project/wheel/)
+- [RStudio Connect](https://www.rstudio.com/products/connect/download-commercial/) v1.7.0
+  or higher, configured with Python support.
 
 If using `conda`, `pip` and `wheel` should already be installed.
 
@@ -33,6 +35,14 @@ pip install virtualenv
 virtualenv /my/path
 source /my/path/bin/activate
 ```
+
+Install Jupyter inside the `virtualenv`:
+```bash
+pip install jupyter
+```
+
+> Note: be sure to run Jupyter from the virtual environment, not from a global
+> installation.
 
 Install the `rsconnect-jupyter` package with the following command:
 

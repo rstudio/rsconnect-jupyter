@@ -251,7 +251,14 @@ define([
       var path = Jupyter.notebook.notebook_name;
 
       try {
-        var cmd = ["!", Jupyter.notebook.kernel_selector.kernelspecs[Jupyter.notebook.kernel.name].spec.argv[0], " -m rsconnect_jupyter.environment ${PWD}/", path].join("");
+        var cmd = [
+          "!",
+          Jupyter.notebook.kernel_selector.kernelspecs[
+            Jupyter.notebook.kernel.name
+          ].spec.argv[0],
+          " -m rsconnect_jupyter.environment ${PWD}/",
+          path
+        ].join("");
         console.log("executing: " + cmd);
       } catch (e) {
         return $.Deferred().reject(e);
@@ -296,6 +303,67 @@ define([
 
       var entry = this.servers[serverId];
 
+      var $log = $("#rsc-log").attr("hidden", null);
+      $log.text("Deploying...\n");
+
+      function getLogs(deployResult) {
+        function inner(lastStatus) {
+          lastStatus = lastStatus || null;
+          return Utils.ajax({
+            url: Jupyter.notebook.base_url + "rsconnect_jupyter/get_log",
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            data: JSON.stringify({
+              server_address: entry.server,
+              api_key: apiKey,
+              task_id: deployResult["task_id"],
+              last_status: lastStatus
+            })
+          }).then(function(result) {
+            if (result["last_status"] != lastStatus) {
+              lastStatus = result["lastStatus"];
+              var output = result["status"].join("\n");
+              $log.text(output);
+              // scroll to bottom
+              $log.scrollTop($log.get(0).scrollHeight);
+            }
+            if (result["finished"]) {
+              if (result["code"] != 0) {
+                return $.Deferred().reject(
+                  "Failed to deploy successfully: " + result["error"]
+                );
+              }
+              debug.info("logs:", result["status"].join("\n"));
+              return $.Deferred().resolve(deployResult["app_id"]);
+            }
+            var next = $.Deferred();
+            setTimeout(function() {
+              return inner(lastStatus).then(next.resolve);
+            }, 1000);
+            return next;
+          });
+        }
+        return inner();
+      }
+
+      function appConfig(receivedAppId) {
+        return Utils.ajax({
+          url: Jupyter.notebook.base_url + "rsconnect_jupyter/app_config",
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          data: JSON.stringify({
+            server_address: entry.server,
+            api_key: apiKey,
+            app_id: receivedAppId
+          })
+        }).then(function(config) {
+          return {
+            appId: receivedAppId,
+            config: config
+          };
+        });
+      }
+
       function deploy(environment) {
         var data = {
           notebook_path: notebookPath,
@@ -313,18 +381,20 @@ define([
           method: "POST",
           headers: { "Content-Type": "application/json" },
           data: JSON.stringify(data)
-        });
+        })
+          .then(getLogs)
+          .then(appConfig);
 
         // update server with title and appId and set recently selected
         // server
-        xhr.then(function(result) {
+        xhr.then(function(configResult) {
           self.previousServerId = serverId;
           return self.updateServer(
             serverId,
-            result.app_id,
+            configResult.appId,
             notebookTitle,
             appMode,
-            result.config.config_url
+            configResult.config.config_url
           );
         });
 
@@ -763,18 +833,23 @@ define([
         "        <label>Publish Source Code</label>",
         '        <div class="list-group">',
         '            <a href="#" id="rsc-publish-with-source" class="list-group-item rsc-appmode" data-appmode="jupyter-static">',
-        '                <img src="' + Jupyter.notebook.base_url + 'nbextensions/rsconnect_jupyter/images/publishDocWithSource.png" class="rsc-image">',
+        '                <img src="' +
+          Jupyter.notebook.base_url +
+          'nbextensions/rsconnect_jupyter/images/publishDocWithSource.png" class="rsc-image">',
         '                <span class="rsc-label">Publish document with source code</span><br/>',
         '                <span class="rsc-text-light">Choose this option if you want to create a scheduled report or rebuild your document on the server</span>',
         "            </a>",
         '            <a href="#" id="rsc-publish-without-source" class="list-group-item rsc-appmode" data-appmode="static">',
-        '                <img src="' + Jupyter.notebook.base_url + 'nbextensions/rsconnect_jupyter/images/publishDocWithoutSource.png" class="rsc-image">',
+        '                <img src="' +
+          Jupyter.notebook.base_url +
+          'nbextensions/rsconnect_jupyter/images/publishDocWithoutSource.png" class="rsc-image">',
         '                <span class="rsc-label">Publish finished document only</span><br/>',
         '                <span class="rsc-text-light">Choose this option to publish a snapshot of the notebook as it appears in Jupyter</span>',
         "            </a>",
         '            <span class="help-block"></span>',
         "        </div>",
         "    </div>",
+        '    <pre id="rsc-log" hidden></pre>',
         '    <div class="text-center" data-id="configUrl"></div>',
         '    <input type="submit" hidden>',
         "</form>"
@@ -910,11 +985,7 @@ define([
           }
 
           function handleFailure(xhr) {
-            addValidationMarkup(
-              false,
-              txtTitle,
-              xhr.responseJSON.message
-            );
+            addValidationMarkup(false, txtTitle, xhr.responseJSON.message);
             togglePublishButton(true);
           }
 
