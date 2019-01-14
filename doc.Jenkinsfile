@@ -24,8 +24,8 @@ pipeline {
                 }
             }
             steps {
-                sh "aws s3 cp s3://rstudio-rsconnect-jupyter/rsconnect-jupyter-${RELEASE_VERSION}.html s3://docs.rstudio.com/rsconnect-jupyter/ --dryrun"
-                sh "aws s3 cp s3://docs.rstudio.com/rsconnect-jupyter/rsconnect-jupyter-${RELEASE_VERSION}.html s3://docs.rstudio.com/rsconnect-jupyter/index.html --dryrun"
+                sh "aws s3 cp s3://rstudio-rsconnect-jupyter/rsconnect_jupyter-${RELEASE_VERSION}.html s3://docs.rstudio.com/rsconnect-jupyter/ --dryrun"
+                sh "aws s3 cp s3://docs.rstudio.com/rsconnect-jupyter/rsconnect_jupyter-${RELEASE_VERSION}.html s3://docs.rstudio.com/rsconnect-jupyter/index.html --dryrun"
             }
         }
         stage('Promote Docs') {
@@ -36,8 +36,8 @@ pipeline {
                 }
             }
             steps {
-                sh "aws s3 cp s3://rstudio-rsconnect-jupyter/rsconnect-jupyter-${RELEASE_VERSION}.html s3://docs.rstudio.com/rsconnect-jupyter/"
-                sh "aws s3 cp s3://docs.rstudio.com/rsconnect-jupyter/rsconnect-jupyter-${RELEASE_VERSION}.html s3://docs.rstudio.com/rsconnect-jupyter/index.html"
+                sh "aws s3 cp s3://rstudio-rsconnect-jupyter/rsconnect_jupyter-${RELEASE_VERSION}.html s3://docs.rstudio.com/rsconnect-jupyter/"
+                sh "aws s3 cp s3://docs.rstudio.com/rsconnect-jupyter/rsconnect_jupyter-${RELEASE_VERSION}.html s3://docs.rstudio.com/rsconnect-jupyter/index.html"
             }
         }
     }
