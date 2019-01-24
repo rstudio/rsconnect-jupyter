@@ -15,7 +15,7 @@ class EnvironmentException(Exception):
     pass
 
 
-def detect_environment(dirname):
+def detect_environment():
     """Determine the python dependencies in the environment.
 
     If requirements.txt exists in the notebook directory,
@@ -26,8 +26,7 @@ def detect_environment(dirname):
     and contents if successful, or a dictionary containing 'error'
     on failure.
     """
-    result = (output_file(dirname, 'requirements.txt', 'pip') or
-              pip_freeze(dirname))
+    result = pip_freeze()
 
     if result is not None:
         result['python'] = get_python_version()
@@ -95,7 +94,7 @@ def output_file(dirname, filename, package_manager):
         raise EnvironmentException('Error reading %s: %s' % (filename, str(exc)))
 
 
-def pip_freeze(dirname):
+def pip_freeze():
     """Inspect the environment using `pip freeze`.
 
     Returns a dictionary containing the filename
@@ -129,12 +128,7 @@ def pip_freeze(dirname):
 
 if __name__ == '__main__':
     try:
-        if len(sys.argv) < 2:
-            raise EnvironmentException('Usage: %s NOTEBOOK_PATH' % sys.argv[0])
-
-        notebook_path = sys.argv[1]
-        dirname = os.path.dirname(notebook_path)
-        result = detect_environment(dirname)
+        result = detect_environment()
     except EnvironmentException as exc:
         result = dict(error=str(exc))
 
