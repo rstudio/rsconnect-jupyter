@@ -115,7 +115,7 @@ def pip_freeze():
         raise EnvironmentException('Error during pip freeze: %s' % msg)
 
     pip_stdout = '\n'.join([line for line in pip_stdout.split('\n')
-                            if 'rsconnect-jupyter' not in line])
+                            if 'rsconnect' not in line])
 
     return {
         'filename': 'requirements.txt',
