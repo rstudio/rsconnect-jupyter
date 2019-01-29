@@ -131,16 +131,9 @@ kernel environment; that is, the environment where the `ipykernel` package is
 installed. In most cases that will be the same as the notebook server
 environment where `jupyter` is installed.
 
-If there is a `requirements.txt` file in the same directory as the notebook
-file, its contents will be used. This allows you to directly control which
-packages will be installed on the RStudio Connect server before the notebook is
-rendered. If you use this option, you must ensure that all necessary packages
-are listed in the `requirements.txt` file.
-
-If there isn't a requirements file, the command `pip freeze` will be used to
-inspect the environment. The output of `pip freeze` lists all packages currently
-installed, as well as their versions, which enables RStudio Connect to recreate
-the same environment.
+The command `pip freeze` will be used to inspect the environment. The output
+of `pip freeze` lists all packages currently installed, as well as their
+versions, which enables RStudio Connect to recreate the same environment.
 
 
 ### Handling conflicts
