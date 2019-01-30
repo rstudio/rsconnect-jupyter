@@ -15,19 +15,16 @@ class EnvironmentException(Exception):
     pass
 
 
-def detect_environment(dirname):
+def detect_environment():
     """Determine the python dependencies in the environment.
 
-    If requirements.txt exists in the notebook directory,
-    its contents will be used. Otherwise, the results
-    of `pip freeze` will be used.
+    `pip freeze` will be used to introspect the environment.
 
     Returns a dictionary containing the package spec filename
     and contents if successful, or a dictionary containing 'error'
     on failure.
     """
-    result = (output_file(dirname, 'requirements.txt', 'pip') or
-              pip_freeze(dirname))
+    result = pip_freeze()
 
     if result is not None:
         result['python'] = get_python_version()
@@ -46,24 +43,19 @@ def get_default_locale():
     return '.'.join(locale.getdefaultlocale())
 
 
-def get_version(binary):
-    # use os.path.realpath to traverse any symlinks
+def get_version(module):
     try:
-        binary_path = os.path.realpath(os.path.join(exec_dir, binary))
-        if not os.path.isfile(binary_path):
-            raise EnvironmentException("File not found: %s" % binary_path)
-
-        args = [binary_path, "--version"]
+        args = [sys.executable, '-m', module, '--version']
         proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         stdout, stderr = proc.communicate()
         match = version_re.search(stdout)
         if match:
             return match.group()
 
-        msg = "Failed to get version of '%s' from the output of: %s --version" % (binary, binary_path)
+        msg = "Failed to get version of '%s' from the output of: %s" % (module, ' '.join(args))
         raise EnvironmentException(msg)
     except Exception as exc:
-        raise EnvironmentException("Error getting '%s' version: %s" % (binary, str(exc)))
+        raise EnvironmentException("Error getting '%s' version: %s" % (module, str(exc)))
 
 
 def output_file(dirname, filename, package_manager):
@@ -81,9 +73,8 @@ def output_file(dirname, filename, package_manager):
         with open(path, 'r') as f:
             data = f.read()
 
-        # TODO TODO TODO TODO
         data = '\n'.join([line for line in data.split('\n')
-                                if 'rsconnect_jupyter' not in line])
+                                if 'rsconnect' not in line])
 
         return {
             'filename': filename,
@@ -95,7 +86,7 @@ def output_file(dirname, filename, package_manager):
         raise EnvironmentException('Error reading %s: %s' % (filename, str(exc)))
 
 
-def pip_freeze(dirname):
+def pip_freeze():
     """Inspect the environment using `pip freeze`.
 
     Returns a dictionary containing the filename
@@ -104,7 +95,7 @@ def pip_freeze(dirname):
     """
     try:
         proc = subprocess.Popen(
-            ['pip', 'freeze'],
+            [sys.executable, '-m', 'pip', 'freeze'],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
 
         pip_stdout, pip_stderr = proc.communicate()
@@ -117,7 +108,7 @@ def pip_freeze(dirname):
         raise EnvironmentException('Error during pip freeze: %s' % msg)
 
     pip_stdout = '\n'.join([line for line in pip_stdout.split('\n')
-                            if 'rsconnect-jupyter' not in line])
+                            if 'rsconnect' not in line])
 
     return {
         'filename': 'requirements.txt',
@@ -129,12 +120,7 @@ def pip_freeze(dirname):
 
 if __name__ == '__main__':
     try:
-        if len(sys.argv) < 2:
-            raise EnvironmentException('Usage: %s NOTEBOOK_PATH' % sys.argv[0])
-
-        notebook_path = sys.argv[1]
-        dirname = os.path.dirname(notebook_path)
-        result = detect_environment(dirname)
+        result = detect_environment()
     except EnvironmentException as exc:
         result = dict(error=str(exc))
 
