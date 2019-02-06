@@ -55,7 +55,7 @@ test-selenium:
 dist:
 # wheels don't get built if _any_ file it tries to touch has a timestamp < 1980
 # (system files) so use the current timestamp as a point of reference instead
-	SOURCE_DATE_EPOCH="$(shell date +%s)"; python setup.py bdist_wheel
+	SOURCE_DATE_EPOCH="$(shell date +%s)"; python setup.py sdist bdist_wheel
 
 package:
 	make DOCKER_IMAGE=$(IMAGE)3 PY_VERSION=3 TARGET=dist launch
