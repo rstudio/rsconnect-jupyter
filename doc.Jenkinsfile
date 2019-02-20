@@ -40,7 +40,30 @@ pipeline {
                 sh "aws s3 cp s3://docs.rstudio.com/rsconnect-jupyter/rsconnect_jupyter-${RELEASE_VERSION}.html s3://docs.rstudio.com/rsconnect-jupyter/index.html"
             }
         }
-        stage('Release plugin to PyPI') {
+        stage('Release to PyPI (dry run)') {
+            when {
+                allOf {
+                    expression { return !params.PYPI_RELEASE }
+                    expression { return params.RELEASE_VERSION != "" }
+                }
+            }
+            environment {
+                PYPI_CREDS = credentials('pypi')
+            }
+            steps {
+                sh "aws s3 cp s3://rstudio-rsconnect-jupyter/rsconnect_jupyter-${RELEASE_VERSION}-py2.py3-none-any.whl ."
+                sh "aws s3 cp s3://docs.rstudio.com/rsconnect-jupyter/rsconnect_jupyter-${RELEASE_VERSION}.tar.gz ."
+                sh "python3 -m pip install --user twine"
+                sh """python3 -m twine upload \
+                    --repository-url https://test.pypi.org/legacy/ \
+                    -u ${PYPI_CREDS_USR} \
+                    -p ${PYPI_CREDS_PSW} \
+                    rsconnect_jupyter-${RELEASE_VERSION}-py2.py3-none-any.whl \
+                    rsconnect_jupyter-${RELEASE_VERSION}.tar.gz \
+                """
+            }
+        }
+        stage('Release to PyPI') {
             when {
                 allOf {
                     expression { return params.PYPI_RELEASE }
@@ -55,7 +78,6 @@ pipeline {
                 sh "aws s3 cp s3://docs.rstudio.com/rsconnect-jupyter/rsconnect_jupyter-${RELEASE_VERSION}.tar.gz ."
                 sh "python3 -m pip install --user twine"
                 sh """python3 -m twine upload \
-                    --repository-url https://test.pypi.org/legacy/ \
                     -u ${PYPI_CREDS_USR} \
                     -p ${PYPI_CREDS_PSW} \
                     rsconnect_jupyter-${RELEASE_VERSION}-py2.py3-none-any.whl \
