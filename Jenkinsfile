@@ -139,8 +139,8 @@ try {
             img.inside("-v ${env.WORKSPACE}:/rsconnect_jupyter") {
               print "building python wheel package"
               sh 'make dist'
-              archiveArtifacts artifacts: 'dist/*.whl'
-              stash includes: 'dist/*.whl', name: 'wheel'
+              archiveArtifacts artifacts: 'dist/*.whl,dist/*.tar.gz'
+              stash includes: 'dist/*.whl,dist/*.tar.gz', name: 'wheel'
             }
           },
           'python3.7': {
