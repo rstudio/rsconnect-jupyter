@@ -1,4 +1,4 @@
-.PHONY: clean all-images image% launch notebook% package dist run test all-tests test% shell shell% dist-run dist-run% mock-server docs-build docs-image
+.PHONY: clean all-images image% launch notebook% package dist run test all-tests test% shell shell% dist-run dist-run% pypi-run pypi-run% mock-server docs-build docs-image
 
 NB_UID=$(shell id -u)
 NB_GID=$(shell id -g)
@@ -28,6 +28,7 @@ launch:
 		-e NB_UID=$(NB_UID) \
 		-e NB_GID=$(NB_GID) \
 		-e PY_VERSION=$(PY_VERSION) \
+		-e BUILD_NUMBER=$(BUILD_NUMBER) \
 		-p :9999:9999 \
 		$(DOCKER_IMAGE) \
 		/rsconnect_jupyter/run.sh $(TARGET)
@@ -83,6 +84,26 @@ dist-run%:
 
 dist-run: dist
 	pip install dist/rsconnect_jupyter-$(VERSION)-py2.py3-none-any.whl
+	jupyter-nbextension install --symlink --user --py rsconnect_jupyter
+	jupyter-nbextension enable --py rsconnect_jupyter
+	jupyter-serverextension enable --py rsconnect_jupyter
+	jupyter-notebook -y --notebook-dir=/notebooks --ip='0.0.0.0' --port=9999 --no-browser --NotebookApp.token=''
+
+pypi-run%:
+	make DOCKER_IMAGE=$(IMAGE)$* PY_VERSION=$* TARGET=pypi-run launch
+
+pypi-run:
+	pip install rsconnect_jupyter==$(VERSION)
+	jupyter-nbextension install --symlink --user --py rsconnect_jupyter
+	jupyter-nbextension enable --py rsconnect_jupyter
+	jupyter-serverextension enable --py rsconnect_jupyter
+	jupyter-notebook -y --notebook-dir=/notebooks --ip='0.0.0.0' --port=9999 --no-browser --NotebookApp.token=''
+
+pypi-test-run%:
+	make DOCKER_IMAGE=$(IMAGE)$* PY_VERSION=$* TARGET=pypi-test-run launch
+
+pypi-test-run:
+	pip install --index-url https://test.pypi.org/simple/ rsconnect_jupyter==$(VERSION)
 	jupyter-nbextension install --symlink --user --py rsconnect_jupyter
 	jupyter-nbextension enable --py rsconnect_jupyter
 	jupyter-serverextension enable --py rsconnect_jupyter
