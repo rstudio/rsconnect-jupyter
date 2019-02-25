@@ -54,7 +54,7 @@ pipeline {
             steps {
                 sh "aws s3 cp s3://rstudio-rsconnect-jupyter/rsconnect_jupyter-${RELEASE_VERSION}-py2.py3-none-any.whl ."
                 sh "aws s3 cp s3://rstudio-rsconnect-jupyter/rsconnect_jupyter-${RELEASE_VERSION}.tar.gz ."
-                sh "pip install --user twine"
+                sh "pip install --user --upgrade twine setuptools wheel"
                 sh """python -m twine upload \
                     --repository-url https://test.pypi.org/legacy/ \
                     -u ${PYPI_CREDS_USR} \
@@ -77,7 +77,7 @@ pipeline {
             steps {
                 sh "aws s3 cp s3://rstudio-rsconnect-jupyter/rsconnect_jupyter-${RELEASE_VERSION}-py2.py3-none-any.whl ."
                 sh "aws s3 cp s3://rstudio-rsconnect-jupyter/rsconnect_jupyter-${RELEASE_VERSION}.tar.gz ."
-                sh "pip install --user twine"
+                sh "pip install --user --upgrade twine setuptools wheel"
                 sh """python -m twine upload \
                     -u ${PYPI_CREDS_USR} \
                     -p ${PYPI_CREDS_PSW} \
