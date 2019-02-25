@@ -19,10 +19,6 @@ If using `conda`, `pip` and `wheel` should already be installed.
 
 # Installation
 
-Download the `rsconnect-jupyter` python package from
-[https://s3.amazonaws.com/rstudio-rsconnect-jupyter/rsconnect_jupyter-RSCONNECT_VERSION-py2.py3-none-any.whl](https://s3.amazonaws.com/rstudio-rsconnect-jupyter/rsconnect_jupyter-RSCONNECT_VERSION-py2.py3-none-any.whl)
-(packaged as a [wheel](https://pythonwheels.com/) file).
-
 If you are installing `rsconnect-jupyter` for use in Jupyterhub, please see the
 [Jupyterhub](#Installation-In-Jupyterhub) section below.
 
@@ -47,7 +43,7 @@ pip install jupyter
 Install the `rsconnect-jupyter` package with the following command:
 
 ```bash
-pip install rsconnect_jupyter-RSCONNECT_VERSION-py2.py3-none-any.whl
+pip install rsconnect_jupyter
 ```
 
 Enable the `rsconnect-jupyter` extension with the following commands:
