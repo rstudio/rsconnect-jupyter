@@ -97,7 +97,7 @@ re-install it.
 Open a notebook and click the blue "Publish to RStudio Connect" icon
 to publish the current notebook to RStudio Connect.
 
-![blue toolbar icon used for publishing the notebook](publish-icon.gif)
+![blue toolbar icon used for publishing the notebook](docs/images/publish-icon.gif)
 
 ### Entering server information
 
@@ -105,7 +105,7 @@ If this is your first time publishing this notebook, you will be
 prompted to enter the location and a nickname for the RStudio Connect
 server.
 
-![initial dialog that prompts for the location of RStudio Connect](add-dialog.gif)
+![initial dialog that prompts for the location of RStudio Connect](docs/images/add-dialog.gif)
 
 ### Publishing options
 
@@ -116,7 +116,7 @@ See the [RStudio Connect User
 Guide](http://docs.rstudio.com/connect/user/api-keys.html) for
 instructions on generating API Keys for your user.
 
-![publish dialog that prompts for an API key](manage.png)
+![publish dialog that prompts for an API key](docs/images/manage.png)
 
 There are two different publication modes. Selecting "Publish finished document only" will publish an HTML snapshot of the notebook to RStudio Connect. HTML snapshots are static and cannot be scheduled or re-run on the RStudio Connect server.
 
@@ -140,7 +140,7 @@ versions, which enables RStudio Connect to recreate the same environment.
 If content that matches your notebook's title is found on RStudio Connect, you
 may choose to overwrite the existing content or create new content.
 
-![dialog that prompts for overwriting or publishing new content](overwrite.png)
+![dialog that prompts for overwriting or publishing new content](docs/images/overwrite.png)
 
 Choosing "New location" will create a new document in RStudio Connect. You can choose either publication mode - an HTML snapshot or a document with source code.
 
@@ -152,7 +152,7 @@ shown in toolbar.  Clicking the notification will open the published
 document in the RStudio Connect server you selected in the previous
 dialog.
 
-![notification that shows the notebook was published successfully](published.gif)
+![notification that shows the notebook was published successfully](docs/images/published.gif)
 
 # Collaboration
 
