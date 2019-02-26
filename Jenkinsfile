@@ -137,6 +137,7 @@ try {
             img = buildAndTest("3.6")
 
             img.inside("-v ${env.WORKSPACE}:/rsconnect_jupyter") {
+              sh "pip install --user --upgrade twine setuptools wheel"
               print "building python wheel package"
               sh 'make dist'
               archiveArtifacts artifacts: 'dist/*.whl,dist/*.tar.gz'
