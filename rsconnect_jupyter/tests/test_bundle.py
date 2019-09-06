@@ -40,7 +40,7 @@ class TestBundle(TestCase):
         # the test environment. Don't do this in the production code, which
         # runs in the notebook server. We need the introspection to run in
         # the kernel environment and not the notebook server environment.
-        environment = detect_environment()
+        environment = detect_environment(dir)
         notebook = self.read_notebook(nb_path)
         with make_source_bundle(notebook, environment, dir) as bundle, \
             tarfile.open(mode='r:gz', fileobj=bundle) as tar:
@@ -53,15 +53,9 @@ class TestBundle(TestCase):
             ])
 
             reqs = tar.extractfile('requirements.txt').read()
-
-            # these are the dependencies declared in our setup.py
-            self.assertIn(b'notebook', reqs)
-            self.assertIn(b'nbformat', reqs)
+            self.assertEqual(reqs, b'numpy\npandas\nmatplotlib\n')
 
             manifest = json.loads(tar.extractfile('manifest.json').read().decode('utf-8'))
-
-            # don't check requirements.txt since we don't know the checksum
-            del manifest['files']['requirements.txt']
 
             # don't check locale value, just require it be present
             del manifest['locale']
@@ -83,6 +77,9 @@ class TestBundle(TestCase):
                 u"files": {
                     u"dummy.ipynb": {
                         u"checksum": u"36873800b48ca5ab54760d60ba06703a"
+                    },
+                    u"requirements.txt": {
+                        u"checksum": u"5f2a5e862fe7afe3def4a57bb5cfb214"
                     }
                 }
             })
@@ -96,7 +93,7 @@ class TestBundle(TestCase):
         # the test environment. Don't do this in the production code, which
         # runs in the notebook server. We need the introspection to run in
         # the kernel environment and not the notebook server environment.
-        environment = detect_environment()
+        environment = detect_environment(dir)
         notebook = self.read_notebook(nb_path)
 
         with make_source_bundle(notebook, environment, dir, extra_files=['data.csv']) as bundle, \
@@ -162,7 +159,7 @@ class TestBundle(TestCase):
         # the test environment. Don't do this in the production code, which
         # runs in the notebook server. We need the introspection to run in
         # the kernel environment and not the notebook server environment.
-        environment = detect_environment()
+        environment = detect_environment(dir)
         notebook = self.read_notebook(nb_path)
 
         # borrowed these from the running notebook server in the container
