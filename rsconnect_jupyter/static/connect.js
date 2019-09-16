@@ -305,6 +305,8 @@ define([
 
       var $log = $("#rsc-log").attr("hidden", null);
       $log.text("Deploying...\n");
+      var $deploy_err = $("#rsc-deploy-error");
+      $deploy_err.text("");
 
       function getLogs(deployResult) {
         function inner(lastStatus) {
@@ -329,9 +331,9 @@ define([
             }
             if (result["finished"]) {
               if (result["code"] != 0) {
-                return $.Deferred().reject(
-                  "Failed to deploy successfully: " + result["error"]
-                );
+                var msg = "Failed to deploy successfully: " + result["error"];
+                addValidationMarkup(false, $deploy_err, msg)
+                return $.Deferred().reject(msg);
               }
               debug.info("logs:", result["status"].join("\n"));
               return $.Deferred().resolve(deployResult["app_id"]);
@@ -850,6 +852,9 @@ define([
         "        </div>",
         "    </div>",
         '    <pre id="rsc-log" hidden></pre>',
+        '    <div class="form-group">',
+        '    <span id="rsc-deploy-error" class="help-block"></span>',
+        '    </div>',
         '    <div class="text-center" data-id="configUrl"></div>',
         '    <input type="submit" hidden>',
         "</form>"
