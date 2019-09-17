@@ -41,5 +41,6 @@ setup(name='rsconnect_jupyter',
           'nbconvert>=5.0',
           'six'
       ] + ipython_dependency,
+      python_requires = '>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*',
       include_package_data=True,
       zip_safe=False)
