@@ -127,9 +127,6 @@ try {
           'python2.7': {
             buildAndTest("2.7")
           },
-          'python3.4': {
-            img = buildAndTest("3.4")
-          },
           'python3.5': {
             img = buildAndTest("3.5")
           },
