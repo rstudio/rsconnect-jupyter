@@ -16,6 +16,13 @@ except ImportError:
     from urllib import urlencode
     from urlparse import urlparse, urljoin
 
+try:
+    # python2
+    from Cookie import SimpleCookie
+except ImportError:
+    from http.cookies import SimpleCookie
+
+
 class RSConnectException(Exception):
     def __init__(self, message):
         super(RSConnectException, self).__init__(message)
@@ -95,7 +102,7 @@ def _verify_server(server_address, max_redirects):
 
 
 class RSConnect:
-    def __init__(self, uri, api_key):
+    def __init__(self, uri, api_key, cookies=[]):
         self.path_prefix = uri.path or '/'
         self.api_key = api_key
         self.conn = None
@@ -105,6 +112,8 @@ class RSConnect:
         self.http_headers = {
             'Authorization': 'Key %s' % self.api_key,
         }
+        self.cookies = cookies
+        self._inject_cookies(cookies)
 
     def __enter__(self):
         self.conn = self.mk_conn()
@@ -126,18 +135,27 @@ class RSConnect:
             logger.error('IO/OS Error: %s' % e)
             raise RSConnectException(str(e))
 
-    def _update_cookie(self, response):
-        ### This is a hacky way of setting a cookie if we receive one
-        value = response.getheader('set-cookie', None)
-        if value is not None:
-            self.http_headers['Cookie'] = value
-        else:
-            if 'Cookie' in self.http_headers:
-                del self.http_headers['Cookie']
+    def _handle_set_cookie(self, response):
+        headers = filter(lambda h: h[0].lower() == 'set-cookie', response.getheaders())
+        values = []
+
+        for header in headers:
+            cookie = SimpleCookie(header[1])
+            for morsel in cookie.values():
+                values.append((dict(key=morsel.key, value=morsel.value)))
+
+        self.cookies = values
+        self._inject_cookies(values)
+
+    def _inject_cookies(self, cookies):
+        if cookies:
+            self.http_headers['Cookie'] = '; '.join(['%s="%s"' % (kv['key'], kv['value']) for kv in cookies])
+        elif 'Cookie' in self.http_headers:
+            del self.http_headers['Cookie']
 
     def json_response(self):
         response = self.conn.getresponse()
-        self._update_cookie(response)
+        self._handle_set_cookie(response)
         raw = response.read().decode('utf-8')
 
         if response.status >= 500:
@@ -244,14 +262,16 @@ def deploy(uri, api_key, app_id, app_name, app_title, tarball):
 
         app_bundle = api.app_upload(app['id'], tarball)
         task_id = api.app_deploy(app['id'], app_bundle['id'])['id']
+
         return {
             'task_id': task_id,
             'app_id': app['id'],
+            'cookies': api.cookies,
         }
 
 
-def task_get(uri, api_key, task_id, last_status):
-    with RSConnect(uri, api_key) as api:
+def task_get(uri, api_key, task_id, last_status, cookies):
+    with RSConnect(uri, api_key, cookies) as api:
         return api.task_get(task_id, first_status=last_status)
 
 
