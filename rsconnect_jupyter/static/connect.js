@@ -2,8 +2,8 @@ define([
   "jquery",
   "base/js/namespace",
   "base/js/dialog",
-  "rsconnect"
-], function($, Jupyter, Dialog, RSconnect) {
+  "./rsconnect"
+], function($, Jupyter, Dialog, RSConnect) {
   /***********************************************************************
    * Extension bootstrap (main)
    ***********************************************************************/
@@ -273,7 +273,7 @@ define([
           e.preventDefault();
           e.stopPropagation();
 
-          const $a = $(this).closest("a");
+          var $a = $(this).closest("a");
           config
             .removeServer(id)
             .then(function() {
@@ -882,7 +882,7 @@ define([
     // lazily load the config when clicked since Jupyter's init
     // function is racy w.r.t. loading of notebook metadata
     if (!config) {
-      config = new RSConnect();
+      config = new RSConnect(debug);
       window.RSConnect = config;
     }
 
