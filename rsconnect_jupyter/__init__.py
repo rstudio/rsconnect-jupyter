@@ -164,8 +164,10 @@ class EndpointHandler(APIHandler):
             api_key = data['api_key']
             task_id = data['task_id']
             last_status = data['last_status']
+            cookies = data.get('cookies', [])
+
             try:
-                retval = task_get(uri, api_key, task_id, last_status)
+                retval = task_get(uri, api_key, task_id, last_status, cookies)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
             self.finish(json.dumps(retval))
