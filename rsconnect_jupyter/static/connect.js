@@ -128,6 +128,11 @@ define([
         '            <span class="help-block"></span>',
         "        </div>",
         '        <div class="form-group">',
+        '            <label class="rsc-label" for="rsc-api-key">API Key</label>',
+        '            <input class="form-control" id="rsc-api-key" type="text" placeholder="API key" minlength="32" maxlength="32" required>',
+        '            <span class="help-block"></span>',
+        "        </div>",
+        '        <div class="form-group">',
         '            <label class="rsc-label" for="rsc-servername">Server Name</label>',
         '            <input class="form-control" id="rsc-servername" type="text" placeholder="server-nickname" minlength="1" required>',
         '            <span class="help-block"></span>',
@@ -153,6 +158,7 @@ define([
 
         var $txtServer = serverModal.find("#rsc-server");
         var $txtServerName = serverModal.find("#rsc-servername");
+        var $txtApiKey = serverModal.find("#rsc-api-key");
 
         function toggleAddButton(state) {
           serverModal.find("fieldset").attr("disabled", state ? null : true);
@@ -179,6 +185,7 @@ define([
             validServer &= $txtServer.get(0).checkValidity();
           }
           var validServerName = $txtServerName.val().length > 0;
+          var validApiKey = $txtApiKey.val().length === 32;
 
           addValidationMarkup(
             validServer,
@@ -190,12 +197,17 @@ define([
             $txtServerName,
             "This should not be empty."
           );
+          addValidationMarkup(
+            validApiKey,
+            $txtApiKey,
+            "API Key must be 32 characters long."
+          );
 
-          if (validServer && validServerName) {
+          if (validServer && validServerName && validApiKey) {
             toggleAddButton(false);
 
             config
-              .addServer($txtServer.val(), $txtServerName.val())
+              .addServer($txtServer.val(), $txtServerName.val(), $txtApiKey.val())
               .then(function(id) {
                 dialogResult.resolve(id);
                 serverModal.modal("hide");
@@ -236,11 +248,10 @@ define([
   }
 
   function showSelectServerDialog(
-    // serverId, userEditedTitle, and userProvidedApiKey are shuttled
+    // serverId and userEditedTitle are shuttled
     // between content selection dialog and this dialog.
     serverId,
     userEditedTitle,
-    userProvidedApiKey,
     // selectedDeployLocation is set to: DeploymentLocation.Canceled when
     // content selection was canceled, DeploymentLocation.New when user wants to
     // deploy to a new location, and a stringy appId in case the user wishes to
@@ -316,11 +327,10 @@ define([
             btnPublish.removeClass("disabled");
             maybeShowConfigUrl();
             maybeUpdateAppTitle();
-            fetchApiKey();
 
             // select associated appmode, if any
             var entry = config.servers[selectedEntryId];
-            appMode = selectedAppMode || (entry && entry.appMode) || "static";
+            appMode = selectedAppMode || (entry && entry.appMode) || "jupyter-static";
             selectPreviousAppMode();
           } else {
             selectedEntryId = null;
@@ -333,7 +343,6 @@ define([
 
     // will be filled during dialog open
     var appModeChoices = null;
-    var txtApiKey = null;
     var txtTitle = null;
     var initialTitle =
       userEditedTitle || config.getNotebookTitle(selectedEntryId);
@@ -376,29 +385,18 @@ define([
       // only do this if the user hasn't edited the title
       if (txtTitle.val() === initialTitle && !userEditedTitle) {
         // and we have a valid API key to use for the request
-        apiKey = txtApiKey.val();
-        if (selectedEntryId && apiKey.length === 32) {
+        if (selectedEntryId) {
           var entry = config.servers[selectedEntryId];
           var appId = entry && entry.appId;
 
           if (appId) {
-            config.getApp(selectedEntryId, apiKey, appId).then(function(app) {
+            config.getApp(selectedEntryId, appId).then(function(app) {
               if (app.title) {
                 txtTitle.val(app.title);
               }
             });
           }
         }
-      }
-    }
-
-    function fetchApiKey() {
-      if (config.servers && config.servers[selectedEntryId]) {
-        config
-          .loadApiKey(config.servers[selectedEntryId].server)
-          .then(function(data) {
-            txtApiKey.val(data.api_key || "");
-          });
       }
     }
 
@@ -415,11 +413,6 @@ define([
         "        <label>Publish to</label>",
         '        <div id="rsc-select-server" class="list-group">',
         "        </div>",
-        "    </div>",
-        '    <div class="form-group">',
-        '        <label>API Key</label><a href="http://docs.rstudio.com/connect/user/api-keys.html" target="_rsconnect"><i class="fa fa-question-circle rsc-fa-icon" target="_rsconnect"></i></a>',
-        '        <input class="form-control" name="api-key" type="password" maxlength="32" required>',
-        '        <span class="help-block"></span>',
         "    </div>",
         '    <div class="form-group">',
         "        <label>Title</label>",
@@ -509,21 +502,11 @@ define([
         txtTitle.on("input", updateDeployNextButton);
         maybeShowConfigUrl();
 
-        txtApiKey = publishModal.find("[name=api-key]").val(userProvidedApiKey);
-        txtApiKey.change(function() {
-          maybeUpdateAppTitle();
-        });
-
-        if (!userProvidedApiKey) {
-          fetchApiKey();
-        }
-
         if (
           selectedDeployLocation &&
           selectedDeployLocation !== DeploymentLocation.Canceled
         ) {
           txtTitle.prop("disabled", true);
-          txtApiKey.prop("disabled", true);
         }
 
         // app mode
@@ -563,14 +546,8 @@ define([
           publishModal.find(".form-group").removeClass("has-error");
           publishModal.find(".help-block").text("");
 
-          var validApiKey = txtApiKey.val().length === 32;
           var validTitle = txtTitle.val().length >= 3;
 
-          addValidationMarkup(
-            validApiKey,
-            txtApiKey,
-            "API Key must be 32 characters long."
-          );
           addValidationMarkup(
             validTitle,
             txtTitle,
@@ -610,7 +587,6 @@ define([
               .publishContent(
                 selectedEntryId,
                 appId,
-                txtApiKey.val(),
                 txtTitle.val(),
                 appMode
               )
@@ -619,11 +595,6 @@ define([
               })
               .fail(handleFailure)
               .then(function(result) {
-                config.saveApiKey(
-                  config.servers[selectedEntryId].server,
-                  txtApiKey.val()
-                );
-
                 notify.set_message(
                   " Successfully published content",
                   // timeout in milliseconds after which the notification
@@ -646,7 +617,7 @@ define([
               });
           }
 
-          if (selectedEntryId !== null && validApiKey && validTitle) {
+          if (selectedEntryId !== null && validTitle) {
             togglePublishButton(false);
 
             var currentNotebookTitle =
@@ -662,7 +633,6 @@ define([
                 config
                   .appSearch(
                     selectedEntryId,
-                    txtApiKey.val(),
                     txtTitle.val(),
                     currentAppId
                   )
@@ -680,7 +650,6 @@ define([
                       showSearchDialog(
                         searchResults,
                         selectedEntryId,
-                        txtApiKey.val(),
                         txtTitle.val(),
                         currentAppId,
                         appMode
@@ -753,7 +722,6 @@ define([
   function showSearchDialog(
     searchResults,
     serverId,
-    apiKey,
     title,
     appId,
     appMode
@@ -845,7 +813,6 @@ define([
           showSelectServerDialog(
             serverId,
             title,
-            apiKey,
             location,
             selectedAppMode
           );
