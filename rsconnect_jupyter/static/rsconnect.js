@@ -22,6 +22,13 @@ define([
                 // make a copy
                 this.servers = metadata.rsconnect.servers;
 
+                // if a server is present but no API key, remove it
+                // since we can't successfully publish there.
+                for (serverId in this.servers) {
+                    if (!this.getApiKey(this.servers[serverId].server)) {
+                        delete this.servers[serverId];
+                    }
+                }
                 // previousServer may have been removed
                 this.previousServerId =
                     metadata.rsconnect.previousServerId in this.servers
