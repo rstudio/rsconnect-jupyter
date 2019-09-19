@@ -272,7 +272,8 @@ define([
                                 server_address: entry.server,
                                 api_key: apiKey,
                                 task_id: deployResult['task_id'],
-                                last_status: lastStatus
+                                last_status: lastStatus,
+                                cookies: deployResult.cookies || []
                             })
                         }).then(function (result) {
                             if (result['last_status'] != lastStatus) {
