@@ -141,24 +141,6 @@ class EndpointHandler(APIHandler):
             self.finish(json.dumps(retval))
             return
 
-        if action == 'get_api_key':
-            server_address = data['server_address']
-            address_hash = md5(server_address)
-            api_key = self.get_secure_cookie('key_' + address_hash, max_age_days=3650)
-
-            self.finish(json.dumps({
-                'server_address': server_address,
-                'api_key': api_key and api_key.decode('utf-8')
-            }))
-            return
-
-        if action == 'set_api_key':
-            server_address = data['server_address']
-            api_key = data['api_key']
-            address_hash = md5(server_address)
-            self.set_secure_cookie('key_' + address_hash, api_key, expires_days=3650)
-            return
-
         if action == 'get_log':
             uri = urlparse(data['server_address'])
             api_key = data['api_key']
