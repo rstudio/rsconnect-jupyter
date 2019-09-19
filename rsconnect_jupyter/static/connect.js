@@ -213,12 +213,24 @@ define([
                 serverModal.modal("hide");
               })
               .fail(function(xhr) {
+                var msg;
+
+                if (xhr.status == 400) {
+                  msg = "Failed to verify RSConnect Connect is running at " +
+                    $txtServer.val() +
+                    ". Please ensure the server address is valid.";
+                }
+                else if (xhr.status == 401) {
+                  msg = "The server did not accept the API key.";
+                }
+                else {
+                  msg = "An error occurred while checking the server.";
+                }
+
                 addValidationMarkup(
                   false,
                   $txtServer,
-                  "Failed to verify RSConnect Connect is running at " +
-                    $txtServer.val() +
-                    ". Please ensure the server address is valid."
+                  msg
                 );
               })
               .always(function() {

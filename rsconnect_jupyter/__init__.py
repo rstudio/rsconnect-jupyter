@@ -8,7 +8,7 @@ from notebook.base.handlers import APIHandler
 from notebook.utils import url_path_join
 from tornado import web
 
-from .api import app_config, app_get, app_search, deploy, task_get, verify_server, RSConnectException
+from .api import app_config, app_get, app_search, deploy, task_get, verify_server, verify_api_key, RSConnectException
 from .bundle import make_html_bundle, make_source_bundle
 
 __version__ = '1.0.0'
@@ -50,15 +50,20 @@ class EndpointHandler(APIHandler):
 
         if action == 'verify_server':
             server_address = data['server_address']
+            api_key = data['api_key']
             canonical_address = verify_server(server_address)
 
             if canonical_address:
-                address_hash = md5(server_address)
-                self.finish(json.dumps({
-                    'status': 'Provided server is running RStudio Connect',
-                    'address_hash': address_hash,
-                    'server_address': canonical_address,
-                }))
+                uri = urlparse(canonical_address)
+                if verify_api_key(uri, api_key):
+                    address_hash = md5(server_address)
+                    self.finish(json.dumps({
+                        'status': 'Provided server is running RStudio Connect',
+                        'address_hash': address_hash,
+                        'server_address': canonical_address,
+                    }))
+                else:
+                    raise web.HTTPError(401, u'Unable to verify the provided API key')
             else:
                 raise web.HTTPError(400, u'Unable to verify the provided server is running RStudio Connect')
             return

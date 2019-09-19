@@ -79,12 +79,15 @@ define([
             },
 
             verifyServer: function (server) {
+                var self = this;
+
                 return Utils.ajax({
                     url: Jupyter.notebook.base_url + 'rsconnect_jupyter/verify_server',
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     data: JSON.stringify({
-                        server_address: server
+                        server_address: server,
+                        api_key: self.getApiKey(server)
                     })
                 });
             },
