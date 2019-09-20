@@ -13,7 +13,7 @@ define([
             console.error.apply(null, args);
         }
     };
-        function RSConnect(debug) {
+        function RSConnect() {
             /* sample value of `Jupyter.notebook.metadata`:
                { version: 1,
                  previousServerId: "abc-def-ghi-jkl",
@@ -60,7 +60,6 @@ define([
             this.inspectEnvironment = this.inspectEnvironment.bind(this);
             this.publishContent = this.publishContent.bind(this);
             this.getNotebookTitle = this.getNotebookTitle.bind(this);
-            this.debug = debug;
         }
 
         RSConnect.prototype = {
