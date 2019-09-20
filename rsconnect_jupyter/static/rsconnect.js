@@ -1,7 +1,19 @@
 define([
     'base/js/utils'
     ], function (Utils) {
-        function RSConnect(debug) {
+    var debug = {
+        info: function() {
+            var args = [].slice.call(arguments);
+            args.unshift("RSConnect API:");
+            console.info.apply(null, args);
+        },
+        error: function() {
+            var args = [].slice.call(arguments);
+            args.unshift("RSConnect API:");
+            console.error.apply(null, args);
+        }
+    };
+        function RSConnect() {
             /* sample value of `Jupyter.notebook.metadata`:
                { version: 1,
                  previousServerId: "abc-def-ghi-jkl",
@@ -14,7 +26,7 @@ define([
 
             this.previousServerId = null;
             this.servers = {};
-            this.apiKeys = {}
+            this.apiKeys = {};
 
             // TODO more rigorous checking?
             var metadata = JSON.parse(JSON.stringify(Jupyter.notebook.metadata));
@@ -48,7 +60,6 @@ define([
             this.inspectEnvironment = this.inspectEnvironment.bind(this);
             this.publishContent = this.publishContent.bind(this);
             this.getNotebookTitle = this.getNotebookTitle.bind(this);
-            this.debug = debug;
         }
 
         RSConnect.prototype = {
@@ -71,7 +82,7 @@ define([
                         result.resolve();
                     })
                     .catch(function (e) {
-                        self.debug.error(e);
+                        debug.error(e);
                         // notebook is read-only (server details will likely not be persisted)
                         result.resolve();
                     });
@@ -150,7 +161,7 @@ define([
 
                     toSave[serverId] = dst;
                 }
-                self.debug.info('saving config:', toSave);
+                debug.info('saving config:', toSave);
                 return Utils.ajax({
                     url: Jupyter.notebook.base_url + 'api/config/rsconnect_jupyter',
                     method: 'PUT',
@@ -165,7 +176,7 @@ define([
                     url: Jupyter.notebook.base_url + 'api/config/rsconnect_jupyter',
                     method: 'GET'
                 }).then(function (data) {
-                    self.debug.info('fetched config:', data);
+                    debug.info('fetched config:', data);
                     if (!self.servers) {
                         self.servers = {};
                     }
@@ -226,10 +237,10 @@ define([
 
                     if (count('{', content) === count('}', content)) {
                         try {
-                            self.debug.info('environment:', content);
+                            debug.info('environment:', content);
                             result.resolve(JSON.parse(content));
                         } catch (err) {
-                            self.debug.info('environment error:', err);
+                            debug.info('environment error:', err);
                             result.reject(content);
                         }
                     }
@@ -286,7 +297,7 @@ define([
                                     addValidationMarkup(false, $deploy_err, msg);
                                     return $.Deferred().reject(msg);
                                 }
-                                self.debug.info('logs:', result['status'].join('\n'));
+                                debug.info('logs:', result['status'].join('\n'));
                                 return $.Deferred().resolve(deployResult['app_id']);
                             }
                             var next = $.Deferred();
