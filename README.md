@@ -7,7 +7,7 @@ Connect](https://www.rstudio.com/products/connect/).
 
 # Requirements
 
-- Python 2.7.9 or Python 3.4.0 and higher
+- Python 2.7.9 or Python 3.5.0 and higher
 - Jupyter Notebook 5.x
 - [pip](https://pypi.org/project/pip/)
 - [wheel](https://pypi.org/project/wheel/)
@@ -96,22 +96,19 @@ to publish the current notebook to RStudio Connect.
 
 ### Entering server information
 
-If this is your first time publishing this notebook, you will be
+If this is your first time publishing a notebook, you will be
 prompted to enter the location and a nickname for the RStudio Connect
 server.
 
-![initial dialog that prompts for the location of RStudio Connect](docs/images/add-dialog.gif)
-
-### Publishing options
-
-You will be prompted to enter your API Key, which will be used to publish
-the notebook under your account to the selected RStudio Connect server.
-
-See the [RStudio Connect User
+You will also be prompted to enter your API Key. See the [RStudio Connect User
 Guide](http://docs.rstudio.com/connect/user/api-keys.html) for
 instructions on generating API Keys for your user.
 
-![publish dialog that prompts for an API key](docs/images/manage.png)
+![initial dialog that prompts for the location of RStudio Connect](docs/images/add-dialog.png)
+
+### Publishing options
+
+![publish dialog](docs/images/manage.png)
 
 There are two different publication modes. Selecting "Publish finished document only" will publish an HTML snapshot of the notebook to RStudio Connect. HTML snapshots are static and cannot be scheduled or re-run on the RStudio Connect server.
 

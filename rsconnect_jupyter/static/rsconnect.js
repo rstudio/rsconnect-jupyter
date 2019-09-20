@@ -14,6 +14,7 @@ define([
 
             this.previousServerId = null;
             this.servers = {};
+            this.apiKeys = {}
 
             // TODO more rigorous checking?
             var metadata = JSON.parse(JSON.stringify(Jupyter.notebook.metadata));
@@ -21,6 +22,13 @@ define([
                 // make a copy
                 this.servers = metadata.rsconnect.servers;
 
+                // if a server is present but no API key, remove it
+                // since we can't successfully publish there.
+                for (serverId in this.servers) {
+                    if (!this.getApiKey(this.servers[serverId].server)) {
+                        delete this.servers[serverId];
+                    }
+                }
                 // previousServer may have been removed
                 this.previousServerId =
                     metadata.rsconnect.previousServerId in this.servers
@@ -34,13 +42,12 @@ define([
             this.addServer = this.addServer.bind(this);
             this.fetchConfig = this.fetchConfig.bind(this);
             this.saveConfig = this.saveConfig.bind(this);
+            this.getApiKey = this.getApiKey.bind(this);
             this.getApp = this.getApp.bind(this);
             this.removeServer = this.removeServer.bind(this);
             this.inspectEnvironment = this.inspectEnvironment.bind(this);
             this.publishContent = this.publishContent.bind(this);
             this.getNotebookTitle = this.getNotebookTitle.bind(this);
-            this.loadApiKey = this.loadApiKey.bind(this);
-            this.saveApiKey = this.saveApiKey.bind(this);
             this.debug = debug;
         }
 
@@ -72,21 +79,25 @@ define([
             },
 
             verifyServer: function (server) {
+                var self = this;
+
                 return Utils.ajax({
                     url: Jupyter.notebook.base_url + 'rsconnect_jupyter/verify_server',
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     data: JSON.stringify({
-                        server_address: server
+                        server_address: server,
+                        api_key: self.getApiKey(server)
                     })
                 });
             },
 
-            addServer: function (server, serverName) {
+            addServer: function (server, serverName, apiKey) {
                 var self = this;
                 if (server[server.length - 1] !== '/') {
                     server += '/';
                 }
+                this.apiKeys[server] = apiKey;
 
                 // verify the server exists, then save
                 return this.verifyServer(server).then(function (data) {
@@ -104,7 +115,12 @@ define([
                 });
             },
 
-            getApp: function (serverId, apiKey, appId) {
+            getApiKey: function(server) {
+                return this.apiKeys[server];
+            },
+
+            getApp: function (serverId, appId) {
+                var self = this;
                 var entry = this.servers[serverId];
 
                 return Utils.ajax({
@@ -114,12 +130,13 @@ define([
                     data: JSON.stringify({
                         app_id: appId,
                         server_address: entry.server,
-                        api_key: apiKey
+                        api_key: self.getApiKey(entry.server)
                     })
                 });
             },
 
             saveConfig: function () {
+                var self = this;
                 var toSave = {};
 
                 for (var serverId in this.servers) {
@@ -127,7 +144,8 @@ define([
 
                     var dst = {
                         server: src.server,
-                        serverName: src.serverName
+                        serverName: src.serverName,
+                        apiKey: self.getApiKey(src.server)
                     };
 
                     toSave[serverId] = dst;
@@ -138,33 +156,6 @@ define([
                     method: 'PUT',
                     headers: {'Content-Type': 'application/json'},
                     data: JSON.stringify(toSave)
-                });
-            },
-
-            loadApiKey: function (server_address) {
-                var data = {
-                    server_address: server_address
-                };
-
-                return Utils.ajax({
-                    url: Jupyter.notebook.base_url + 'rsconnect_jupyter/get_api_key',
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    data: JSON.stringify(data)
-                });
-            },
-
-            saveApiKey: function (server_address, api_key) {
-                var data = {
-                    server_address: server_address,
-                    api_key: api_key
-                };
-
-                return Utils.ajax({
-                    url: Jupyter.notebook.base_url + 'rsconnect_jupyter/set_api_key',
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    data: JSON.stringify(data)
                 });
             },
 
@@ -180,8 +171,13 @@ define([
                     }
 
                     for (var serverId in data) {
+                        // Split out API keys so they're not saved into the notebook metadata.
+                        var entry = data[serverId];
+                        self.apiKeys[entry.server] = entry.apiKey;
+                        delete entry.apiKey
+
                         if (!self.servers[serverId]) {
-                            self.servers[serverId] = data[serverId];
+                            self.servers[serverId] = entry;
                         }
                     }
                 });
@@ -201,6 +197,7 @@ define([
             },
 
             inspectEnvironment: function () {
+                var self = this;
                 var path = Jupyter.notebook.notebook_name;
 
                 try {
@@ -248,7 +245,7 @@ define([
                 return result;
             },
 
-            publishContent: function (serverId, appId, apiKey, notebookTitle, appMode) {
+            publishContent: function (serverId, appId, notebookTitle, appMode) {
                 var self = this;
                 var notebookPath = Utils.encode_uri_components(
                     Jupyter.notebook.notebook_path
@@ -270,7 +267,7 @@ define([
                             headers: {'Content-Type': 'application/json'},
                             data: JSON.stringify({
                                 server_address: entry.server,
-                                api_key: apiKey,
+                                api_key: self.getApiKey(entry.server),
                                 task_id: deployResult['task_id'],
                                 last_status: lastStatus,
                                 cookies: deployResult.cookies || []
@@ -303,14 +300,14 @@ define([
                     return inner();
                 }
 
-                function appConfig(receivedAppId) {
+                function appConfig(receivedAppId) {                    
                     return Utils.ajax({
                         url: Jupyter.notebook.base_url + 'rsconnect_jupyter/app_config',
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
                         data: JSON.stringify({
                             server_address: entry.server,
-                            api_key: apiKey,
+                            api_key: self.getApiKey(entry.server),
                             app_id: receivedAppId
                         })
                     }).then(function (config) {
@@ -328,7 +325,7 @@ define([
                         notebook_name: self.getNotebookName(notebookTitle),
                         app_id: appId,
                         server_address: entry.server,
-                        api_key: apiKey,
+                        api_key: self.getApiKey(entry.server),
                         app_mode: appMode,
                         environment: environment
                     };
@@ -365,7 +362,8 @@ define([
                 }
             },
 
-            appSearch: function (serverId, apiKey, notebookTitle, appId) {
+            appSearch: function (serverId, notebookTitle, appId) {
+                var self = this;
                 var entry = this.servers[serverId];
 
                 return Utils.ajax({
@@ -376,7 +374,7 @@ define([
                         notebook_title: notebookTitle,
                         app_id: appId,
                         server_address: entry.server,
-                        api_key: apiKey
+                        api_key: self.getApiKey(entry.server)
                     })
                 });
             },

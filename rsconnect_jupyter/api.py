@@ -279,6 +279,13 @@ def app_config(uri, api_key, app_id):
     with RSConnect(uri, api_key) as api:
         return api.app_config(app_id)
 
+def verify_api_key(uri, api_key):
+    with RSConnect(uri, api_key) as api:
+        try:
+            api.me()
+            return True
+        except RSConnectException:
+            return False
 
 APP_MODE_STATIC = 4
 APP_MODE_JUPYTER_STATIC = 7
