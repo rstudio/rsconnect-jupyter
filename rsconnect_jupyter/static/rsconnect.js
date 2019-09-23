@@ -173,11 +173,14 @@ define([
                     for (var serverId in data) {
                         // Split out API keys so they're not saved into the notebook metadata.
                         var entry = data[serverId];
-                        self.apiKeys[entry.server] = entry.apiKey;
-                        delete entry.apiKey
 
-                        if (!self.servers[serverId]) {
-                            self.servers[serverId] = entry;
+                        if (entry.apiKey) {
+                            self.apiKeys[entry.server] = entry.apiKey;
+                            delete entry.apiKey
+
+                            if (!self.servers[serverId]) {
+                                self.servers[serverId] = entry;
+                            }
                         }
                     }
                 });
