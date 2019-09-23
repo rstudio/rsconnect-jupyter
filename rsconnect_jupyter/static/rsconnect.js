@@ -78,7 +78,7 @@ define([
                 return result;
             },
 
-            verifyServer: function (server) {
+            verifyServer: function (server, apiKey) {
                 var self = this;
 
                 return Utils.ajax({
@@ -87,7 +87,7 @@ define([
                     headers: {'Content-Type': 'application/json'},
                     data: JSON.stringify({
                         server_address: server,
-                        api_key: self.getApiKey(server)
+                        api_key: apiKey
                     })
                 });
             },
@@ -97,15 +97,15 @@ define([
                 if (server[server.length - 1] !== '/') {
                     server += '/';
                 }
-                this.apiKeys[server] = apiKey;
 
                 // verify the server exists, then save
-                return this.verifyServer(server).then(function (data) {
+                return this.verifyServer(server, apiKey).then(function (data) {
                     var id = data.address_hash;
                     self.servers[id] = {
                         server: data.server_address,
                         serverName: serverName
                     };
+                    self.apiKeys[server] = apiKey;
                     return self
                         .saveConfig()
                         .then(self.saveNotebookMetadata)

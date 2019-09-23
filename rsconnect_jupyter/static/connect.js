@@ -110,7 +110,7 @@ define([
    * Dialogs
    ***********************************************************************/
 
-  function showAddServerDialog(cancelToPublishDialog, publishToServerId) {
+  function showAddServerDialog(cancelToPublishDialog, publishToServerId, serverAddress, serverName) {
     var dialogResult = $.Deferred();
 
     var serverModal = Dialog.modal({
@@ -148,17 +148,31 @@ define([
       open: function() {
         disableKeyboardManagerIfNeeded();
 
+        var $txtServer = serverModal.find("#rsc-server");
+        var $txtServerName = serverModal.find("#rsc-servername");
+        var $txtApiKey = serverModal.find("#rsc-api-key");
+
         // there is no _close_ event so let's improvise.
         serverModal.on("hide.bs.modal", function() {
           dialogResult.reject("canceled");
           if (cancelToPublishDialog) {
-            showSelectServerDialog(publishToServerId);
+            var serverId = publishToServerId;
+
+            if (publishToServerId && 
+                !config.getApiKey(config.servers[publishToServerId].server)) {
+                serverId = null;
+            }
+            showSelectServerDialog(serverId);
           }
         });
 
-        var $txtServer = serverModal.find("#rsc-server");
-        var $txtServerName = serverModal.find("#rsc-servername");
-        var $txtApiKey = serverModal.find("#rsc-api-key");
+        if(serverAddress) {
+          $txtServer.val(serverAddress);
+        }
+
+        if(serverName) {
+          $txtServerName.val(serverName);
+        }
 
         function toggleAddButton(state) {
           serverModal.find("fieldset").attr("disabled", state ? null : true);
@@ -336,12 +350,16 @@ define([
           // there is a selected server
           if ($this.hasClass("active")) {
             selectedEntryId = id;
+            var entry = config.servers[selectedEntryId];
+            if (!config.getApiKey(entry.server)) {
+              showAddServerDialog(true, selectedEntryId, entry.server, entry.serverName);
+            }
+
             btnPublish.removeClass("disabled");
             maybeShowConfigUrl();
             maybeUpdateAppTitle();
 
             // select associated appmode, if any
-            var entry = config.servers[selectedEntryId];
             appMode = selectedAppMode || (entry && entry.appMode) || "jupyter-static";
             selectPreviousAppMode();
           } else {
