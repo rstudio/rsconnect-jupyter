@@ -283,7 +283,8 @@ define([
                             if (result['finished']) {
                                 if (result['code'] != 0) {
                                     var msg = 'Failed to deploy successfully: ' + result['error'];
-                                    addValidationMarkup(false, $deploy_err, msg);
+                                    $deploy_err.closest(".form-group").addClass("has-error");
+                                    $deploy_err.text(msg);
                                     return $.Deferred().reject(msg);
                                 }
                                 self.debug.info('logs:', result['status'].join('\n'));
