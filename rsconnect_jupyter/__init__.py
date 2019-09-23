@@ -71,7 +71,8 @@ class EndpointHandler(APIHandler):
                 else:
                     raise web.HTTPError(401, u'Unable to verify the provided API key')
             else:
-                raise web.HTTPError(400, u'Unable to verify the provided server is running RStudio Connect')
+                print(err)
+                raise web.HTTPError(400, u'Unable to verify that the provided server is running RStudio Connect')
             return
 
         if action == 'app_search':
