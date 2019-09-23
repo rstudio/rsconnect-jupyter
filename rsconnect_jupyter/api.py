@@ -58,6 +58,11 @@ def verify_server(server_address):
     return _verify_server(server_url, max_redirects)
 
 def _verify_server(server_address, max_redirects):
+    """
+    Verifies that a server is present at the given address.
+    Assumes that `__api__/server_settings` is accessible from the jupyter server.
+    returns (address, response-or-error)
+    """
     r = urlparse(server_address)
     conn = None
     try:
@@ -71,7 +76,7 @@ def _verify_server(server_address, max_redirects):
 
         if response.status >= 400:
             logger.error('Response from Connect server: %s %s' % (response.status, response.reason))
-            return False
+            return (None, response)
         elif response.status >= 300:
             # process redirects now so we don't have to later
             target = response.getheader('Location')
@@ -81,24 +86,25 @@ def _verify_server(server_address, max_redirects):
                 return _verify_server(urljoin(server_address, target), max_redirects - 1)
             else:
                 logger.error('Too many redirects')
-                return None
+                return (None, 'Too many redirects')
         else:
             content_type = response.getheader('Content-Type')
             if not content_type.startswith('application/json'):
-                logger.error('Unexpected Content-Type %s from %s' % (content_type, server_address))
-                return None
+                err = 'Unexpected Content-Type %s from %s' % (content_type, server_address)
+                logger.error(err)
+                return (None, err)
 
     except (http.HTTPException, OSError, socket.error) as exc:
         logger.error('Error connecting to Connect: %s' % str(exc))
-        return None
+        return (None, exc)
     finally:
         if conn is not None:
             conn.close()
 
     if server_address.endswith(settings_path):
-        return server_address[:-len(settings_path)]
+        return (server_address[:-len(settings_path)], None)
     else:
-        return server_address
+        return (server_address, None)
 
 
 class RSConnect:
