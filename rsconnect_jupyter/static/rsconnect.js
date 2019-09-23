@@ -255,8 +255,6 @@ define([
 
                 var $log = $('#rsc-log').attr('hidden', null);
                 $log.text('Deploying...\n');
-                var $deploy_err = $('#rsc-deploy-error');
-                $deploy_err.text('');
 
                 function getLogs(deployResult) {
                     function inner(lastStatus) {
@@ -283,9 +281,7 @@ define([
                             if (result['finished']) {
                                 if (result['code'] != 0) {
                                     var msg = 'Failed to deploy successfully: ' + result['error'];
-                                    $deploy_err.closest(".form-group").addClass("has-error");
-                                    $deploy_err.text(msg);
-                                    return $.Deferred().reject(msg);
+                                    return $.Deferred().reject({responseJSON: {message: msg}});
                                 }
                                 self.debug.info('logs:', result['status'].join('\n'));
                                 return $.Deferred().resolve(deployResult['app_id']);

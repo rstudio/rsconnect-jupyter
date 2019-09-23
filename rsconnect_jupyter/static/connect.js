@@ -557,6 +557,8 @@ define([
           e.preventDefault();
           publishModal.find(".form-group").removeClass("has-error");
           publishModal.find(".help-block").text("");
+          var $deploy_err = $('#rsc-deploy-error');
+          $deploy_err.text('');
 
           var validTitle = txtTitle.val().length >= 3;
 
@@ -574,7 +576,7 @@ define([
           }
 
           function handleFailure(xhr) {
-            addValidationMarkup(false, txtTitle, xhr.responseJSON.message);
+            addValidationMarkup(false, $deploy_err, xhr.responseJSON.message);
             togglePublishButton(true);
           }
 
