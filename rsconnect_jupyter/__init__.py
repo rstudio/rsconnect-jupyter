@@ -54,12 +54,15 @@ class EndpointHandler(APIHandler):
             server_address = data['server_address']
             api_key = data['api_key']
 
-            (canonical_address, err) = verify_server(server_address)
-            if type(err) is SSLError:
+            try:
+                canonical_address = verify_server(server_address)
+            except SSLError:
                 raise web.HTTPError(400, u'A TLS error occurred when trying to reach the RStudio Connect server.\n' +
-                '* Ensure that the server address you entered is correct.\n' +
-                '* Ensure that your Jupyter server has the proper certificates.')
-            if canonical_address:
+                                    u'* Ensure that the server address you entered is correct.\n' +
+                                    u'* Ensure that your Jupyter server has the proper certificates.')
+            except Exception as err:
+                raise web.HTTPError(400, u'Unable to verify that the provided server is running RStudio Connect: %s' % err)
+            if canonical_address is not None:
                 uri = urlparse(canonical_address)
                 if verify_api_key(uri, api_key):
                     address_hash = md5(server_address)
@@ -70,8 +73,6 @@ class EndpointHandler(APIHandler):
                     }))
                 else:
                     raise web.HTTPError(401, u'Unable to verify the provided API key')
-            else:
-                raise web.HTTPError(400, u'Unable to verify that the provided server is running RStudio Connect: %s' % err)
             return
 
         if action == 'app_search':
