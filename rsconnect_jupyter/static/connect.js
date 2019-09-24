@@ -352,6 +352,7 @@ define([
             selectedEntryId = id;
             var entry = config.servers[selectedEntryId];
             if (!config.getApiKey(entry.server)) {
+              publishModal.modal("hide");
               showAddServerDialog(true, selectedEntryId, entry.server, entry.serverName);
             }
 
