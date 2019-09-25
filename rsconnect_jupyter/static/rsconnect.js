@@ -285,9 +285,16 @@ define([
                             if (result['last_status'] != lastStatus) {
                                 lastStatus = result['lastStatus'];
                                 var output = result['status'].join('\n');
+
+                                var elem = $log[0];
+                                var oldScroll = elem.scrollTop;
+                                var oldMaxScroll = elem.scrollHeight - elem.clientHeight;
                                 $log.text(output);
-                                // scroll to bottom
-                                $log.scrollTop($log.get(0).scrollHeight);
+
+                                if (oldScroll >= oldMaxScroll - 1) {
+                                  // scroll to new bottom position
+                                  $log.scrollTop(elem.scrollHeight);
+                                }
                             }
                             if (result['finished']) {
                                 if (result['code'] != 0) {
