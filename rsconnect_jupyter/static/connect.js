@@ -471,12 +471,14 @@ define([
         "        </div>",
         "    </div>",
         '    <div class="form-group">',
-        '        <input id="include-files" name="include-files" type="checkbox">',
-        '        Include all files in the notebook directory',
-        "    </div>",
-        '    <div class="form-group">',
-        '        <input id="include-subdirs" name="include-subdirs" type="checkbox">',
-        '        Include subdirectories',
+        '        <label>',
+        '          <input id="include_files" name="include_files" type="checkbox">',
+        '          Include all files in the notebook directory',
+        '        </label>',
+        '        <label>',
+        '          <input id="include_subdirs" name="include_subdirs" type="checkbox" style="margin-left: 30px">',
+        '          Include subdirectories',
+        '        </label>',
         "    </div>",
         '    <pre id="rsc-log" hidden></pre>',
         '    <div class="form-group">',
@@ -559,7 +561,42 @@ define([
             .addClass("active")
             .siblings()
             .removeClass("active");
+
+          updateCheckboxStates();
         });
+
+        function updateCheckboxStates() {
+          var publishingWithSource = (appMode === 'jupyter-static');
+          var includingFiles = $('#include_files').prop('checked');
+
+          var $filesBox = $('#include_files');
+          $filesBox.prop('disabled', !publishingWithSource);
+          if (!publishingWithSource) {
+            $filesBox.prop('checked', false);
+          }
+          $filesBox.parent().toggleClass('rsc-text-light', !publishingWithSource);
+          
+          var canIncludeSubdirs = publishingWithSource && includingFiles;
+          var $subdirsBox = $('#include_subdirs');
+          $subdirsBox.prop('disabled', !canIncludeSubdirs);
+          if (!canIncludeSubdirs) {
+            $subdirsBox.prop('checked', false);
+          }
+          $subdirsBox.parent().toggleClass('rsc-text-light', !canIncludeSubdirs);
+        }
+
+        function bindCheckbox(id) {
+          // save/restore value in server settings
+          var $box = $('#' + id);
+          $box.prop('checked', config.servers[selectedEntryId][id]);
+
+          $box.on('change', function() {
+            config.servers[selectedEntryId][id] = $box.prop('checked');
+            updateCheckboxStates();
+          });
+        }
+        bindCheckbox('include_files');
+        bindCheckbox('include_subdirs');
 
         // setup app mode choices help icon
         (function() {
@@ -630,8 +667,8 @@ define([
                 appId,
                 txtTitle.val(),
                 appMode,
-                $('#include-files').prop('checked'),
-                $('#include-subdirs').prop('checked')
+                $('#include_files').prop('checked'),
+                $('#include_subdirs').prop('checked')
               )
               .always(function() {
                 togglePublishButton(true);
