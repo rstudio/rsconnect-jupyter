@@ -256,6 +256,29 @@ define([
                 return result;
             },
 
+            writeManifest: function(notebookTitle) {
+              var self = this;
+              return self.inspectEnvironment().then(function(environment) {
+                var notebookPath = Utils.encode_uri_components(
+                    Jupyter.notebook.notebook_path
+                );
+
+                var data = {
+                    notebook_path: notebookPath,
+                    notebook_name: self.getNotebookName(notebookTitle),
+                    environment: environment
+                };
+
+                var xhr = Utils.ajax({
+                    url: Jupyter.notebook.base_url + 'rsconnect_jupyter/write_manifest',
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    data: JSON.stringify(data)
+                });
+                return xhr;
+              });
+            },
+
             publishContent: function (serverId, appId, notebookTitle, appMode) {
                 var self = this;
                 var notebookPath = Utils.encode_uri_components(
