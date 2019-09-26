@@ -470,6 +470,14 @@ define([
         '            <span class="help-block"></span>',
         "        </div>",
         "    </div>",
+        '    <div class="form-group">',
+        '        <input id="include-files" name="include-files" type="checkbox">',
+        '        Include all files in the notebook directory',
+        "    </div>",
+        '    <div class="form-group">',
+        '        <input id="include-subdirs" name="include-subdirs" type="checkbox">',
+        '        Include subdirectories',
+        "    </div>",
         '    <pre id="rsc-log" hidden></pre>',
         '    <div class="form-group">',
         '    <span id="rsc-deploy-error" class="help-block"></span>',
@@ -490,7 +498,7 @@ define([
 
         // clicking on links in the modal body prevents the default
         // behavior (i.e. changing location.hash)
-        publishModal.find(".modal-body").on("click", function(e) {
+        publishModal.find("a.modal-body").on("click", function(e) {
           if ($(e.target).attr("target") !== "_rsconnect") {
             e.preventDefault();
           }
@@ -621,7 +629,9 @@ define([
                 selectedEntryId,
                 appId,
                 txtTitle.val(),
-                appMode
+                appMode,
+                $('#include-files').prop('checked'),
+                $('#include-subdirs').prop('checked')
               )
               .always(function() {
                 togglePublishButton(true);

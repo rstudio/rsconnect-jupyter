@@ -3,11 +3,12 @@ import hashlib
 import io
 import json
 import logging
+import os
 import posixpath
 import tarfile
 import tempfile
 
-from os.path import join, split, splitext
+from os.path import join, relpath, split, splitext
 
 import nbformat
 from ipython_genutils import text
@@ -105,6 +106,24 @@ def bundle_add_buffer(bundle, filename, contents):
     bundle.addfile(fileinfo, buf)
     log.debug('added buffer: %s', filename)
 
+
+def list_files(base_dir, include_subdirs):
+    """List the files in the directory at path.
+
+    If include_subdirs is True, recursively list
+    files in subdirectories.
+
+    Returns an iterable of file paths relative to base_dir.
+    """
+    def walk():
+        for root, subdirs, files in os.walk(base_dir):
+            if not include_subdirs:
+                # tell walk not to traverse any subdirs
+                subdirs[:] = []
+
+            for filename in files:
+                yield relpath(join(root, filename), base_dir)
+    return list(walk())
 
 def make_source_bundle(model, environment, ext_resources_dir, extra_files=None):
     """Create a bundle containing the specified notebook and python environment.

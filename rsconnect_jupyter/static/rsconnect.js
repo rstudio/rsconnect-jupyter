@@ -256,7 +256,7 @@ define([
                 return result;
             },
 
-            publishContent: function (serverId, appId, notebookTitle, appMode) {
+            publishContent: function (serverId, appId, notebookTitle, appMode, includeFiles, includeSubdirs) {
                 var self = this;
                 var notebookPath = Utils.encode_uri_components(
                     Jupyter.notebook.notebook_path
@@ -335,7 +335,9 @@ define([
                         server_address: entry.server,
                         api_key: self.getApiKey(entry.server),
                         app_mode: appMode,
-                        environment: environment
+                        environment: environment,
+                        include_files: includeFiles,
+                        include_subdirs: includeSubdirs
                     };
 
                     var xhr = Utils.ajax({
