@@ -487,6 +487,7 @@ define([
       open: function() {
         disableKeyboardManagerIfNeeded();
         // TODO add ability to dismiss via escape key
+        var $deploy_err = $('#rsc-deploy-error');
 
         // clicking on links in the modal body prevents the default
         // behavior (i.e. changing location.hash)
@@ -576,7 +577,6 @@ define([
           e.preventDefault();
           publishModal.find(".form-group").removeClass("has-error");
           publishModal.find(".help-block").text("");
-          var $deploy_err = $('#rsc-deploy-error');
           $deploy_err.text('');
 
           var validTitle = txtTitle.val().length >= 3;
@@ -719,6 +719,16 @@ define([
         });
 
         // add footer buttons
+        var btnCreateManifest = $(
+          '<a class="btn" aria-hidden="true" style="float: left">Create Manifest</a>'
+        );
+        btnCreateManifest.on("click", function() {
+          config.writeManifest(txtTitle.val()).then(function(response) {
+            $deploy_err.text('Successfully saved: ' + response.files.join(', '));
+          }).fail(function(err) {
+            $deploy_err.text(err);
+          });
+        });
         var btnCancel = $(
           '<a class="btn" data-dismiss="modal" aria-hidden="true">Cancel</a>'
         );
@@ -731,6 +741,7 @@ define([
         });
         publishModal
           .find(".modal-footer")
+          .append(btnCreateManifest)
           .append(btnCancel)
           .append(btnPublish);
         updateDeployNextButton();
