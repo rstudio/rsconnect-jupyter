@@ -9,7 +9,7 @@ from notebook.utils import url_path_join
 from tornado import web
 
 from .api import app_config, app_get, app_search, deploy, task_get, verify_server, verify_api_key, RSConnectException
-from .bundle import make_html_bundle, make_source_bundle
+from .bundle import make_html_bundle, make_source_bundle, write_manifest
 
 __version__ = '1.0.0'
 
@@ -171,6 +171,14 @@ class EndpointHandler(APIHandler):
             self.finish(json.dumps(retval))
             return
 
+        if action == 'write_manifest':
+            environment = data['environment']
+            nb_path = unquote_plus(data['notebook_path'].strip('/'))
+            os_path = self.contents_manager._get_os_path(nb_path)
+            output_dir = os.path.dirname(os_path)
+            nb_name = os.path.basename(os_path)
+            files = write_manifest(nb_name, environment, output_dir)
+            self.finish(json.dumps({"files": files}))
 
 
 def load_jupyter_server_extension(nb_app):
