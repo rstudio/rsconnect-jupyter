@@ -12,7 +12,7 @@ from os.path import basename, dirname, exists, join
 import nbformat
 
 from rsconnect_jupyter.environment import detect_environment
-from rsconnect_jupyter.bundle import make_html_bundle, make_source_bundle
+from rsconnect_jupyter.bundle import list_files, make_html_bundle, make_source_bundle
 
 
 class TestBundle(TestCase):
@@ -147,6 +147,40 @@ class TestBundle(TestCase):
                     }
                 }
             })
+
+    def test_list_files(self):
+        paths = [
+            'notebook.ipynb',
+            'somedata.csv',
+            'subdir/subfile',
+            'subdir2/subfile2',
+            '.ipynb_checkpoints/notebook.ipynb',
+            '.git/config',
+        ]
+
+        def walk(base_dir):
+            dirnames = []
+            filenames = []
+
+            for path in paths:
+                if '/' in path:
+                    dirname, filename = path.split('/', 1)
+                    dirnames.append(dirname)
+                else:
+                    filenames.append(path)
+
+            yield (base_dir, dirnames, filenames)
+
+            for subdir in dirnames:
+                for path in paths:
+                    if path.startswith(subdir + '/'):
+                        yield (base_dir + '/' + subdir, [], [path.split('/', 1)[1]])
+
+        files = list_files('/', True, walk=walk)
+        self.assertEqual(files, paths[:4])
+
+        files = list_files('/', False, walk=walk)
+        self.assertEqual(files, paths[:2])
 
     def test_html_bundle1(self):
         self.do_test_html_bundle(self.get_dir('pip1'))
