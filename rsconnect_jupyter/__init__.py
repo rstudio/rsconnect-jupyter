@@ -53,9 +53,10 @@ class EndpointHandler(APIHandler):
         if action == 'verify_server':
             server_address = data['server_address']
             api_key = data['api_key']
+            disable_tls_check = data.get('disable_tls_check', False)
 
             try:
-                canonical_address = verify_server(server_address)
+                canonical_address = verify_server(server_address, disable_tls_check)
             except SSLError:
                 raise web.HTTPError(400, u'A TLS error occurred when trying to reach the RStudio Connect server.\n' +
                                     u'* Ensure that the server address you entered is correct.\n' +
@@ -64,7 +65,7 @@ class EndpointHandler(APIHandler):
                 raise web.HTTPError(400, u'Unable to verify that the provided server is running RStudio Connect: %s' % err)
             if canonical_address is not None:
                 uri = urlparse(canonical_address)
-                if verify_api_key(uri, api_key):
+                if verify_api_key(uri, api_key, disable_tls_check):
                     address_hash = md5(server_address)
                     self.finish(json.dumps({
                         'status': 'Provided server is running RStudio Connect',
@@ -80,9 +81,10 @@ class EndpointHandler(APIHandler):
             api_key = data['api_key']
             title = data['notebook_title']
             app_id = data.get('app_id')
+            disable_tls_check = data.get('disable_tls_check', False)
 
             try:
-                retval = app_search(uri, api_key, title, app_id)
+                retval = app_search(uri, api_key, title, app_id, disable_tls_check)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
             self.finish(json.dumps(retval))
@@ -97,6 +99,7 @@ class EndpointHandler(APIHandler):
             api_key = data['api_key']
             app_mode = data['app_mode']
             environment = data.get('environment')
+            disable_tls_check = data.get('disable_tls_check', False)
 
             model = self.contents_manager.get(path=nb_path)
             if model['type'] != 'notebook':
@@ -134,7 +137,7 @@ class EndpointHandler(APIHandler):
                 raise web.HTTPError(400, 'Invalid app_mode: %s, must be "static" or "jupyter-static"' % app_mode)
 
             try:
-                retval = deploy(uri, api_key, app_id, nb_name, nb_title, bundle)
+                retval = deploy(uri, api_key, app_id, nb_name, nb_title, bundle, disable_tls_check)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
 
@@ -145,9 +148,10 @@ class EndpointHandler(APIHandler):
             uri = urlparse(data['server_address'])
             api_key = data['api_key']
             app_id = data['app_id']
+            disable_tls_check = data.get('disable_tls_check', False)
 
             try:
-                retval = app_get(uri, api_key, app_id)
+                retval = app_get(uri, api_key, app_id, disable_tls_check)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
             self.finish(json.dumps(retval))
@@ -159,9 +163,10 @@ class EndpointHandler(APIHandler):
             task_id = data['task_id']
             last_status = data['last_status']
             cookies = data.get('cookies', [])
+            disable_tls_check = data.get('disable_tls_check', False)
 
             try:
-                retval = task_get(uri, api_key, task_id, last_status, cookies)
+                retval = task_get(uri, api_key, task_id, last_status, cookies, disable_tls_check)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
             self.finish(json.dumps(retval))
@@ -171,8 +176,9 @@ class EndpointHandler(APIHandler):
             uri = urlparse(data['server_address'])
             api_key = data['api_key']
             app_id = data['app_id']
+            disable_tls_check = data.get('disable_tls_check', False)
             try:
-                retval = app_config(uri, api_key, app_id)
+                retval = app_config(uri, api_key, app_id, disable_tls_check)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
             self.finish(json.dumps(retval))

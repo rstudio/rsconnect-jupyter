@@ -107,6 +107,18 @@ define([
     }
   }
 
+  /**
+   * Like `addValidationMarkup` but is not a validation error.
+   * @param $el {jQuery} element to set help text on. Must have a `.help-block` under a `.form-group`.
+   * @param helpText {String} string value to set help text to.
+   */
+  function addWarningMarkup($el, helpText) {
+    $el
+        .closest('.form-group')
+        .find('.help-block')
+        .text(helpText);
+  }
+
   // Disable the keyboard shortcut manager if it is enabled. This
   // function should be called at the beginning of every modal open so
   // input events are received in text boxes and not hijacked by the
@@ -133,27 +145,32 @@ define([
 
       title: "Add RStudio Connect Server",
       body: [
-        "<form>",
-        "    <fieldset>",
+        '<form>',
+        '    <fieldset>',
         '        <div class="form-group">',
         '            <label class="rsc-label" for="rsc-server">Server Address</label>',
         '            <input class="form-control" id="rsc-server" type="url" placeholder="https://connect.example.com/" required>',
         '            <span class="help-block"></span>',
-        "        </div>",
+        '        </div>',
         '        <div class="form-group">',
         '            <label class="rsc-label" for="rsc-api-key">API Key</label>',
         '            <input class="form-control" id="rsc-api-key" type="text" placeholder="API key" minlength="32" maxlength="32" required>',
         '            <span class="help-block"></span>',
-        "        </div>",
+        '        </div>',
         '        <div class="form-group">',
         '            <label class="rsc-label" for="rsc-servername">Server Name</label>',
         '            <input class="form-control" id="rsc-servername" type="text" placeholder="server-nickname" minlength="1" required>',
         '            <span class="help-block"></span>',
-        "        </div>",
+        '        </div>',
+        '        <div class="form-group">',
+        '            <input class="form-check-input" id="rsc-disable-tls-cert-check" type="checkbox">',
+        '            <label class="rsc-label form-check-label" for="rsc-disable-tls-cert-check">Disable TLS Certificate Verification</label>',
+        '            <span class="help-block"></span>',
+        '        </div>',
         '        <input type="submit" hidden>',
-        "    </fieldset>",
-        "</form>"
-      ].join(""),
+        '    </fieldset>',
+        '</form>'
+      ].join(''),
 
       // allow raw html
       sanitize: false,
@@ -164,6 +181,7 @@ define([
         var $txtServer = serverModal.find("#rsc-server");
         var $txtServerName = serverModal.find("#rsc-servername");
         var $txtApiKey = serverModal.find("#rsc-api-key");
+        var $checkDisableTLSCertCheck = serverModal.find('#rsc-disable-tls-cert-check');
 
         // there is no _close_ event so let's improvise.
         serverModal.on("hide.bs.modal", function() {
@@ -186,6 +204,18 @@ define([
         if(serverName) {
           $txtServerName.val(serverName);
         }
+
+        $checkDisableTLSCertCheck.change(function(ev) {
+          var checked = ev.target.checked;
+          if(checked) {
+            addWarningMarkup(
+                $checkDisableTLSCertCheck,
+                'Note: Checking "Disable TLS Certificate Verification" will make your connection to RStudio Connect less secure.'
+            );
+          } else {
+            addWarningMarkup($checkDisableTLSCertCheck, '');
+          }
+        });
 
         function toggleAddButton(state) {
           serverModal.find("fieldset").attr("disabled", state ? null : true);
@@ -234,7 +264,12 @@ define([
             toggleAddButton(false);
 
             config
-              .addServer($txtServer.val(), $txtServerName.val(), $txtApiKey.val())
+              .addServer(
+                  $txtServer.val(),
+                  $txtServerName.val(),
+                  $txtApiKey.val(),
+                  $checkDisableTLSCertCheck.is(':checked')
+              )
               .then(function(id) {
                 dialogResult.resolve(id);
                 serverModal.modal("hide");

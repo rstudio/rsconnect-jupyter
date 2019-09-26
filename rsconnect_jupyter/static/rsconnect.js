@@ -89,32 +89,41 @@ define([
                 return result;
             },
 
-            verifyServer: function (server, apiKey) {
-                var self = this;
-
+            verifyServer: function (server, apiKey, disableTLSCheck) {
                 return Utils.ajax({
                     url: Jupyter.notebook.base_url + 'rsconnect_jupyter/verify_server',
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     data: JSON.stringify({
                         server_address: server,
-                        api_key: apiKey
+                        api_key: apiKey,
+                        disable_tls_check: disableTLSCheck
                     })
                 });
             },
 
-            addServer: function (server, serverName, apiKey) {
+            /**
+             * addServer adds a new RStudio Connect server to the list of
+             * available deployment targets
+             * @param server {String} URL of the server to be added
+             * @param serverName {String} Friendly name of the server
+             * @param apiKey {String} API key of the server
+             * @param disableTLSCheck {Boolean} Don't verify TLS certificates
+             * @returns {*}
+             */
+            addServer: function (server, serverName, apiKey, disableTLSCheck) {
                 var self = this;
                 if (server[server.length - 1] !== '/') {
                     server += '/';
                 }
 
                 // verify the server exists, then save
-                return this.verifyServer(server, apiKey).then(function (data) {
+                return this.verifyServer(server, apiKey, disableTLSCheck).then(function (data) {
                     var id = data.address_hash;
                     self.servers[id] = {
                         server: data.server_address,
-                        serverName: serverName
+                        serverName: serverName,
+                        disableTLSCheck: disableTLSCheck
                     };
                     self.apiKeys[server] = apiKey;
                     return self
