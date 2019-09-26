@@ -84,13 +84,26 @@ define([
     });
   }
 
+    /**
+     * addValidationMarkup adds validation hints to an element
+     * @param {Boolean} valid when true, validation hints are not added
+     * @param {jQuery} $el jQuery handle for the element to add hint to
+     * @param {String} helpText String for validation message. Newlines will be transformed to HTML line breaks
+     */
   function addValidationMarkup(valid, $el, helpText) {
     if (!valid) {
-      $el
+      var helpBlock = $el
         .closest(".form-group")
         .addClass("has-error")
-        .find(".help-block")
-        .text(helpText);
+        .find(".help-block");
+      helpBlock.empty();
+      if (helpText.match(/\n/) !== null) {
+        helpText.split('\n').forEach(function(line) {
+            helpBlock.append(line+"<br />")
+        });
+      } else {
+          helpBlock.append(helpText);
+      }
     }
   }
 
@@ -230,9 +243,17 @@ define([
                 var msg;
 
                 if (xhr.status == 400) {
-                  msg = "Failed to verify RSConnect Connect is running at " +
-                    $txtServer.val() +
-                    ". Please ensure the server address is valid.";
+                  if (xhr.responseJSON) {
+                      if (xhr.responseJSON.message) {
+                          msg = xhr.responseJSON.message;
+                      } else {
+                          msg = "Server returned an unexpected response:" + xhr.responseJSON;
+                      }
+                  } else {
+                      msg = "Failed to verify that RStudio Connect is running at " +
+                          $txtServer.val() +
+                          ". Please ensure the server address is valid.";
+                  }
                 }
                 else if (xhr.status == 401) {
                   msg = "The server did not accept the API key.";

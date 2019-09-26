@@ -11,6 +11,8 @@ from tornado import web
 from .api import app_config, app_get, app_search, deploy, task_get, verify_server, verify_api_key, RSConnectException
 from .bundle import make_html_bundle, make_source_bundle
 
+from ssl import SSLError
+
 __version__ = '1.0.0'
 
 
@@ -51,9 +53,16 @@ class EndpointHandler(APIHandler):
         if action == 'verify_server':
             server_address = data['server_address']
             api_key = data['api_key']
-            canonical_address = verify_server(server_address)
 
-            if canonical_address:
+            try:
+                canonical_address = verify_server(server_address)
+            except SSLError:
+                raise web.HTTPError(400, u'A TLS error occurred when trying to reach the RStudio Connect server.\n' +
+                                    u'* Ensure that the server address you entered is correct.\n' +
+                                    u'* Ensure that your Jupyter server has the proper certificates.')
+            except Exception as err:
+                raise web.HTTPError(400, u'Unable to verify that the provided server is running RStudio Connect: %s' % err)
+            if canonical_address is not None:
                 uri = urlparse(canonical_address)
                 if verify_api_key(uri, api_key):
                     address_hash = md5(server_address)
@@ -64,8 +73,6 @@ class EndpointHandler(APIHandler):
                     }))
                 else:
                     raise web.HTTPError(401, u'Unable to verify the provided API key')
-            else:
-                raise web.HTTPError(400, u'Unable to verify the provided server is running RStudio Connect')
             return
 
         if action == 'app_search':
