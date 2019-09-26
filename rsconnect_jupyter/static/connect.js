@@ -723,10 +723,19 @@ define([
           '<a class="btn" aria-hidden="true" style="float: left">Create Manifest</a>'
         );
         btnCreateManifest.on("click", function() {
-          config.writeManifest(txtTitle.val()).then(function(response) {
-            $deploy_err.text('Successfully saved: ' + response.files.join(', '));
-          }).fail(function(err) {
-            $deploy_err.text(err);
+          var $spinner = $('<i class="fa fa-spinner fa-spin" style="margin-left: 15px"></i>');
+          btnCreateManifest.append($spinner);
+
+          config.inspectEnvironment().then(function(environment) {
+            return config.writeManifest(txtTitle.val(), environment).then(function(response) {
+              $deploy_err.text('Successfully saved: ' + response.files.join(', '));
+            }).fail(function(response) {
+              $deploy_err.text(response.responseJSON.message);
+            });
+          }).fail(function(response) {
+            $deploy_err.text(response.responseJSON.message);
+          }).always(function() {
+            $spinner.remove();
           });
         });
         var btnCancel = $(
