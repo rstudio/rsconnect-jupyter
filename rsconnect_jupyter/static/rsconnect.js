@@ -150,7 +150,8 @@ define([
                     data: JSON.stringify({
                         app_id: appId,
                         server_address: entry.server,
-                        api_key: self.getApiKey(entry.server)
+                        api_key: self.getApiKey(entry.server),
+                        disable_tls_check: entry.disableTLSCheck
                     })
                 });
             },
@@ -165,7 +166,8 @@ define([
                     var dst = {
                         server: src.server,
                         serverName: src.serverName,
-                        apiKey: self.getApiKey(src.server)
+                        apiKey: self.getApiKey(src.server),
+                        disableTLSCheck: src.disableTLSCheck
                     };
 
                     toSave[serverId] = dst;
@@ -288,7 +290,9 @@ define([
                                 api_key: self.getApiKey(entry.server),
                                 task_id: deployResult['task_id'],
                                 last_status: lastStatus,
-                                cookies: deployResult.cookies || []
+                                cookies: deployResult.cookies || [],
+                                disable_tls_check: entry.disableTLSCheck
+
                             })
                         }).then(function (result) {
                             if (result['last_status'] != lastStatus) {
@@ -332,7 +336,8 @@ define([
                         data: JSON.stringify({
                             server_address: entry.server,
                             api_key: self.getApiKey(entry.server),
-                            app_id: receivedAppId
+                            app_id: receivedAppId,
+                            disable_tls_check: entry.disableTLSCheck
                         })
                     }).then(function (config) {
                         return {
@@ -351,7 +356,8 @@ define([
                         server_address: entry.server,
                         api_key: self.getApiKey(entry.server),
                         app_mode: appMode,
-                        environment: environment
+                        environment: environment,
+                        disable_tls_check: entry.disableTLSCheck
                     };
 
                     var xhr = Utils.ajax({
@@ -398,7 +404,8 @@ define([
                         notebook_title: notebookTitle,
                         app_id: appId,
                         server_address: entry.server,
-                        api_key: self.getApiKey(entry.server)
+                        api_key: self.getApiKey(entry.server),
+                        disable_tls_check: entry.disableTLSCheck
                     })
                 });
             },
