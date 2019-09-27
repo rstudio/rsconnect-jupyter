@@ -1,15 +1,19 @@
+/* global define */
+
 define([
-    'base/js/utils'
-    ], function (Utils) {
+    'jquery',
+    'base/js/utils',
+    'base/js/namespace'
+    ], function ($, Utils, Jupyter) {
     var debug = {
         info: function() {
             var args = [].slice.call(arguments);
-            args.unshift("RSConnect API:");
+            args.unshift('RSConnect API:');
             console.info.apply(null, args);
         },
         error: function() {
             var args = [].slice.call(arguments);
-            args.unshift("RSConnect API:");
+            args.unshift('RSConnect API:');
             console.error.apply(null, args);
         }
     };
@@ -36,7 +40,7 @@ define([
 
                 // if a server is present but no API key, remove it
                 // since we can't successfully publish there.
-                for (serverId in this.servers) {
+                for (var serverId in this.servers) {
                     if (!this.getApiKey(this.servers[serverId].server)) {
                         delete this.servers[serverId];
                     }
@@ -163,14 +167,12 @@ define([
                 for (var serverId in this.servers) {
                     var src = this.servers[serverId];
 
-                    var dst = {
+                    toSave[serverId] = {
                         server: src.server,
                         serverName: src.serverName,
                         apiKey: self.getApiKey(src.server),
                         disableTLSCheck: src.disableTLSCheck
                     };
-
-                    toSave[serverId] = dst;
                 }
                 debug.info('saving config:', toSave);
                 return Utils.ajax({
@@ -196,7 +198,7 @@ define([
                         // Split out API keys so they're not saved into the notebook metadata.
                         var entry = data[serverId];
                         self.apiKeys[entry.server] = entry.apiKey;
-                        delete entry.apiKey
+                        delete entry.apiKey;
 
                         if (!self.servers[serverId]) {
                             self.servers[serverId] = entry;
@@ -219,7 +221,6 @@ define([
             },
 
             inspectEnvironment: function () {
-                var self = this;
                 var path = Jupyter.notebook.notebook_name;
 
                 try {
@@ -295,7 +296,7 @@ define([
 
                             })
                         }).then(function (result) {
-                            if (result['last_status'] != lastStatus) {
+                            if (result['last_status'] !== lastStatus) {
                                 lastStatus = result['lastStatus'];
                                 var output = result['status'].join('\n');
 
@@ -310,7 +311,7 @@ define([
                                 }
                             }
                             if (result['finished']) {
-                                if (result['code'] != 0) {
+                                if (result['code'] !== 0) {
                                     var msg = 'Failed to deploy successfully: ' + result['error'];
                                     return $.Deferred().reject({responseJSON: {message: msg}});
                                 }
@@ -436,6 +437,6 @@ define([
             }
         };
 
-        return RSConnect
+        return RSConnect;
     }
 );
