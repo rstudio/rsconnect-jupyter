@@ -526,6 +526,16 @@ define([
         '            <span class="help-block"></span>',
         "        </div>",
         "    </div>",
+        '    <div class="form-group">',
+        '        <label>',
+        '          <input id="include-files" name="include-files" type="checkbox">',
+        '          Include all files in the notebook directory',
+        '        </label>',
+        '        <label>',
+        '          <input id="include-subdirs" name="include-subdirs" type="checkbox" style="margin-left: 30px">',
+        '          Include subdirectories',
+        '        </label>',
+        "    </div>",
         '    <pre id="rsc-log" hidden></pre>',
         '    <div class="form-group">',
         '    <span id="rsc-deploy-error" class="help-block"></span>',
@@ -546,7 +556,7 @@ define([
 
         // clicking on links in the modal body prevents the default
         // behavior (i.e. changing location.hash)
-        publishModal.find(".modal-body").on("click", function(e) {
+        publishModal.find("a.modal-body").on("click", function(e) {
           if ($(e.target).attr("target") !== "_rsconnect") {
             e.preventDefault();
           }
@@ -607,7 +617,43 @@ define([
             .addClass("active")
             .siblings()
             .removeClass("active");
+
+          updateCheckboxStates();
         });
+
+        function updateCheckboxStates() {
+          var publishingWithSource = (appMode === 'jupyter-static');
+          var $filesBox = $('#include-files');
+          var includingFiles = $filesBox.prop('checked');
+
+          $filesBox.prop('disabled', !publishingWithSource);
+          if (!publishingWithSource) {
+            $filesBox.prop('checked', false);
+          }
+          $filesBox.parent().toggleClass('rsc-text-light', !publishingWithSource);
+          
+          var canIncludeSubdirs = publishingWithSource && includingFiles;
+          var $subdirsBox = $('#include-subdirs');
+          $subdirsBox.prop('disabled', !canIncludeSubdirs);
+          if (!canIncludeSubdirs) {
+            $subdirsBox.prop('checked', false);
+          }
+          $subdirsBox.parent().toggleClass('rsc-text-light', !canIncludeSubdirs);
+        }
+
+        function bindCheckbox(id) {
+          // save/restore value in server settings
+          var entry = config.servers[selectedEntryId];
+          var $box = $('#' + id.replace('_', '-'));
+          $box.prop('checked', entry[id]);
+
+          $box.on('change', function() {
+            entry[id] = $box.prop('checked');
+            updateCheckboxStates();
+          });
+        }
+        bindCheckbox('include_files');
+        bindCheckbox('include_subdirs');
 
         // setup app mode choices help icon
         (function() {
@@ -677,7 +723,9 @@ define([
                 selectedEntryId,
                 appId,
                 txtTitle.val(),
-                appMode
+                appMode,
+                $('#include-files').prop('checked'),
+                $('#include-subdirs').prop('checked')
               )
               .always(function() {
                 togglePublishButton(true);

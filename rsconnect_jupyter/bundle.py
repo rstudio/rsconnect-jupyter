@@ -3,11 +3,12 @@ import hashlib
 import io
 import json
 import logging
+import os
 import posixpath
 import tarfile
 import tempfile
 
-from os.path import join, split, splitext
+from os.path import join, relpath, split, splitext
 
 import nbformat
 from ipython_genutils import text
@@ -106,7 +107,32 @@ def bundle_add_buffer(bundle, filename, contents):
     log.debug('added buffer: %s', filename)
 
 
-def make_source_bundle(model, environment, ext_resources_dir, extra_files=None):
+def list_files(base_dir, include_subdirs, walk=os.walk):
+    """List the files in the directory at path.
+
+    If include_subdirs is True, recursively list
+    files in subdirectories.
+
+    Returns an iterable of file paths relative to base_dir.
+    """
+    skip_dirs = ['.ipynb_checkpoints', '.git']
+
+    def iter_files():
+        for root, subdirs, files in walk(base_dir):
+            if include_subdirs:
+                for skip in skip_dirs:
+                    if skip in subdirs:
+                        subdirs.remove(skip)
+            else:
+                # tell walk not to traverse any subdirs
+                subdirs[:] = []
+
+            for filename in files:
+                yield relpath(join(root, filename), base_dir)
+    return list(iter_files())
+
+
+def make_source_bundle(model, environment, ext_resources_dir, extra_files=[]):
     """Create a bundle containing the specified notebook and python environment.
 
     Returns a file-like object containing the bundle tarball.
@@ -118,7 +144,11 @@ def make_source_bundle(model, environment, ext_resources_dir, extra_files=None):
     manifest_add_buffer(manifest, nb_name, nb_content)
     manifest_add_buffer(manifest, environment['filename'], environment['contents'])
 
-    for rel_path in (extra_files or []):
+    if extra_files:
+        skip = [nb_name, environment['filename'], 'manifest.json']
+        extra_files = sorted(list(set(extra_files) - set(skip)))
+
+    for rel_path in extra_files:
         manifest_add_file(manifest, rel_path, ext_resources_dir)
 
     log.debug('manifest: %r', manifest)
@@ -131,7 +161,7 @@ def make_source_bundle(model, environment, ext_resources_dir, extra_files=None):
         bundle_add_buffer(bundle, nb_name, nb_content)
         bundle_add_buffer(bundle, environment['filename'], environment['contents'])
 
-        for rel_path in (extra_files or []):
+        for rel_path in extra_files:
             bundle_add_file(bundle, rel_path, ext_resources_dir)
 
     bundle_file.seek(0)
