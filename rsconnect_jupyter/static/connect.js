@@ -368,6 +368,7 @@ define([
               if ($a.hasClass('active')) {
                 btnPublish.addClass('disabled');
                 selectedEntryId = null;
+                updateCheckboxStates();
               }
             })
             .fail(function(err) {
@@ -412,9 +413,11 @@ define([
             // select associated appmode, if any
             appMode = selectedAppMode || (updatedEntry && updatedEntry.appMode) || 'jupyter-static';
             selectPreviousAppMode();
+            updateCheckboxStates();
           } else {
             selectedEntryId = null;
             btnPublish.addClass('disabled');
+            updateCheckboxStates();
           }
         });
       }
@@ -478,6 +481,28 @@ define([
           }
         }
       }
+    }
+
+    function updateCheckboxStates() {
+      var publishingWithSource = (appMode === 'jupyter-static');
+      var serverSelected = !!selectedEntryId;
+      var $filesBox = $('#include-files');
+      var includingFiles = $filesBox.prop('checked');
+      var canIncludeFiles = publishingWithSource && serverSelected;
+
+      $filesBox.prop('disabled', !canIncludeFiles);
+      if (!publishingWithSource) {
+        $filesBox.prop('checked', false);
+      }
+      $filesBox.parent().toggleClass('rsc-text-light', !canIncludeFiles);
+
+      var canIncludeSubdirs = canIncludeFiles && includingFiles;
+      var $subdirsBox = $('#include-subdirs');
+      $subdirsBox.prop('disabled', !canIncludeSubdirs);
+      if (!canIncludeSubdirs) {
+        $subdirsBox.prop('checked', false);
+      }
+      $subdirsBox.parent().toggleClass('rsc-text-light', !canIncludeSubdirs);
     }
 
     var publishModal = Dialog.modal({
@@ -591,7 +616,7 @@ define([
         }
         txtTitle.on('input', updateDeployNextButton);
         maybeShowConfigUrl();
-
+        
         if (
           selectedDeployLocation &&
           selectedDeployLocation !== DeploymentLocation.Canceled
@@ -602,6 +627,7 @@ define([
         // app mode
         appModeChoices = publishModal.find('.rsc-appmode');
         selectPreviousAppMode();
+        updateCheckboxStates();
 
         appModeChoices.on('click', function() {
           appMode = $(this).data('appmode');
@@ -614,34 +640,20 @@ define([
           updateCheckboxStates();
         });
 
-        function updateCheckboxStates() {
-          var publishingWithSource = (appMode === 'jupyter-static');
-          var $filesBox = $('#include-files');
-          var includingFiles = $filesBox.prop('checked');
-
-          $filesBox.prop('disabled', !publishingWithSource);
-          if (!publishingWithSource) {
-            $filesBox.prop('checked', false);
-          }
-          $filesBox.parent().toggleClass('rsc-text-light', !publishingWithSource);
-
-          var canIncludeSubdirs = publishingWithSource && includingFiles;
-          var $subdirsBox = $('#include-subdirs');
-          $subdirsBox.prop('disabled', !canIncludeSubdirs);
-          if (!canIncludeSubdirs) {
-            $subdirsBox.prop('checked', false);
-          }
-          $subdirsBox.parent().toggleClass('rsc-text-light', !canIncludeSubdirs);
-        }
-
         function bindCheckbox(id) {
           // save/restore value in server settings
-          var updatedEntry = config.servers[selectedEntryId];
           var $box = $('#' + id.replace('_', '-'));
-          $box.prop('checked', updatedEntry[id]);
+
+          if (selectedEntryId) {
+            var updatedEntry = config.servers[selectedEntryId];
+            $box.prop('checked', updatedEntry[id]);
+          }
 
           $box.on('change', function() {
-            updatedEntry[id] = $box.prop('checked');
+            if (selectedEntryId) {
+              var innerEntry = config.servers[selectedEntryId];
+              innerEntry[id] = $box.prop('checked');
+            }
             updateCheckboxStates();
           });
         }
