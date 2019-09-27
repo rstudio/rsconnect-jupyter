@@ -492,7 +492,8 @@ define([
         // clicking on links in the modal body prevents the default
         // behavior (i.e. changing location.hash)
         publishModal.find(".modal-body").on("click", function(e) {
-          if ($(e.target).attr("target") !== "_rsconnect") {
+          var target = $(e.target).attr("target");
+          if (target !== '_rsconnect' && target !== '_blank') {
             e.preventDefault();
           }
         });
@@ -578,6 +579,7 @@ define([
           publishModal.find(".form-group").removeClass("has-error");
           publishModal.find(".help-block").text("");
           $deploy_err.text('');
+          $deploy_err.empty();
 
           var validTitle = txtTitle.val().length >= 3;
 
@@ -728,7 +730,12 @@ define([
 
           config.inspectEnvironment().then(function(environment) {
             return config.writeManifest(txtTitle.val(), environment).then(function(response) {
-              $deploy_err.text('Successfully saved: ' + response.files.join(', '));
+              var links = response.files.map(function(filename) {
+                var url = Jupyter.notebook.base_url + 'edit/' + filename;
+                return $('<a target="_blank" style="margin-right: 10px" href="' + url + '">' + filename + '</a>');
+              });
+              $deploy_err.text('Successfully saved: ');
+              $deploy_err.append(links);
             }).fail(function(response) {
               $deploy_err.text(response.responseJSON.message);
             });
