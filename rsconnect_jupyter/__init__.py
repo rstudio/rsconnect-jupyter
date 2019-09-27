@@ -57,7 +57,14 @@ class EndpointHandler(APIHandler):
 
             try:
                 canonical_address = verify_server(server_address, disable_tls_check)
-            except SSLError:
+            except SSLError as exc:
+                if exc.reason == u'UNKNOWN_PROTOCOL':
+                    raise web.HTTPError(400,
+                                        u'Received an "SSL:UNKNOWN_PROTOCOL" error when trying to connect securely ' +
+                                        u'to the RStudio Connect server.\n' +
+                                        u'* Try changing "https://" in the "Server Address" field to "http://".\n' +
+                                        u'* If the condition persists, contact your RStudio Connect server ' +
+                                        u'administrator.')
                 raise web.HTTPError(400, u'A TLS error occurred when trying to reach the RStudio Connect server.\n' +
                                     u'* Ensure that the server address you entered is correct.\n' +
                                     u'* Ensure that your Jupyter server has the proper certificates.')
