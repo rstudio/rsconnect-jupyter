@@ -84,14 +84,39 @@ define([
     });
   }
 
+    /**
+     * addValidationMarkup adds validation hints to an element
+     * @param {Boolean} valid when true, validation hints are not added
+     * @param {jQuery} $el jQuery handle for the element to add hint to
+     * @param {String} helpText String for validation message. Newlines will be transformed to HTML line breaks
+     */
   function addValidationMarkup(valid, $el, helpText) {
     if (!valid) {
-      $el
+      var helpBlock = $el
         .closest(".form-group")
         .addClass("has-error")
-        .find(".help-block")
-        .text(helpText);
+        .find(".help-block");
+      helpBlock.empty();
+      if (helpText.match(/\n/) !== null) {
+        helpText.split('\n').forEach(function(line) {
+            helpBlock.append(line+"<br />")
+        });
+      } else {
+          helpBlock.append(helpText);
+      }
     }
+  }
+
+  /**
+   * Like `addValidationMarkup` but is not a validation error.
+   * @param $el {jQuery} element to set help text on. Must have a `.help-block` under a `.form-group`.
+   * @param helpText {String} string value to set help text to.
+   */
+  function addWarningMarkup($el, helpText) {
+    $el
+        .closest('.form-group')
+        .find('.help-block')
+        .text(helpText);
   }
 
   // Disable the keyboard shortcut manager if it is enabled. This
@@ -120,27 +145,32 @@ define([
 
       title: "Add RStudio Connect Server",
       body: [
-        "<form>",
-        "    <fieldset>",
+        '<form>',
+        '    <fieldset>',
         '        <div class="form-group">',
         '            <label class="rsc-label" for="rsc-server">Server Address</label>',
         '            <input class="form-control" id="rsc-server" type="url" placeholder="https://connect.example.com/" required>',
         '            <span class="help-block"></span>',
-        "        </div>",
+        '        </div>',
         '        <div class="form-group">',
         '            <label class="rsc-label" for="rsc-api-key">API Key</label>',
         '            <input class="form-control" id="rsc-api-key" type="text" placeholder="API key" minlength="32" maxlength="32" required>',
         '            <span class="help-block"></span>',
-        "        </div>",
+        '        </div>',
         '        <div class="form-group">',
         '            <label class="rsc-label" for="rsc-servername">Server Name</label>',
         '            <input class="form-control" id="rsc-servername" type="text" placeholder="server-nickname" minlength="1" required>',
         '            <span class="help-block"></span>',
-        "        </div>",
+        '        </div>',
+        '        <div class="form-group">',
+        '            <input class="form-check-input" id="rsc-disable-tls-cert-check" type="checkbox">',
+        '            <label class="rsc-label form-check-label" for="rsc-disable-tls-cert-check">Disable TLS Certificate Verification</label>',
+        '            <span class="help-block"></span>',
+        '        </div>',
         '        <input type="submit" hidden>',
-        "    </fieldset>",
-        "</form>"
-      ].join(""),
+        '    </fieldset>',
+        '</form>'
+      ].join(''),
 
       // allow raw html
       sanitize: false,
@@ -151,6 +181,7 @@ define([
         var $txtServer = serverModal.find("#rsc-server");
         var $txtServerName = serverModal.find("#rsc-servername");
         var $txtApiKey = serverModal.find("#rsc-api-key");
+        var $checkDisableTLSCertCheck = serverModal.find('#rsc-disable-tls-cert-check');
 
         // there is no _close_ event so let's improvise.
         serverModal.on("hide.bs.modal", function() {
@@ -173,6 +204,18 @@ define([
         if(serverName) {
           $txtServerName.val(serverName);
         }
+
+        $checkDisableTLSCertCheck.change(function(ev) {
+          var checked = ev.target.checked;
+          if(checked) {
+            addWarningMarkup(
+                $checkDisableTLSCertCheck,
+                'Note: Checking "Disable TLS Certificate Verification" will make your connection to RStudio Connect less secure.'
+            );
+          } else {
+            addWarningMarkup($checkDisableTLSCertCheck, '');
+          }
+        });
 
         function toggleAddButton(state) {
           serverModal.find("fieldset").attr("disabled", state ? null : true);
@@ -221,7 +264,12 @@ define([
             toggleAddButton(false);
 
             config
-              .addServer($txtServer.val(), $txtServerName.val(), $txtApiKey.val())
+              .addServer(
+                  $txtServer.val(),
+                  $txtServerName.val(),
+                  $txtApiKey.val(),
+                  $checkDisableTLSCertCheck.is(':checked')
+              )
               .then(function(id) {
                 dialogResult.resolve(id);
                 serverModal.modal("hide");
@@ -230,9 +278,17 @@ define([
                 var msg;
 
                 if (xhr.status == 400) {
-                  msg = "Failed to verify RSConnect Connect is running at " +
-                    $txtServer.val() +
-                    ". Please ensure the server address is valid.";
+                  if (xhr.responseJSON) {
+                      if (xhr.responseJSON.message) {
+                          msg = xhr.responseJSON.message;
+                      } else {
+                          msg = "Server returned an unexpected response:" + xhr.responseJSON;
+                      }
+                  } else {
+                      msg = "Failed to verify that RStudio Connect is running at " +
+                          $txtServer.val() +
+                          ". Please ensure the server address is valid.";
+                  }
                 }
                 else if (xhr.status == 401) {
                   msg = "The server did not accept the API key.";
