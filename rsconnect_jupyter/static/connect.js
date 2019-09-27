@@ -668,8 +668,8 @@ define([
                 appId,
                 txtTitle.val(),
                 appMode,
-                $('#include_files').prop('checked'),
-                $('#include_subdirs').prop('checked')
+                $('#include-files').prop('checked'),
+                $('#include-subdirs').prop('checked')
               )
               .always(function() {
                 togglePublishButton(true);
