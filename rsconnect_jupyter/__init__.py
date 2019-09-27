@@ -53,7 +53,7 @@ class EndpointHandler(APIHandler):
         if action == 'verify_server':
             server_address = data['server_address']
             api_key = data['api_key']
-            disable_tls_check = data.get('disable_tls_check', False)
+            disable_tls_check = data['disable_tls_check']
 
             try:
                 canonical_address = verify_server(server_address, disable_tls_check)
@@ -81,7 +81,7 @@ class EndpointHandler(APIHandler):
             api_key = data['api_key']
             title = data['notebook_title']
             app_id = data.get('app_id')
-            disable_tls_check = data.get('disable_tls_check', False)
+            disable_tls_check = data['disable_tls_check']
 
             try:
                 retval = app_search(uri, api_key, title, app_id, disable_tls_check)
@@ -99,7 +99,7 @@ class EndpointHandler(APIHandler):
             api_key = data['api_key']
             app_mode = data['app_mode']
             environment = data.get('environment')
-            disable_tls_check = data.get('disable_tls_check', False)
+            disable_tls_check = data['disable_tls_check']
 
             model = self.contents_manager.get(path=nb_path)
             if model['type'] != 'notebook':
@@ -148,7 +148,7 @@ class EndpointHandler(APIHandler):
             uri = urlparse(data['server_address'])
             api_key = data['api_key']
             app_id = data['app_id']
-            disable_tls_check = data.get('disable_tls_check', False)
+            disable_tls_check = data['disable_tls_check']
 
             try:
                 retval = app_get(uri, api_key, app_id, disable_tls_check)
@@ -163,7 +163,7 @@ class EndpointHandler(APIHandler):
             task_id = data['task_id']
             last_status = data['last_status']
             cookies = data.get('cookies', [])
-            disable_tls_check = data.get('disable_tls_check', False)
+            disable_tls_check = data['disable_tls_check']
 
             try:
                 retval = task_get(uri, api_key, task_id, last_status, cookies, disable_tls_check)
@@ -176,7 +176,7 @@ class EndpointHandler(APIHandler):
             uri = urlparse(data['server_address'])
             api_key = data['api_key']
             app_id = data['app_id']
-            disable_tls_check = data.get('disable_tls_check', False)
+            disable_tls_check = data['disable_tls_check']
             try:
                 retval = app_config(uri, api_key, app_id, disable_tls_check)
             except RSConnectException as exc:
