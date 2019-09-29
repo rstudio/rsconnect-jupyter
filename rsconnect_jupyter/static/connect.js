@@ -136,11 +136,6 @@ define([
   function showAddServerDialog(cancelToPublishDialog, publishToServerId, inServerAddress, inServerName) {
     var dialogResult = $.Deferred();
 
-    var serverAddress = inServerAddress;
-    var apiKey = '';
-    var serverName = inServerName;
-    var disableTLSVerification = false;
-
     var serverModal;
     var $txtServer;
     var $txtServerName;
@@ -159,8 +154,8 @@ define([
       $txtApiKey = serverModal.find('#rsc-api-key');
       $checkDisableTLSCertCheck = serverModal.find('#rsc-disable-tls-cert-check');
 
-      $txtServer.val(serverAddress);
-      $txtServerName.val(serverName);
+      $txtServer.val(inServerAddress);
+      $txtServerName.val(inServerName);
 
       $checkDisableTLSCertCheck.change(onDisableTLSCertCheckChanged);
 
