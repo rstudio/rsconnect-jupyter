@@ -112,6 +112,11 @@ define([
         .text(helpText);
   }
 
+  function clearValidationMessages($parent) {
+    $parent.find('.form-group').removeClass('has-error');
+    $parent.find('.help-block').text('');
+  }
+
   // Disable the keyboard shortcut manager if it is enabled. This
   // function should be called at the beginning of every modal open so
   // input events are received in text boxes and not hijacked by the
@@ -128,10 +133,179 @@ define([
    * Dialogs
    ***********************************************************************/
 
-  function showAddServerDialog(cancelToPublishDialog, publishToServerId, serverAddress, serverName) {
+  function showAddServerDialog(cancelToPublishDialog, publishToServerId, inServerAddress, inServerName) {
     var dialogResult = $.Deferred();
 
-    var serverModal = Dialog.modal({
+    var serverAddress = inServerAddress;
+    var apiKey = '';
+    var serverName = inServerName;
+    var disableTLSVerification = false;
+
+    var serverModal;
+    var $txtServer;
+    var $txtServerName;
+    var $txtApiKey;
+    var $checkDisableTLSCertCheck;
+    var $btnAdd;
+
+    function openDialog() {
+      disableKeyboardManagerIfNeeded();
+
+      // there is no _close_ event so let's improvise.
+      serverModal.on('hide.bs.modal', closeDialog);
+
+      $txtServer = serverModal.find('#rsc-server');
+      $txtServerName = serverModal.find('#rsc-servername');
+      $txtApiKey = serverModal.find('#rsc-api-key');
+      $checkDisableTLSCertCheck = serverModal.find('#rsc-disable-tls-cert-check');
+
+      $txtServer.val(serverAddress);
+      $txtServerName.val(serverName);
+
+      $checkDisableTLSCertCheck.change(onDisableTLSCertCheckChanged);
+
+      var form = serverModal.find('form').on('submit', onSubmit);
+
+      // add footer buttons
+      var $btnCancel = $(
+        '<a class="btn" data-dismiss="modal" aria-hidden="true">Cancel</a>'
+      );
+      $btnAdd = $(
+        '<a class="btn btn-primary" aria-hidden="true"><i class="fa fa-spinner fa-spin hidden"></i> Add Server</a>'
+      );
+      $btnAdd.on('click', function() {
+        form.trigger('submit');
+      });
+      serverModal
+        .find('.modal-footer')
+        .append($btnCancel)
+        .append($btnAdd);
+    }
+
+    function closeDialog() {
+      dialogResult.reject('canceled');
+      if (cancelToPublishDialog) {
+        // Reopen publish dialog. Only keep the current server selected
+        // if it has an API key. This is needed because we previously 
+        // didn't save API keys, so there could be a saved server without one.
+        if (publishToServerId && 
+            !config.getApiKey(config.servers[publishToServerId].server)) {
+            showSelectServerDialog();
+        }
+        showSelectServerDialog(publishToServerId);
+      }
+    }
+
+    function onDisableTLSCertCheckChanged(ev) {
+      var checked = ev.target.checked;
+      if(checked) {
+        addWarningMarkup(
+            $checkDisableTLSCertCheck,
+            'Note: Checking "Disable TLS Certificate Verification" will make your connection to RStudio Connect less secure.'
+        );
+      } else {
+        addWarningMarkup($checkDisableTLSCertCheck, '');
+      }
+    }
+
+    function validate() {
+      var server = $txtServer.val();
+      if (server.indexOf('http') !== 0) {
+        $txtServer.val('http://' + server);
+      }
+
+      var validServer = $txtServer.val().length > 0;
+      // if browser supports <input type=url> then use its checkValidity function
+      if ($txtServer.get(0).checkValidity) {
+        validServer &= $txtServer.get(0).checkValidity();
+      }
+      var validServerName = $txtServerName.val().length > 0;
+      var validApiKey = $txtApiKey.val().length === 32;
+
+      addValidationMarkup(
+        validServer,
+        $txtServer,
+        'This should be the location of RStudio Connect: e.g. https://connect.example.com/'
+      );
+      addValidationMarkup(
+        validServerName,
+        $txtServerName,
+        'This should not be empty.'
+      );
+      addValidationMarkup(
+        validApiKey,
+        $txtApiKey,
+        'API Key must be 32 characters long.'
+      );
+
+      return (validServer && validServerName && validApiKey);
+    }
+
+    function toggleAddButton(state) {
+      serverModal.find('fieldset').attr('disabled', state ? null : true);
+      $btnAdd
+        .toggleClass('disabled', !state)
+        .find('i.fa')
+        .toggleClass('hidden', state);
+    }
+
+    function getServerError(xhr) {
+      var msg;
+
+      if (xhr.status === 400) {
+        if (xhr.responseJSON) {
+            if (xhr.responseJSON.message) {
+                msg = xhr.responseJSON.message;
+            } else {
+                msg = 'Server returned an unexpected response:' + xhr.responseJSON;
+            }
+        } else {
+            msg = 'Failed to verify that RStudio Connect is running at ' +
+                $txtServer.val() +
+                '. Please ensure the server address is valid.';
+        }
+      }
+      else if (xhr.status === 401) {
+        msg = 'The server did not accept the API key.';
+      }
+      else {
+        msg = 'An error occurred while checking the server.';
+      }
+      return msg;
+    }
+
+    function onSubmit(e) {
+      e.preventDefault();
+      clearValidationMessages(serverModal);
+
+      if (validate()) {
+        toggleAddButton(false);
+
+        config
+          .addServer(
+              $txtServer.val(),
+              $txtServerName.val(),
+              $txtApiKey.val(),
+              $checkDisableTLSCertCheck.is(':checked')
+          )
+          .then(function(serverId) {
+            dialogResult.resolve(serverId);
+            serverModal.modal('hide');
+          })
+          .fail(function(xhr) {
+            addValidationMarkup(
+              false,
+              $txtServer,
+              getServerError(xhr)
+            );
+          })
+          .always(function() {
+            toggleAddButton(true);
+          });
+      }
+    }
+
+    serverModal = Dialog.modal({
       // pass the existing keyboard manager so all shortcuts are disabled while
       // modal is active
       keyboard_manager: Jupyter.notebook.keyboard_manager,
@@ -168,155 +342,7 @@ define([
       // allow raw html
       sanitize: false,
 
-      open: function() {
-        disableKeyboardManagerIfNeeded();
-
-        var $txtServer = serverModal.find('#rsc-server');
-        var $txtServerName = serverModal.find('#rsc-servername');
-        var $txtApiKey = serverModal.find('#rsc-api-key');
-        var $checkDisableTLSCertCheck = serverModal.find('#rsc-disable-tls-cert-check');
-
-        // there is no _close_ event so let's improvise.
-        serverModal.on('hide.bs.modal', function() {
-          dialogResult.reject('canceled');
-          if (cancelToPublishDialog) {
-            var serverId = publishToServerId;
-
-            if (publishToServerId && 
-                !config.getApiKey(config.servers[publishToServerId].server)) {
-                serverId = null;
-            }
-            showSelectServerDialog(serverId);
-          }
-        });
-
-        if(serverAddress) {
-          $txtServer.val(serverAddress);
-        }
-
-        if(serverName) {
-          $txtServerName.val(serverName);
-        }
-
-        $checkDisableTLSCertCheck.change(function(ev) {
-          var checked = ev.target.checked;
-          if(checked) {
-            addWarningMarkup(
-                $checkDisableTLSCertCheck,
-                'Note: Checking "Disable TLS Certificate Verification" will make your connection to RStudio Connect less secure.'
-            );
-          } else {
-            addWarningMarkup($checkDisableTLSCertCheck, '');
-          }
-        });
-
-        function toggleAddButton(state) {
-          serverModal.find('fieldset').attr('disabled', state ? null : true);
-          serverModal
-            .find('.modal-footer .btn:last')
-            .toggleClass('disabled', !state)
-            .find('i.fa')
-            .toggleClass('hidden', state);
-        }
-
-        var form = serverModal.find('form').on('submit', function(e) {
-          e.preventDefault();
-          serverModal.find('.form-group').removeClass('has-error');
-          serverModal.find('.help-block').text('');
-
-          var server = $txtServer.val();
-          if (server.indexOf('http') !== 0) {
-            $txtServer.val('http://' + server);
-          }
-
-          var validServer = $txtServer.val().length > 0;
-          // if browser supports <input type=url> then use its checkValidity function
-          if ($txtServer.get(0).checkValidity) {
-            validServer &= $txtServer.get(0).checkValidity();
-          }
-          var validServerName = $txtServerName.val().length > 0;
-          var validApiKey = $txtApiKey.val().length === 32;
-
-          addValidationMarkup(
-            validServer,
-            $txtServer,
-            'This should be the location of RStudio Connect: e.g. https://connect.example.com/'
-          );
-          addValidationMarkup(
-            validServerName,
-            $txtServerName,
-            'This should not be empty.'
-          );
-          addValidationMarkup(
-            validApiKey,
-            $txtApiKey,
-            'API Key must be 32 characters long.'
-          );
-
-          if (validServer && validServerName && validApiKey) {
-            toggleAddButton(false);
-
-            config
-              .addServer(
-                  $txtServer.val(),
-                  $txtServerName.val(),
-                  $txtApiKey.val(),
-                  $checkDisableTLSCertCheck.is(':checked')
-              )
-              .then(function(id) {
-                dialogResult.resolve(id);
-                serverModal.modal('hide');
-              })
-              .fail(function(xhr) {
-                var msg;
-
-                if (xhr.status === 400) {
-                  if (xhr.responseJSON) {
-                      if (xhr.responseJSON.message) {
-                          msg = xhr.responseJSON.message;
-                      } else {
-                          msg = 'Server returned an unexpected response:' + xhr.responseJSON;
-                      }
-                  } else {
-                      msg = 'Failed to verify that RStudio Connect is running at ' +
-                          $txtServer.val() +
-                          '. Please ensure the server address is valid.';
-                  }
-                }
-                else if (xhr.status === 401) {
-                  msg = 'The server did not accept the API key.';
-                }
-                else {
-                  msg = 'An error occurred while checking the server.';
-                }
-
-                addValidationMarkup(
-                  false,
-                  $txtServer,
-                  msg
-                );
-              })
-              .always(function() {
-                toggleAddButton(true);
-              });
-          }
-        });
-
-        // add footer buttons
-        var btnCancel = $(
-          '<a class="btn" data-dismiss="modal" aria-hidden="true">Cancel</a>'
-        );
-        var btnAdd = $(
-          '<a class="btn btn-primary" aria-hidden="true"><i class="fa fa-spinner fa-spin hidden"></i> Add Server</a>'
-        );
-        btnAdd.on('click', function() {
-          form.trigger('submit');
-        });
-        serverModal
-          .find('.modal-footer')
-          .append(btnCancel)
-          .append(btnAdd);
-      }
+      open: openDialog
     });
 
     return dialogResult;
