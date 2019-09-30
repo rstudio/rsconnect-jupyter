@@ -137,6 +137,7 @@ define([
 
   function showAddServerDialog(_config, cancelToPublishDialog, publishToServerId, inServerAddress, inServerName) {
     var addServerDialog = new AddServerDialog(_config, cancelToPublishDialog, publishToServerId, inServerAddress, inServerName);
+    addServerDialog.init();
     return addServerDialog.result();
   }
 
@@ -157,8 +158,6 @@ define([
     this.$checkDisableTLSCertCheck = null;
     this.$btnAdd = null;
     this.$btnCancel = null;
-
-    this.init();
   } 
 
   AddServerDialog.prototype = {
