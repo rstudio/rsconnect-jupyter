@@ -141,7 +141,7 @@ define([
   function showAddServerDialog(cancelToPublishDialog, publishToServerId, inServerAddress, inServerName) {
     var dialogResult = $.Deferred();
 
-    var serverModal;
+    var dialog;
     var $txtServer;
     var $txtServerName;
     var $txtApiKey;
@@ -152,19 +152,19 @@ define([
       disableKeyboardManagerIfNeeded();
 
       // there is no _close_ event so let's improvise.
-      serverModal.on('hide.bs.modal', closeDialog);
+      dialog.on('hide.bs.modal', closeDialog);
 
-      $txtServer = serverModal.find('#rsc-server');
-      $txtServerName = serverModal.find('#rsc-servername');
-      $txtApiKey = serverModal.find('#rsc-api-key');
-      $checkDisableTLSCertCheck = serverModal.find('#rsc-disable-tls-cert-check');
+      $txtServer = dialog.find('#rsc-server');
+      $txtServerName = dialog.find('#rsc-servername');
+      $txtApiKey = dialog.find('#rsc-api-key');
+      $checkDisableTLSCertCheck = dialog.find('#rsc-disable-tls-cert-check');
 
       $txtServer.val(inServerAddress);
       $txtServerName.val(inServerName);
 
       $checkDisableTLSCertCheck.change(onDisableTLSCertCheckChanged);
 
-      var form = serverModal.find('form').on('submit', onSubmit);
+      var form = dialog.find('form').on('submit', onSubmit);
 
       // add footer buttons
       var $btnCancel = $(
@@ -176,7 +176,7 @@ define([
       $btnAdd.on('click', function() {
         form.trigger('submit');
       });
-      serverModal
+      dialog
         .find('.modal-footer')
         .append($btnCancel)
         .append($btnAdd);
@@ -242,7 +242,7 @@ define([
     }
 
     function toggleAddButton(state) {
-      serverModal.find('fieldset').attr('disabled', state ? null : true);
+      dialog.find('fieldset').attr('disabled', state ? null : true);
       $btnAdd
         .toggleClass('disabled', !state)
         .find('i.fa')
@@ -276,7 +276,7 @@ define([
 
     function onSubmit(e) {
       e.preventDefault();
-      clearValidationMessages(serverModal);
+      clearValidationMessages(dialog);
 
       if (validate()) {
         toggleAddButton(false);
@@ -290,7 +290,7 @@ define([
           )
           .then(function(serverId) {
             dialogResult.resolve(serverId);
-            serverModal.modal('hide');
+            dialog.modal('hide');
           })
           .fail(function(xhr) {
             addValidationMarkup(
@@ -305,7 +305,7 @@ define([
       }
     }
 
-    serverModal = Dialog.modal({
+    dialog = Dialog.modal({
       // pass the existing keyboard manager so all shortcuts are disabled while
       // modal is active
       keyboard_manager: Jupyter.notebook.keyboard_manager,
