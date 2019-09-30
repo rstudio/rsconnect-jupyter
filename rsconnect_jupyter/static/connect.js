@@ -135,13 +135,13 @@ define([
     }
   }
 
-  function showAddServerDialog(config, cancelToPublishDialog, publishToServerId, inServerAddress, inServerName) {
-    var addServerDialog = new AddServerDialog(config, cancelToPublishDialog, publishToServerId, inServerAddress, inServerName);
+  function showAddServerDialog(_config, cancelToPublishDialog, publishToServerId, inServerAddress, inServerName) {
+    var addServerDialog = new AddServerDialog(_config, cancelToPublishDialog, publishToServerId, inServerAddress, inServerName);
     return addServerDialog.result();
   }
 
-  function AddServerDialog(config, cancelToPublishDialog, publishToServerId, inServerAddress, inServerName) {
-    this.config = config;
+  function AddServerDialog(_config, cancelToPublishDialog, publishToServerId, inServerAddress, inServerName) {
+    this.config = _config;
 
     this.cancelToPublishDialog = cancelToPublishDialog;
     this.publishToServerId = publishToServerId;
@@ -323,7 +323,7 @@ define([
             }
         } else {
             msg = 'Failed to verify that RStudio Connect is running at ' +
-                $txtServer.val() +
+                this.$txtServer.val() +
                 '. Please ensure the server address is valid.';
         }
       }
@@ -366,7 +366,7 @@ define([
             self.toggleAddButton(true);
           });
       }
-    },
+    }
   };
 
   function showSelectServerDialog(
