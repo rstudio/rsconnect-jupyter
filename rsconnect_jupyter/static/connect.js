@@ -27,7 +27,12 @@ define([
 
     // create an action that can be invoked from many places (e.g. command
     // palette, button click, keyboard shortcut, etc.)
-    var actionName = Jupyter.actions.register(
+
+    // avoid 'accessing "actions" on the global IPython/Jupyter is not recommended' warning
+    // https://github.com/jupyter/notebook/issues/2401
+    var actions = Jupyter.notebook.keyboard_manager.actions;
+
+    var actionName = actions.register(
       {
         icon: 'fa-cloud-upload',
         help: 'Publish to RStudio Connect',
