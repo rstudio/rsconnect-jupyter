@@ -220,15 +220,38 @@ define([
                 return this.saveConfig().then(this.saveNotebookMetadata);
             },
 
+            getRunningPythonPath: function () {
+              var cmd = 'import sys; print(sys.executable)';
+              var pythonPath = 'python';
+              var result = $.Deferred();
+
+              function handle_output(message) {
+                try {
+                  pythonPath = message.content.text.trim();
+                  console.log('Using python: ' + pythonPath);
+                  result.resolve(pythonPath);
+                } catch(err) {
+                  result.reject(err);
+                }
+              }
+
+              var callbacks = {
+                  iopub: {
+                      output: handle_output
+                  }
+              };
+              Jupyter.notebook.kernel.execute(cmd, callbacks);
+              return result;
+            },
+
             inspectEnvironment: function () {
+              return this.getRunningPythonPath().then(function(pythonPath) {
                 var path = Jupyter.notebook.notebook_name;
 
                 try {
                     var cmd = [
                         '!',
-                        Jupyter.notebook.kernel_selector.kernelspecs[
-                            Jupyter.notebook.kernel.name
-                            ].spec.argv[0],
+                        pythonPath,
                         ' -m rsconnect_jupyter.environment ${PWD}/',
                         path
                     ].join('');
@@ -266,6 +289,7 @@ define([
 
                 Jupyter.notebook.kernel.execute(cmd, callbacks);
                 return result;
+              });
             },
 
             publishContent: function (serverId, appId, notebookTitle, appMode, includeFiles, includeSubdirs) {

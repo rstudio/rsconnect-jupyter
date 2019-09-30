@@ -702,7 +702,22 @@ define([
           }
 
           function handleFailure(xhr) {
-            addValidationMarkup(false, $deploy_err, xhr.responseJSON.message);
+            var msg;
+            if (xhr.responseJSON) {
+              if(xhr.responseJSON.message) {
+                msg = xhr.responseJSON.message;
+              }
+              else {
+                msg = 'An unknown error occurred.';
+              }
+            }
+            else if(xhr.responseText) {
+              msg = xhr.responseText;
+            }
+            else {
+              msg = 'An unknown error occurred.';
+            }
+            addValidationMarkup(false, $deploy_err, msg);
             togglePublishButton(true);
           }
 
