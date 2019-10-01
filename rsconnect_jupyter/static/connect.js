@@ -135,17 +135,15 @@ define([
     }
   }
 
-  function showAddServerDialog(_config, cancelToPublishDialog, publishToServerId, inServerAddress, inServerName) {
-    var addServerDialog = new AddServerDialog(_config, cancelToPublishDialog, publishToServerId, inServerAddress, inServerName);
+  function showAddServerDialog(_config, inServerAddress, inServerName) {
+    var addServerDialog = new AddServerDialog(_config, inServerAddress, inServerName);
     addServerDialog.init();
     return addServerDialog.result();
   }
 
-  function AddServerDialog(_config, cancelToPublishDialog, publishToServerId, inServerAddress, inServerName) {
+  function AddServerDialog(_config, inServerAddress, inServerName) {
     this.config = _config;
 
-    this.cancelToPublishDialog = cancelToPublishDialog;
-    this.publishToServerId = publishToServerId;
     this.inServerAddress = inServerAddress;
     this.inServerName = inServerName;
 
@@ -239,18 +237,6 @@ define([
 
     closeDialog: function() {
       this.dialogResult.reject('canceled');
-      if (this.cancelToPublishDialog) {
-        // Reopen publish dialog. Only keep the current server selected
-        // if it has an API key. This is needed because we previously 
-        // didn't save API keys, so there could be a saved server without one.
-        if (this.publishToServerId && 
-            !this.config.getApiKey(this.config.servers[this.publishToServerId].server)) {
-            showSelectServerDialog();
-        }
-        else {
-          showSelectServerDialog(this.publishToServerId);
-        }
-      }
     },
 
     result: function() {
@@ -396,6 +382,19 @@ define([
     // will be set during modal initialization
     var btnPublish = null;
 
+    function reselectPreviousServer() {
+      // Reopen publish dialog. Only keep the current server selected
+      // if it has an API key. This is needed because we previously 
+      // didn't save API keys, so there could be a saved server without one.
+      if (selectedEntryId && 
+          !config.getApiKey(config.servers[selectedEntryId].server)) {
+          showSelectServerDialog();
+      }
+      else {
+        showSelectServerDialog(selectedEntryId);
+      }
+    }
+
     function mkServerItem(id, active) {
       var btnRemove = $('<button></button>')
         .addClass('pull-right btn btn-danger btn-xs')
@@ -449,7 +448,8 @@ define([
             var updatedEntry = config.servers[selectedEntryId];
             if (!config.getApiKey(updatedEntry.server)) {
               publishModal.modal('hide');
-              showAddServerDialog(config, true, selectedEntryId, updatedEntry.server, updatedEntry.serverName);
+              showAddServerDialog(config, updatedEntry.server, updatedEntry.serverName)
+                .fail(reselectPreviousServer);
             }
 
             btnPublish.removeClass('disabled');
@@ -634,7 +634,11 @@ define([
         // add server button
         publishModal.find('#rsc-add-server').on('click', function() {
           publishModal.modal('hide');
-          showAddServerDialog(config, true, selectedEntryId);
+          showAddServerDialog(config)
+            .then(function(serverId) {
+              showSelectServerDialog(serverId);
+            })
+            .fail(reselectPreviousServer);
         });
 
         // generate server list
