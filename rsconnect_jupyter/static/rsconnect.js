@@ -1,15 +1,19 @@
+/* global define */
+
 define([
-    'base/js/utils'
-    ], function (Utils) {
+    'jquery',
+    'base/js/utils',
+    'base/js/namespace'
+    ], function ($, Utils, Jupyter) {
     var debug = {
         info: function() {
             var args = [].slice.call(arguments);
-            args.unshift("RSConnect API:");
+            args.unshift('RSConnect API:');
             console.info.apply(null, args);
         },
         error: function() {
             var args = [].slice.call(arguments);
-            args.unshift("RSConnect API:");
+            args.unshift('RSConnect API:');
             console.error.apply(null, args);
         }
     };
@@ -36,7 +40,7 @@ define([
 
                 // if a server is present but no API key, remove it
                 // since we can't successfully publish there.
-                for (serverId in this.servers) {
+                for (var serverId in this.servers) {
                     if (!this.getApiKey(this.servers[serverId].server)) {
                         delete this.servers[serverId];
                     }
@@ -89,32 +93,41 @@ define([
                 return result;
             },
 
-            verifyServer: function (server, apiKey) {
-                var self = this;
-
+            verifyServer: function (server, apiKey, disableTLSCheck) {
                 return Utils.ajax({
                     url: Jupyter.notebook.base_url + 'rsconnect_jupyter/verify_server',
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     data: JSON.stringify({
                         server_address: server,
-                        api_key: apiKey
+                        api_key: apiKey,
+                        disable_tls_check: disableTLSCheck
                     })
                 });
             },
 
-            addServer: function (server, serverName, apiKey) {
+            /**
+             * addServer adds a new RStudio Connect server to the list of
+             * available deployment targets
+             * @param server {String} URL of the server to be added
+             * @param serverName {String} Friendly name of the server
+             * @param apiKey {String} API key of the server
+             * @param disableTLSCheck {Boolean} Don't verify TLS certificates
+             * @returns {*}
+             */
+            addServer: function (server, serverName, apiKey, disableTLSCheck) {
                 var self = this;
                 if (server[server.length - 1] !== '/') {
                     server += '/';
                 }
 
                 // verify the server exists, then save
-                return this.verifyServer(server, apiKey).then(function (data) {
+                return this.verifyServer(server, apiKey, disableTLSCheck).then(function (data) {
                     var id = data.address_hash;
                     self.servers[id] = {
                         server: data.server_address,
-                        serverName: serverName
+                        serverName: serverName,
+                        disableTLSCheck: disableTLSCheck
                     };
                     self.apiKeys[server] = apiKey;
                     return self
@@ -141,7 +154,8 @@ define([
                     data: JSON.stringify({
                         app_id: appId,
                         server_address: entry.server,
-                        api_key: self.getApiKey(entry.server)
+                        api_key: self.getApiKey(entry.server),
+                        disable_tls_check: entry.disableTLSCheck
                     })
                 });
             },
@@ -153,13 +167,12 @@ define([
                 for (var serverId in this.servers) {
                     var src = this.servers[serverId];
 
-                    var dst = {
+                    toSave[serverId] = {
                         server: src.server,
                         serverName: src.serverName,
-                        apiKey: self.getApiKey(src.server)
+                        apiKey: self.getApiKey(src.server),
+                        disableTLSCheck: src.disableTLSCheck
                     };
-
-                    toSave[serverId] = dst;
                 }
                 debug.info('saving config:', toSave);
                 return Utils.ajax({
@@ -185,7 +198,7 @@ define([
                         // Split out API keys so they're not saved into the notebook metadata.
                         var entry = data[serverId];
                         self.apiKeys[entry.server] = entry.apiKey;
-                        delete entry.apiKey
+                        delete entry.apiKey;
 
                         if (!self.servers[serverId]) {
                             self.servers[serverId] = entry;
@@ -207,16 +220,38 @@ define([
                 return this.saveConfig().then(this.saveNotebookMetadata);
             },
 
+            getRunningPythonPath: function () {
+              var cmd = 'import sys; print(sys.executable)';
+              var pythonPath = 'python';
+              var result = $.Deferred();
+
+              function handle_output(message) {
+                try {
+                  pythonPath = message.content.text.trim();
+                  console.log('Using python: ' + pythonPath);
+                  result.resolve(pythonPath);
+                } catch(err) {
+                  result.reject(err);
+                }
+              }
+
+              var callbacks = {
+                  iopub: {
+                      output: handle_output
+                  }
+              };
+              Jupyter.notebook.kernel.execute(cmd, callbacks);
+              return result;
+            },
+
             inspectEnvironment: function () {
-                var self = this;
+              return this.getRunningPythonPath().then(function(pythonPath) {
                 var path = Jupyter.notebook.notebook_name;
 
                 try {
                     var cmd = [
                         '!',
-                        Jupyter.notebook.kernel_selector.kernelspecs[
-                            Jupyter.notebook.kernel.name
-                            ].spec.argv[0],
+                        pythonPath,
                         ' -m rsconnect_jupyter.environment ${PWD}/',
                         path
                     ].join('');
@@ -254,6 +289,7 @@ define([
 
                 Jupyter.notebook.kernel.execute(cmd, callbacks);
                 return result;
+              });
             },
 
             writeManifest: function(notebookTitle, environment) {
@@ -277,7 +313,7 @@ define([
               return xhr;
             },
 
-            publishContent: function (serverId, appId, notebookTitle, appMode) {
+            publishContent: function (serverId, appId, notebookTitle, appMode, includeFiles, includeSubdirs) {
                 var self = this;
                 var notebookPath = Utils.encode_uri_components(
                     Jupyter.notebook.notebook_path
@@ -300,18 +336,27 @@ define([
                                 api_key: self.getApiKey(entry.server),
                                 task_id: deployResult['task_id'],
                                 last_status: lastStatus,
-                                cookies: deployResult.cookies || []
+                                cookies: deployResult.cookies || [],
+                                disable_tls_check: entry.disableTLSCheck
+
                             })
                         }).then(function (result) {
-                            if (result['last_status'] != lastStatus) {
+                            if (result['last_status'] !== lastStatus) {
                                 lastStatus = result['lastStatus'];
                                 var output = result['status'].join('\n');
+
+                                var logElem = $log.get(0);
+                                var oldScroll = logElem.scrollTop;
+                                var oldMaxScroll = logElem.scrollHeight - logElem.clientHeight;
                                 $log.text(output);
-                                // scroll to bottom
-                                $log.scrollTop($log.get(0).scrollHeight);
+
+                                if (oldScroll >= oldMaxScroll - 1) {
+                                  // scroll to new bottom position
+                                  $log.scrollTop(logElem.scrollHeight);
+                                }
                             }
                             if (result['finished']) {
-                                if (result['code'] != 0) {
+                                if (result['code'] !== 0) {
                                     var msg = 'Failed to deploy successfully: ' + result['error'];
                                     return $.Deferred().reject({responseJSON: {message: msg}});
                                 }
@@ -337,7 +382,8 @@ define([
                         data: JSON.stringify({
                             server_address: entry.server,
                             api_key: self.getApiKey(entry.server),
-                            app_id: receivedAppId
+                            app_id: receivedAppId,
+                            disable_tls_check: entry.disableTLSCheck
                         })
                     }).then(function (config) {
                         return {
@@ -356,7 +402,10 @@ define([
                         server_address: entry.server,
                         api_key: self.getApiKey(entry.server),
                         app_mode: appMode,
-                        environment: environment
+                        environment: environment,
+                        include_files: includeFiles,
+                        include_subdirs: includeSubdirs,
+                        disable_tls_check: entry.disableTLSCheck
                     };
 
                     var xhr = Utils.ajax({
@@ -403,7 +452,8 @@ define([
                         notebook_title: notebookTitle,
                         app_id: appId,
                         server_address: entry.server,
-                        api_key: self.getApiKey(entry.server)
+                        api_key: self.getApiKey(entry.server),
+                        disable_tls_check: entry.disableTLSCheck
                     })
                 });
             },
@@ -432,6 +482,6 @@ define([
             }
         };
 
-        return RSConnect
+        return RSConnect;
     }
 );

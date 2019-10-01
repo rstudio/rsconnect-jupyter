@@ -9,7 +9,9 @@ from notebook.utils import url_path_join
 from tornado import web
 
 from .api import app_config, app_get, app_search, deploy, task_get, verify_server, verify_api_key, RSConnectException
-from .bundle import make_html_bundle, make_source_bundle, write_manifest
+from .bundle import list_files, make_html_bundle, make_source_bundle, write_manifest
+
+from ssl import SSLError
 
 __version__ = '1.0.0'
 
@@ -51,11 +53,19 @@ class EndpointHandler(APIHandler):
         if action == 'verify_server':
             server_address = data['server_address']
             api_key = data['api_key']
-            canonical_address = verify_server(server_address)
+            disable_tls_check = data['disable_tls_check']
 
-            if canonical_address:
+            try:
+                canonical_address = verify_server(server_address, disable_tls_check)
+            except SSLError:
+                raise web.HTTPError(400, u'A TLS error occurred when trying to reach the RStudio Connect server.\n' +
+                                    u'* Ensure that the server address you entered is correct.\n' +
+                                    u'* Ensure that your Jupyter server has the proper certificates.')
+            except Exception as err:
+                raise web.HTTPError(400, u'Unable to verify that the provided server is running RStudio Connect: %s' % err)
+            if canonical_address is not None:
                 uri = urlparse(canonical_address)
-                if verify_api_key(uri, api_key):
+                if verify_api_key(uri, api_key, disable_tls_check):
                     address_hash = md5(server_address)
                     self.finish(json.dumps({
                         'status': 'Provided server is running RStudio Connect',
@@ -64,8 +74,6 @@ class EndpointHandler(APIHandler):
                     }))
                 else:
                     raise web.HTTPError(401, u'Unable to verify the provided API key')
-            else:
-                raise web.HTTPError(400, u'Unable to verify the provided server is running RStudio Connect')
             return
 
         if action == 'app_search':
@@ -73,9 +81,10 @@ class EndpointHandler(APIHandler):
             api_key = data['api_key']
             title = data['notebook_title']
             app_id = data.get('app_id')
+            disable_tls_check = data['disable_tls_check']
 
             try:
-                retval = app_search(uri, api_key, title, app_id)
+                retval = app_search(uri, api_key, title, app_id, disable_tls_check)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
             self.finish(json.dumps(retval))
@@ -90,6 +99,9 @@ class EndpointHandler(APIHandler):
             api_key = data['api_key']
             app_mode = data['app_mode']
             environment = data.get('environment')
+            include_files = data['include_files']
+            include_subdirs = data['include_subdirs']
+            disable_tls_check = data['disable_tls_check']
 
             model = self.contents_manager.get(path=nb_path)
             if model['type'] != 'notebook':
@@ -119,7 +131,12 @@ class EndpointHandler(APIHandler):
                     raise web.HTTPError(400, 'environment is required for jupyter-static app_mode')
 
                 try:
-                    bundle = make_source_bundle(model, environment, ext_resources_dir, extra_files=[])
+                    if include_files:
+                        extra_files = list_files(ext_resources_dir, include_subdirs)
+                    else:
+                        extra_files = []
+
+                    bundle = make_source_bundle(model, environment, ext_resources_dir, extra_files)
                 except Exception as exc:
                     self.log.exception('Bundle creation failed')
                     raise web.HTTPError(500, u"Bundle creation failed: %s" % exc)
@@ -127,7 +144,7 @@ class EndpointHandler(APIHandler):
                 raise web.HTTPError(400, 'Invalid app_mode: %s, must be "static" or "jupyter-static"' % app_mode)
 
             try:
-                retval = deploy(uri, api_key, app_id, nb_name, nb_title, bundle)
+                retval = deploy(uri, api_key, app_id, nb_name, nb_title, bundle, disable_tls_check)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
 
@@ -138,9 +155,10 @@ class EndpointHandler(APIHandler):
             uri = urlparse(data['server_address'])
             api_key = data['api_key']
             app_id = data['app_id']
+            disable_tls_check = data['disable_tls_check']
 
             try:
-                retval = app_get(uri, api_key, app_id)
+                retval = app_get(uri, api_key, app_id, disable_tls_check)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
             self.finish(json.dumps(retval))
@@ -152,9 +170,10 @@ class EndpointHandler(APIHandler):
             task_id = data['task_id']
             last_status = data['last_status']
             cookies = data.get('cookies', [])
+            disable_tls_check = data['disable_tls_check']
 
             try:
-                retval = task_get(uri, api_key, task_id, last_status, cookies)
+                retval = task_get(uri, api_key, task_id, last_status, cookies, disable_tls_check)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
             self.finish(json.dumps(retval))
@@ -164,8 +183,9 @@ class EndpointHandler(APIHandler):
             uri = urlparse(data['server_address'])
             api_key = data['api_key']
             app_id = data['app_id']
+            disable_tls_check = data['disable_tls_check']
             try:
-                retval = app_config(uri, api_key, app_id)
+                retval = app_config(uri, api_key, app_id, disable_tls_check)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
             self.finish(json.dumps(retval))

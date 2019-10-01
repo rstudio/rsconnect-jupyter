@@ -1,8 +1,10 @@
+/* global define */
+
 define([
-  "jquery",
-  "base/js/namespace",
-  "base/js/dialog",
-  "./rsconnect"
+  'jquery',
+  'base/js/namespace',
+  'base/js/dialog',
+  './rsconnect'
 ], function($, Jupyter, Dialog, RSConnect) {
   /***********************************************************************
    * Extension bootstrap (main)
@@ -15,25 +17,25 @@ define([
   var config = null;
 
   var DeploymentLocation = {
-    New: "new",
-    Canceled: "canceled"
+    New: 'new',
+    Canceled: 'canceled'
   };
 
   function init() {
     // construct notification widget
-    notify = Jupyter.notification_area.widget("rsconnect_jupyter");
+    notify = Jupyter.notification_area.widget('rsconnect_jupyter');
 
     // create an action that can be invoked from many places (e.g. command
     // palette, button click, keyboard shortcut, etc.)
     var actionName = Jupyter.actions.register(
       {
-        icon: "fa-cloud-upload",
-        help: "Publish to RStudio Connect",
-        help_index: "zz",
+        icon: 'fa-cloud-upload',
+        help: 'Publish to RStudio Connect',
+        help_index: 'zz',
         handler: debounce(1000, onPublishClicked)
       },
-      "publish",
-      "rsconnect_jupyter"
+      'publish',
+      'rsconnect_jupyter'
     );
 
     // add a button that invokes the action
@@ -41,7 +43,7 @@ define([
 
     // re-style the toolbar button to have a custom icon
     $('button[data-jupyter-action="' + actionName + '"] > i').addClass(
-      "rsc-icon"
+      'rsc-icon'
     );
   }
 
@@ -52,12 +54,12 @@ define([
   var debug = {
     info: function() {
       var args = [].slice.call(arguments);
-      args.unshift("RSConnect:");
+      args.unshift('RSConnect:');
       console.info.apply(null, args);
     },
     error: function() {
       var args = [].slice.call(arguments);
-      args.unshift("RSConnect:");
+      args.unshift('RSConnect:');
       console.error.apply(null, args);
     }
   };
@@ -75,23 +77,39 @@ define([
     };
   }
 
-  // source: https://stackoverflow.com/a/2117523
-  function uuidv4() {
-    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
-      var r = (Math.random() * 16) | 0,
-        v = c == "x" ? r : (r & 0x3) | 0x8;
-      return v.toString(16);
-    });
-  }
-
+    /**
+     * addValidationMarkup adds validation hints to an element
+     * @param {Boolean} valid when true, validation hints are not added
+     * @param {jQuery} $el jQuery handle for the element to add hint to
+     * @param {String} helpText String for validation message. Newlines will be transformed to HTML line breaks
+     */
   function addValidationMarkup(valid, $el, helpText) {
     if (!valid) {
-      $el
-        .closest(".form-group")
-        .addClass("has-error")
-        .find(".help-block")
-        .text(helpText);
+      var helpBlock = $el
+        .closest('.form-group')
+        .addClass('has-error')
+        .find('.help-block');
+      helpBlock.empty();
+      if (helpText.match(/\n/) !== null) {
+        helpText.split('\n').forEach(function(line) {
+            helpBlock.append(line+'<br />');
+        });
+      } else {
+          helpBlock.append(helpText);
+      }
     }
+  }
+
+  /**
+   * Like `addValidationMarkup` but is not a validation error.
+   * @param $el {jQuery} element to set help text on. Must have a `.help-block` under a `.form-group`.
+   * @param helpText {String} string value to set help text to.
+   */
+  function addWarningMarkup($el, helpText) {
+    $el
+        .closest('.form-group')
+        .find('.help-block')
+        .text(helpText);
   }
 
   // Disable the keyboard shortcut manager if it is enabled. This
@@ -118,29 +136,34 @@ define([
       // modal is active
       keyboard_manager: Jupyter.notebook.keyboard_manager,
 
-      title: "Add RStudio Connect Server",
+      title: 'Add RStudio Connect Server',
       body: [
-        "<form>",
-        "    <fieldset>",
+        '<form>',
+        '    <fieldset>',
         '        <div class="form-group">',
         '            <label class="rsc-label" for="rsc-server">Server Address</label>',
         '            <input class="form-control" id="rsc-server" type="url" placeholder="https://connect.example.com/" required>',
         '            <span class="help-block"></span>',
-        "        </div>",
+        '        </div>',
         '        <div class="form-group">',
         '            <label class="rsc-label" for="rsc-api-key">API Key</label>',
         '            <input class="form-control" id="rsc-api-key" type="text" placeholder="API key" minlength="32" maxlength="32" required>',
         '            <span class="help-block"></span>',
-        "        </div>",
+        '        </div>',
         '        <div class="form-group">',
         '            <label class="rsc-label" for="rsc-servername">Server Name</label>',
         '            <input class="form-control" id="rsc-servername" type="text" placeholder="server-nickname" minlength="1" required>',
         '            <span class="help-block"></span>',
-        "        </div>",
+        '        </div>',
+        '        <div class="form-group">',
+        '            <input class="form-check-input" id="rsc-disable-tls-cert-check" type="checkbox">',
+        '            <label class="rsc-label form-check-label" for="rsc-disable-tls-cert-check">Disable TLS Certificate Verification</label>',
+        '            <span class="help-block"></span>',
+        '        </div>',
         '        <input type="submit" hidden>',
-        "    </fieldset>",
-        "</form>"
-      ].join(""),
+        '    </fieldset>',
+        '</form>'
+      ].join(''),
 
       // allow raw html
       sanitize: false,
@@ -148,13 +171,14 @@ define([
       open: function() {
         disableKeyboardManagerIfNeeded();
 
-        var $txtServer = serverModal.find("#rsc-server");
-        var $txtServerName = serverModal.find("#rsc-servername");
-        var $txtApiKey = serverModal.find("#rsc-api-key");
+        var $txtServer = serverModal.find('#rsc-server');
+        var $txtServerName = serverModal.find('#rsc-servername');
+        var $txtApiKey = serverModal.find('#rsc-api-key');
+        var $checkDisableTLSCertCheck = serverModal.find('#rsc-disable-tls-cert-check');
 
         // there is no _close_ event so let's improvise.
-        serverModal.on("hide.bs.modal", function() {
-          dialogResult.reject("canceled");
+        serverModal.on('hide.bs.modal', function() {
+          dialogResult.reject('canceled');
           if (cancelToPublishDialog) {
             var serverId = publishToServerId;
 
@@ -174,23 +198,35 @@ define([
           $txtServerName.val(serverName);
         }
 
+        $checkDisableTLSCertCheck.change(function(ev) {
+          var checked = ev.target.checked;
+          if(checked) {
+            addWarningMarkup(
+                $checkDisableTLSCertCheck,
+                'Note: Checking "Disable TLS Certificate Verification" will make your connection to RStudio Connect less secure.'
+            );
+          } else {
+            addWarningMarkup($checkDisableTLSCertCheck, '');
+          }
+        });
+
         function toggleAddButton(state) {
-          serverModal.find("fieldset").attr("disabled", state ? null : true);
+          serverModal.find('fieldset').attr('disabled', state ? null : true);
           serverModal
-            .find(".modal-footer .btn:last")
-            .toggleClass("disabled", !state)
-            .find("i.fa")
-            .toggleClass("hidden", state);
+            .find('.modal-footer .btn:last')
+            .toggleClass('disabled', !state)
+            .find('i.fa')
+            .toggleClass('hidden', state);
         }
 
-        var form = serverModal.find("form").on("submit", function(e) {
+        var form = serverModal.find('form').on('submit', function(e) {
           e.preventDefault();
-          serverModal.find(".form-group").removeClass("has-error");
-          serverModal.find(".help-block").text("");
+          serverModal.find('.form-group').removeClass('has-error');
+          serverModal.find('.help-block').text('');
 
           var server = $txtServer.val();
-          if (server.indexOf("http") !== 0) {
-            $txtServer.val("http://" + server);
+          if (server.indexOf('http') !== 0) {
+            $txtServer.val('http://' + server);
           }
 
           var validServer = $txtServer.val().length > 0;
@@ -204,41 +240,54 @@ define([
           addValidationMarkup(
             validServer,
             $txtServer,
-            "This should be the location of RStudio Connect: e.g. https://connect.example.com/"
+            'This should be the location of RStudio Connect: e.g. https://connect.example.com/'
           );
           addValidationMarkup(
             validServerName,
             $txtServerName,
-            "This should not be empty."
+            'This should not be empty.'
           );
           addValidationMarkup(
             validApiKey,
             $txtApiKey,
-            "API Key must be 32 characters long."
+            'API Key must be 32 characters long.'
           );
 
           if (validServer && validServerName && validApiKey) {
             toggleAddButton(false);
 
             config
-              .addServer($txtServer.val(), $txtServerName.val(), $txtApiKey.val())
+              .addServer(
+                  $txtServer.val(),
+                  $txtServerName.val(),
+                  $txtApiKey.val(),
+                  $checkDisableTLSCertCheck.is(':checked')
+              )
               .then(function(id) {
                 dialogResult.resolve(id);
-                serverModal.modal("hide");
+                serverModal.modal('hide');
               })
               .fail(function(xhr) {
                 var msg;
 
-                if (xhr.status == 400) {
-                  msg = "Failed to verify RSConnect Connect is running at " +
-                    $txtServer.val() +
-                    ". Please ensure the server address is valid.";
+                if (xhr.status === 400) {
+                  if (xhr.responseJSON) {
+                      if (xhr.responseJSON.message) {
+                          msg = xhr.responseJSON.message;
+                      } else {
+                          msg = 'Server returned an unexpected response:' + xhr.responseJSON;
+                      }
+                  } else {
+                      msg = 'Failed to verify that RStudio Connect is running at ' +
+                          $txtServer.val() +
+                          '. Please ensure the server address is valid.';
+                  }
                 }
-                else if (xhr.status == 401) {
-                  msg = "The server did not accept the API key.";
+                else if (xhr.status === 401) {
+                  msg = 'The server did not accept the API key.';
                 }
                 else {
-                  msg = "An error occurred while checking the server.";
+                  msg = 'An error occurred while checking the server.';
                 }
 
                 addValidationMarkup(
@@ -260,11 +309,11 @@ define([
         var btnAdd = $(
           '<a class="btn btn-primary" aria-hidden="true"><i class="fa fa-spinner fa-spin hidden"></i> Add Server</a>'
         );
-        btnAdd.on("click", function() {
-          form.trigger("submit");
+        btnAdd.on('click', function() {
+          form.trigger('submit');
         });
         serverModal
-          .find(".modal-footer")
+          .find('.modal-footer')
           .append(btnCancel)
           .append(btnAdd);
       }
@@ -288,7 +337,7 @@ define([
     var dialogResult = $.Deferred();
 
     var servers = Object.keys(config.servers);
-    if (servers.length == 1) {
+    if (servers.length === 1) {
       serverId = servers[0];
     }
 
@@ -296,29 +345,30 @@ define([
 
     var entry = config.servers[selectedEntryId];
     var previousAppMode = entry && entry.appMode;
-    var appMode = selectedAppMode || previousAppMode || "static";
+    var appMode = selectedAppMode || previousAppMode || 'static';
 
     // will be set during modal initialization
     var btnPublish = null;
 
     function mkServerItem(id, active) {
-      var btnRemove = $("<button></button>")
-        .addClass("pull-right btn btn-danger btn-xs")
-        .attr("type", "button")
-        .append($("<i></i>").addClass("fa fa-remove"))
-        .on("click", function(e) {
+      var btnRemove = $('<button></button>')
+        .addClass('pull-right btn btn-danger btn-xs')
+        .attr('type', 'button')
+        .append($('<i></i>').addClass('fa fa-remove'))
+        .on('click', function(e) {
           e.preventDefault();
           e.stopPropagation();
 
-          var $a = $(this).closest("a");
+          var $a = $(this).closest('a');
           config
             .removeServer(id)
             .then(function() {
               $a.remove();
               // if active server is removed, disable publish button
-              if ($a.hasClass("active")) {
-                btnPublish.addClass("disabled");
+              if ($a.hasClass('active')) {
+                btnPublish.addClass('disabled');
                 selectedEntryId = null;
+                updateCheckboxStates();
               }
             })
             .fail(function(err) {
@@ -326,46 +376,48 @@ define([
               debug.error(err);
             });
         });
-      var title = $("<small></small>")
-        .addClass("rsc-text-light")
-        .text("— " + config.servers[id].server);
-      var a = $("<a></a>")
-        .addClass("list-group-item")
-        .toggleClass("active", active)
-        .toggleClass("disabled", !!selectedDeployLocation)
-        .attr("href", "#")
+      var title = $('<small></small>')
+        .addClass('rsc-text-light')
+        .text('— ' + config.servers[id].server);
+      var a = $('<a></a>')
+        .addClass('list-group-item')
+        .toggleClass('active', active)
+        .toggleClass('disabled', !!selectedDeployLocation)
+        .attr('href', '#')
         .text(config.servers[id].serverName)
         .append(title)
         .append(btnRemove);
 
       if (!selectedDeployLocation) {
-        a.on("click", function() {
+        a.on('click', function() {
           var $this = $(this);
           $this
-            .toggleClass("active")
+            .toggleClass('active')
             .siblings()
-            .removeClass("active");
+            .removeClass('active');
 
           // toggle publish button disable state based on whether
           // there is a selected server
-          if ($this.hasClass("active")) {
+          if ($this.hasClass('active')) {
             selectedEntryId = id;
-            var entry = config.servers[selectedEntryId];
-            if (!config.getApiKey(entry.server)) {
-              publishModal.modal("hide");
-              showAddServerDialog(true, selectedEntryId, entry.server, entry.serverName);
+            var updatedEntry = config.servers[selectedEntryId];
+            if (!config.getApiKey(updatedEntry.server)) {
+              publishModal.modal('hide');
+              showAddServerDialog(true, selectedEntryId, updatedEntry.server, updatedEntry.serverName);
             }
 
-            btnPublish.removeClass("disabled");
+            btnPublish.removeClass('disabled');
             maybeShowConfigUrl();
             maybeUpdateAppTitle();
 
             // select associated appmode, if any
-            appMode = selectedAppMode || (entry && entry.appMode) || "jupyter-static";
+            appMode = selectedAppMode || (updatedEntry && updatedEntry.appMode) || 'jupyter-static';
             selectPreviousAppMode();
+            updateCheckboxStates();
           } else {
             selectedEntryId = null;
-            btnPublish.addClass("disabled");
+            btnPublish.addClass('disabled');
+            updateCheckboxStates();
           }
         });
       }
@@ -379,34 +431,34 @@ define([
       userEditedTitle || config.getNotebookTitle(selectedEntryId);
 
     function selectPreviousAppMode() {
-      appModeChoices.removeClass("active").addClass(function() {
-        if ($(this).data("appmode") === appMode) {
-          return "active";
+      appModeChoices.removeClass('active').addClass(function() {
+        if ($(this).data('appmode') === appMode) {
+          return 'active';
         }
       });
     }
 
     function maybeShowConfigUrl() {
-      var entry = config.servers[selectedEntryId];
+      var updatedEntry = config.servers[selectedEntryId];
       if (
-        entry &&
-        entry.configUrl &&
+        updatedEntry &&
+        updatedEntry.configUrl &&
         selectedDeployLocation !== DeploymentLocation.New
       ) {
         publishModal
-          .find("div[data-id=configUrl]")
-          .text("Currently published at: ")
+          .find('div[data-id=configUrl]')
+          .text('Currently published at: ')
           .append(
-            $("<a></a>")
-              .attr("href", entry.configUrl)
-              .attr("target", "_rsconnect")
-              .text(entry.configUrl)
+            $('<a></a>')
+              .attr('href', updatedEntry.configUrl)
+              .attr('target', '_rsconnect')
+              .text(updatedEntry.configUrl)
           );
       } else {
         publishModal
-          .find("div[data-id=configUrl]")
-          .text("")
-          .find("a")
+          .find('div[data-id=configUrl]')
+          .text('')
+          .find('a')
           .remove();
       }
     }
@@ -417,8 +469,8 @@ define([
       if (txtTitle.val() === initialTitle && !userEditedTitle) {
         // and we have a valid API key to use for the request
         if (selectedEntryId) {
-          var entry = config.servers[selectedEntryId];
-          var appId = entry && entry.appId;
+          var updatedEntry = config.servers[selectedEntryId];
+          var appId = updatedEntry && updatedEntry.appId;
 
           if (appId) {
             config.getApp(selectedEntryId, appId).then(function(app) {
@@ -431,27 +483,49 @@ define([
       }
     }
 
+    function updateCheckboxStates() {
+      var publishingWithSource = (appMode === 'jupyter-static');
+      var serverSelected = !!selectedEntryId;
+      var $filesBox = $('#include-files');
+      var includingFiles = $filesBox.prop('checked');
+      var canIncludeFiles = publishingWithSource && serverSelected;
+
+      $filesBox.prop('disabled', !canIncludeFiles);
+      if (!publishingWithSource) {
+        $filesBox.prop('checked', false);
+      }
+      $filesBox.parent().toggleClass('rsc-text-light', !canIncludeFiles);
+
+      var canIncludeSubdirs = canIncludeFiles && includingFiles;
+      var $subdirsBox = $('#include-subdirs');
+      $subdirsBox.prop('disabled', !canIncludeSubdirs);
+      if (!canIncludeSubdirs) {
+        $subdirsBox.prop('checked', false);
+      }
+      $subdirsBox.parent().toggleClass('rsc-text-light', !canIncludeSubdirs);
+    }
+
     var publishModal = Dialog.modal({
       // pass the existing keyboard manager so all shortcuts are disabled while
       // modal is active
       keyboard_manager: Jupyter.notebook.keyboard_manager,
 
-      title: "Publish to RStudio Connect",
+      title: 'Publish to RStudio Connect',
       body: [
-        "<form>",
+        '<form>',
         '    <div class="form-group">',
         '        <a href="#" id="rsc-add-server" class="pull-right">Add server...</a>',
-        "        <label>Publish to</label>",
+        '        <label>Publish to</label>',
         '        <div id="rsc-select-server" class="list-group">',
-        "        </div>",
-        "    </div>",
+        '        </div>',
+        '    </div>',
         '    <div class="form-group">',
-        "        <label>Title</label>",
+        '        <label>Title</label>',
         '        <input class="form-control" name="title" type="text" minlength="3" maxlength="64" required>',
         '        <span class="help-block"></span>',
-        "    </div>",
+        '    </div>',
         '    <div class="form-group" id="rsc-publish-source">',
-        "        <label>Publish Source Code</label>",
+        '        <label>Publish Source Code</label>',
         '        <div class="list-group">',
         '            <a href="#" id="rsc-publish-with-source" class="list-group-item rsc-appmode" data-appmode="jupyter-static">',
         '                <img src="' +
@@ -459,25 +533,35 @@ define([
           'nbextensions/rsconnect_jupyter/images/publishDocWithSource.png" class="rsc-image">',
         '                <span class="rsc-label">Publish document with source code</span><br/>',
         '                <span class="rsc-text-light">Choose this option if you want to create a scheduled report or rebuild your document on the server</span>',
-        "            </a>",
+        '            </a>',
         '            <a href="#" id="rsc-publish-without-source" class="list-group-item rsc-appmode" data-appmode="static">',
         '                <img src="' +
           Jupyter.notebook.base_url +
           'nbextensions/rsconnect_jupyter/images/publishDocWithoutSource.png" class="rsc-image">',
         '                <span class="rsc-label">Publish finished document only</span><br/>',
         '                <span class="rsc-text-light">Choose this option to publish a snapshot of the notebook as it appears in Jupyter</span>',
-        "            </a>",
+        '            </a>',
         '            <span class="help-block"></span>',
-        "        </div>",
-        "    </div>",
+        '        </div>',
+        '    </div>',
+        '    <div class="form-group">',
+        '        <label>',
+        '          <input id="include-files" name="include-files" type="checkbox">',
+        '          Include all files in the notebook directory',
+        '        </label>',
+        '        <label>',
+        '          <input id="include-subdirs" name="include-subdirs" type="checkbox" style="margin-left: 30px">',
+        '          Include subdirectories',
+        '        </label>',
+        '    </div>',
         '    <pre id="rsc-log" hidden></pre>',
         '    <div class="form-group">',
         '    <span id="rsc-deploy-error" class="help-block"></span>',
         '    </div>',
         '    <div class="text-center" data-id="configUrl"></div>',
         '    <input type="submit" hidden>',
-        "</form>"
-      ].join(""),
+        '</form>'
+      ].join(''),
 
       // allow raw html
       sanitize: false,
@@ -491,7 +575,7 @@ define([
 
         // clicking on links in the modal body prevents the default
         // behavior (i.e. changing location.hash)
-        publishModal.find(".modal-body").on("click", function(e) {
+        publishModal.find("a.modal-body").on("click", function(e) {
           var target = $(e.target).attr("target");
           if (target !== '_rsconnect' && target !== '_blank') {
             e.preventDefault();
@@ -499,13 +583,13 @@ define([
         });
 
         // there is no _close_ event so let's improvise
-        publishModal.on("hide.bs.modal", function() {
-          dialogResult.reject("canceled");
+        publishModal.on('hide.bs.modal', function() {
+          dialogResult.reject('canceled');
         });
 
         // add server button
-        publishModal.find("#rsc-add-server").on("click", function() {
-          publishModal.modal("hide");
+        publishModal.find('#rsc-add-server').on('click', function() {
+          publishModal.modal('hide');
           showAddServerDialog(true, selectedEntryId);
         });
 
@@ -514,10 +598,10 @@ define([
           var matchingServer = serverId === id;
           return mkServerItem(id, matchingServer);
         });
-        publishModal.find("#rsc-select-server").append(serverItems);
+        publishModal.find('#rsc-select-server').append(serverItems);
 
         // add default title
-        txtTitle = publishModal.find("[name=title]");
+        txtTitle = publishModal.find('[name=title]');
         txtTitle.val(initialTitle);
 
         function updateDeployNextButton() {
@@ -527,57 +611,86 @@ define([
             config.servers[selectedEntryId].notebookTitle;
 
           if (!lastPublishedTitle || txtTitle.val() === lastPublishedTitle) {
-            btnPublish.text("Publish");
+            btnPublish.text('Publish');
           } else {
-            btnPublish.text("Next");
+            btnPublish.text('Next');
           }
         }
-        txtTitle.on("input", updateDeployNextButton);
+        txtTitle.on('input', updateDeployNextButton);
         maybeShowConfigUrl();
-
+        
         if (
           selectedDeployLocation &&
           selectedDeployLocation !== DeploymentLocation.Canceled
         ) {
-          txtTitle.prop("disabled", true);
+          txtTitle.prop('disabled', true);
         }
 
         // app mode
-        appModeChoices = publishModal.find(".rsc-appmode");
+        appModeChoices = publishModal.find('.rsc-appmode');
         selectPreviousAppMode();
+        updateCheckboxStates();
 
-        appModeChoices.on("click", function() {
-          appMode = $(this).data("appmode");
+        appModeChoices.on('click', function() {
+          appMode = $(this).data('appmode');
 
           $(this)
-            .addClass("active")
+            .addClass('active')
             .siblings()
-            .removeClass("active");
+            .removeClass('active');
+
+          updateCheckboxStates();
         });
+
+        function bindCheckbox(id) {
+          // save/restore value in server settings
+          var $box = $('#' + id.replace('_', '-'));
+
+          if (selectedEntryId) {
+            var updatedEntry = config.servers[selectedEntryId];
+            $box.prop('checked', updatedEntry[id]);
+          }
+
+          $box.on('change', function() {
+            if (selectedEntryId) {
+              var innerEntry = config.servers[selectedEntryId];
+              innerEntry[id] = $box.prop('checked');
+            }
+            updateCheckboxStates();
+          });
+        }
+        bindCheckbox('include_files');
+        bindCheckbox('include_subdirs');
 
         // setup app mode choices help icon
         (function() {
           var msg =
-            "To deploy a new deployment, change the title, " +
+            'To deploy a new deployment, change the title, ' +
             'click "Next", select "New location", and then ' +
-            "you’ll be able to pick a new mode and publish.";
+            'you’ll be able to pick a new mode and publish.';
 
           var helpIcon = $(
             [
               '<a tabindex="0" role="button" data-toggle="popover" data-trigger="focus">',
               '<i class="fa fa-question-circle rsc-fa-icon"></i>'
-            ].join("")
+            ].join('')
           )
-            .data("content", msg)
+            .data('content', msg)
             .popover();
 
-          $("#rsc-publish-source > label").append(helpIcon);
+          $('#rsc-publish-source > label').append(helpIcon);
         })();
 
-        var form = publishModal.find("form").on("submit", function(e) {
+        var form = publishModal.find('form').on('submit', function(e) {
           e.preventDefault();
+<<<<<<< HEAD
           publishModal.find(".form-group").removeClass("has-error");
           publishModal.find(".help-block").text("");
+=======
+          publishModal.find('.form-group').removeClass('has-error');
+          publishModal.find('.help-block').text('');
+          var $deploy_err = $('#rsc-deploy-error');
+>>>>>>> master
           $deploy_err.text('');
           $deploy_err.empty();
 
@@ -586,18 +699,33 @@ define([
           addValidationMarkup(
             validTitle,
             txtTitle,
-            "Title must be at least 3 characters."
+            'Title must be at least 3 characters.'
           );
 
           function togglePublishButton(enabled) {
             btnPublish
-              .toggleClass("disabled", !enabled)
-              .find("i.fa")
-              .toggleClass("hidden", enabled);
+              .toggleClass('disabled', !enabled)
+              .find('i.fa')
+              .toggleClass('hidden', enabled);
           }
 
           function handleFailure(xhr) {
-            addValidationMarkup(false, $deploy_err, xhr.responseJSON.message);
+            var msg;
+            if (xhr.responseJSON) {
+              if(xhr.responseJSON.message) {
+                msg = xhr.responseJSON.message;
+              }
+              else {
+                msg = 'An unknown error occurred.';
+              }
+            }
+            else if(xhr.responseText) {
+              msg = xhr.responseText;
+            }
+            else {
+              msg = 'An unknown error occurred.';
+            }
+            addValidationMarkup(false, $deploy_err, msg);
             togglePublishButton(true);
           }
 
@@ -613,7 +741,7 @@ define([
             } else if (selectedDeployLocation === DeploymentLocation.New) {
               // we want to create a new app
               appId = null;
-            } else if (typeof selectedDeployLocation === "string") {
+            } else if (typeof selectedDeployLocation === 'string') {
               // parse the selected appId as an integer
               appId = parseInt(selectedDeployLocation, 10);
             }
@@ -623,7 +751,9 @@ define([
                 selectedEntryId,
                 appId,
                 txtTitle.val(),
-                appMode
+                appMode,
+                $('#include-files').prop('checked'),
+                $('#include-subdirs').prop('checked')
               )
               .always(function() {
                 togglePublishButton(true);
@@ -631,24 +761,24 @@ define([
               .fail(handleFailure)
               .then(function(result) {
                 notify.set_message(
-                  " Successfully published content",
+                  ' Successfully published content',
                   // timeout in milliseconds after which the notification
                   // should disappear
                   15 * 1000,
                   // click handler
                   function() {
                     // note: logs_url is included in result.config
-                    window.open(result.config.config_url, "");
+                    window.open(result.config.config_url, '');
                   },
                   // options
                   {
-                    class: "info",
-                    icon: "fa fa-link",
+                    class: 'info',
+                    icon: 'fa fa-link',
                     // tooltip
-                    title: "Click to open published content on RStudio Connect"
+                    title: 'Click to open published content on RStudio Connect'
                   }
                 );
-                publishModal.modal("hide");
+                publishModal.modal('hide');
               });
           }
 
@@ -659,6 +789,8 @@ define([
               config.servers[selectedEntryId].notebookTitle;
             var currentAppId = config.servers[selectedEntryId].appId;
 
+            // FIXME: Pull this out into a higher scope
+            // eslint-disable-next-line no-inner-declarations
             function publishOrSearch() {
               if (selectedDeployLocation) {
                 // user selected where to publish: new/existing
@@ -681,7 +813,7 @@ define([
                       // some search results so let user choose an option.
                       // note: in case of single match we can't be 100% sure
                       // that the user wants to overwrite the content
-                      publishModal.modal("hide");
+                      publishModal.modal('hide');
                       showSearchDialog(
                         searchResults,
                         selectedEntryId,
@@ -697,7 +829,7 @@ define([
             if (!currentNotebookTitle) {
               // never been published before (or would have notebook title)
               debug.info(
-                "publishing for the first time, user selected something: ",
+                'publishing for the first time, user selected something: ',
                 !!selectedDeployLocation
               );
 
@@ -707,14 +839,14 @@ define([
             } else if (currentNotebookTitle !== txtTitle.val()) {
               // published previously but title changed
               debug.info(
-                "title changed, user selected something: ",
+                'title changed, user selected something: ',
                 !!selectedDeployLocation
               );
 
               publishOrSearch();
             } else {
               // re-deploying to the same place
-              debug.info("re-deploying to previous location");
+              debug.info('re-deploying to previous location');
               publish();
             }
           }
@@ -751,13 +883,17 @@ define([
         btnPublish = $(
           '<a class="btn btn-primary" aria-hidden="true"><i class="fa fa-spinner fa-spin hidden"></i> Publish</a>'
         );
-        btnPublish.toggleClass("disabled", serverId === null);
-        btnPublish.on("click", function() {
-          form.trigger("submit");
+        btnPublish.toggleClass('disabled', serverId === null);
+        btnPublish.on('click', function() {
+          form.trigger('submit');
         });
         publishModal
+<<<<<<< HEAD
           .find(".modal-footer")
           .append(btnCreateManifest)
+=======
+          .find('.modal-footer')
+>>>>>>> master
           .append(btnCancel)
           .append(btnPublish);
         updateDeployNextButton();
@@ -771,7 +907,7 @@ define([
           selectedDeployLocation &&
           selectedDeployLocation !== DeploymentLocation.New
         ) {
-          form.trigger("submit");
+          form.trigger('submit');
         }
       }
     });
@@ -787,12 +923,12 @@ define([
     appMode
   ) {
     function getUserAppMode(mode) {
-      if (mode === "static") {
-        return "[document]";
-      } else if (mode === "jupyter-static") {
-        return "[document with source code]";
+      if (mode === 'static') {
+        return '[document]';
+      } else if (mode === 'jupyter-static') {
+        return '[document with source code]';
       } else {
-        return "[unknown type]";
+        return '[unknown type]';
       }
     }
 
@@ -801,30 +937,30 @@ define([
       '<a class="btn btn-primary disabled" aria-hidden="true">Deploy</a>'
     );
 
-    function mkRadio(value, name, configUrl, appMode) {
-      var input = $("<input></input>")
-        .attr("type", "radio")
-        .attr("name", "location")
+    function mkRadio(value, name, configUrl, targetAppMode) {
+      var input = $('<input></input>')
+        .attr('type', 'radio')
+        .attr('name', 'location')
         .val(value)
-        .data("appmode", appMode);
-      var link = $("<a></a>")
-        .attr("href", configUrl)
-        .attr("target", "_rsconnect")
+        .data('appmode', targetAppMode);
+      var link = $('<a></a>')
+        .attr('href', configUrl)
+        .attr('target', '_rsconnect')
         .text(configUrl);
-      var span = $("<span></span>")
-        .text(name + " - ")
+      var span = $('<span></span>')
+        .text(name + ' - ')
         .append(link);
-      var span2 = $("<span></span>").text("  " + getUserAppMode(appMode));
-      var label = $("<label></label>")
+      var span2 = $('<span></span>').text('  ' + getUserAppMode(targetAppMode));
+      var label = $('<label></label>')
         .append(input)
         .append(span)
         .append(span2);
-      var div = $("<div></div>")
-        .addClass("radio")
+      var div = $('<div></div>')
+        .addClass('radio')
         .append(label);
 
-      label.on("click", function() {
-        btnDeploy.text("Deploy");
+      label.on('click', function() {
+        btnDeploy.text('Deploy');
       });
       return div;
     }
@@ -832,9 +968,9 @@ define([
       '<div class="radio"><label><input type="radio" name="location" value="new"><span id="new-location"</span></label></div>'
     );
 
-    var divider = $("<p>Or update:</p>");
+    var divider = $('<p>Or update:</p>');
     newLocationRadio
-      .find("#new-location")
+      .find('#new-location')
       .text('New location with title "' + title + '"');
 
     var radios = searchResults.map(function(app) {
@@ -857,19 +993,19 @@ define([
       // modal is active
       keyboard_manager: Jupyter.notebook.keyboard_manager,
 
-      title: "Select deployment location",
-      body: "<form><fieldset></fieldset></form>",
+      title: 'Select deployment location',
+      body: '<form><fieldset></fieldset></form>',
       // allow raw html
       sanitize: false,
 
       open: function() {
         disableKeyboardManagerIfNeeded();
 
-        var form = searchDialog.find("form");
-        form.find("fieldset").append(radios);
+        var form = searchDialog.find('form');
+        form.find('fieldset').append(radios);
 
         function backToSelectServerDialog(location) {
-          searchDialog.modal("hide");
+          searchDialog.modal('hide');
           showSelectServerDialog(
             serverId,
             title,
@@ -881,31 +1017,34 @@ define([
         var selectedLocation = null;
 
         // add footer buttons
-        btnCancel.on("click", function() {
+        btnCancel.on('click', function() {
           backToSelectServerDialog(DeploymentLocation.Canceled);
         });
-        btnDeploy.on("click", function() {
+        btnDeploy.on('click', function() {
           backToSelectServerDialog(selectedLocation);
         });
 
-        newLocationRadio.find("label").on("click", function() {
-          btnDeploy.text("Next");
+        newLocationRadio.find('label').on('click', function() {
+          btnDeploy.text('Next');
         });
         searchDialog
-          .find(".modal-footer")
+          .find('.modal-footer')
           .append(btnCancel)
           .append(btnDeploy);
 
-        form.on("change", "input", function() {
+        form.on('change', 'input', function() {
           selectedLocation = $(this).val();
-          selectedAppMode = $(this).data("appmode");
-          btnDeploy.removeClass("disabled");
+          selectedAppMode = $(this).data('appmode');
+          btnDeploy.removeClass('disabled');
         });
       }
     });
   }
 
-  function onPublishClicked(env, event) {
+  function onPublishClicked() {
+    // This function will be passed (env, event) in the first two
+    // positional slots. We're not using them.
+
     // lazily load the config when clicked since Jupyter's init
     // function is racy w.r.t. loading of notebook metadata
     if (!config) {
@@ -926,11 +1065,11 @@ define([
       })
       .catch(function(err) {
         // unlikely but possible if we aren't able to save
-        debug.error("Failed to save notebook:", err);
+        debug.error('Failed to save notebook:', err);
         Dialog.modal({
-          title: "rsconnect_jupyter",
-          body: "Failed to save this notebook. Error: " + err,
-          buttons: { Ok: { class: "btn-primary" } }
+          title: 'rsconnect_jupyter',
+          body: 'Failed to save this notebook. Error: ' + err,
+          buttons: { Ok: { class: 'btn-primary' } }
         });
       });
   }
