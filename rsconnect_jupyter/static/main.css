@@ -7,6 +7,15 @@
     background-size: contain;
 }
 
+.rsc-manifest-icon {
+    font-size: 18px;
+    /* make the existing icon transparent so it is not visible */
+    color: transparent;
+    /* add a background-image. size 40 x 36 */
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAkCAYAAAD7PHgWAAAAAXNSR0IArs4c6QAAAg9JREFUWAntVb9Lw0AUfhdLdfYHbdpF3MXq5D/gH9DFWR001cFNV0fBRXBoimBHpy6Ci4P/gGARXBURbFBxcNMiPS9XL7lLUr3X2KCQDL33vrz3vq/fXRKA9EodSB343w4QpHyKrHfLsRwKBaa5H3GCDMMjeviKaRQCdXtEvSDU7RP1fDWUbLBJULAWWxICZefQIpMQ6DrVt8gkBLquBZ0L5j23OwmBPcl1bmR0ir6tqTpLbAProRramYNKsRnCw25GlPiQfDZ8NDoS2+L32K0zdrwWostd1CiBlbsK3A/PCRTIqU8mo9GxOrj6MAvEuOSllFpQKdS8toPnAmQ/LmDNLHqYH6hzfDwywgusOYt8EoVjtg6x7d1iQvZghxqQf9yADjmF9dxtJFsXHLBA21G5LZPAkTMBbXiSbtTBMlekXA5RAuM9xQROOHObsLOoXMtKFiPBP8WuY+HrjkGlEGw72wzblfB75qyU/hzGc1DMt/JlEfKVkPmvXBanlOgmUW706kWdHbBb++wVtMmHqa6j5uC3OCjfdlzCV/Y0lyH71oT28BRQ0mDYJC+lZJqvff7EFwjwwrjH2Nf2HN5HVBmUrkLFvFZBXBb/DFrmOHSMGUZ741ETaMBoPsNe3ocelkDgbqU4P3HoUHPiOxhHqkZvP2fwN1zUkNYtwbxm3I7fEofl1f5DaWHqQOrAX3PgExzIY7M+q0kdAAAAAElFTkSuQmCC);
+    background-size: contain;
+}
+
 .rsc-text-light {
     opacity: 0.7;
 }

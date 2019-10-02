@@ -19,7 +19,8 @@ define([
           })
           .appendTo('head');
 
-        connect.init();
+        connect.initPublishButton();
+        connect.initManifestButton();
       }
     });
   }
