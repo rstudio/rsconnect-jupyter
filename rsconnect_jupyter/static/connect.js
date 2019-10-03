@@ -21,7 +21,7 @@ define([
     Canceled: 'canceled'
   };
 
-  function initPublishButton() {
+  function init() {
     // construct notification widget
     notify = Jupyter.notification_area.widget('rsconnect_jupyter');
 
@@ -42,33 +42,31 @@ define([
     Jupyter.toolbar.add_buttons_group([actionName]);
 
     // re-style the toolbar button to have a custom icon
-    $('button[data-jupyter-action="' + actionName + '"] > i').addClass(
-      'rsc-icon'
-    );
-  }
+    var $button = $('button[data-jupyter-action="' + actionName + '"]');
+    $button.addClass('dropbtn');
 
-  function initManifestButton() {
-    // create an action that can be invoked from many places (e.g. command
-    // palette, button click, keyboard shortcut, etc.)
-    var actionName = Jupyter.actions.register(
-      {
-        icon: 'fa-cloud-upload',
-        help: 'Create Manifest for RStudio Connect',
-        help_index: 'zz',
-        handler: debounce(1000, onCreateManifestClicked)
-      },
-      'create_manifest',
-      'rsconnect_jupyter'
-    );
+    var container = $button.parent();
+    $button.remove();
 
-    // add a button that invokes the action
-    Jupyter.toolbar.add_buttons_group([actionName]);
+    var $menuContainer = $('<div class="rsc-dropdown"></div>');
+    var $menu = $('<div id="rsc-menu" class="rsc-dropdown-content"></div>');
 
-    // re-style the toolbar button to have a custom icon
-    $('button[data-jupyter-action="' + actionName + '"] > i').addClass(
-      'rsc-manifest-icon'
-    );
-  }
+    var publishItem = $('<a href="#">Publish to Connect</a>');
+    publishItem.click(onPublishClicked);
+    $menu.append(publishItem);
+
+    var manifestItem = $('<a href="#">Create Manifest for git Publishing</a>');
+    manifestItem.click(onCreateManifestClicked);
+    $menu.append(manifestItem);
+
+    $menuContainer.append($button);
+    $menuContainer.append($menu);
+    container.append($menuContainer);
+
+    $button.find('i')
+      .addClass('rsc-icon')
+      .click(onMenuClicked);
+}
 
   /***********************************************************************
    * Helpers
@@ -1030,6 +1028,16 @@ define([
     });
   }
 
+  function onMenuClicked($button) {
+    // pop up publishing choices
+    var $menu = $('#rsc-menu');
+    $menu.toggleClass('show', !$menu.hasClass('show'));
+  }
+
+  function closeMenu() {
+    $('#rsc-menu').toggleClass('show', false);
+  }
+
   function onPublishClicked() {
     // This function will be passed (env, event) in the first two
     // positional slots. We're not using them.
@@ -1040,6 +1048,8 @@ define([
       config = new RSConnect(debug);
       window.RSConnect = config;
     }
+
+    closeMenu();
 
     // save before publishing so the server can pick up changes
     Jupyter.notebook
@@ -1073,6 +1083,8 @@ define([
       config = new RSConnect(debug);
       window.RSConnect = config;
     }
+
+    closeMenu();
 
     var dialog = Dialog.modal({
       // pass the existing keyboard manager so all shortcuts are disabled while
@@ -1134,7 +1146,6 @@ define([
   }
 
   return {
-    initPublishButton: initPublishButton,
-    initManifestButton: initManifestButton,
+    init: init
   };
 });

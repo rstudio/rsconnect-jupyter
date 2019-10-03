@@ -7,15 +7,6 @@
     background-size: contain;
 }
 
-.rsc-manifest-icon {
-    font-size: 18px;
-    /* make the existing icon transparent so it is not visible */
-    color: transparent;
-    /* add a background-image. size 40 x 36 */
-    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAkCAYAAAD7PHgWAAAAAXNSR0IArs4c6QAAAxFJREFUWAntWE1oE0EUfrNpGnsSNCVJe1DEq/gDgjd7aA9SEIrkKCgEu5tcDEg9Wr0oVIgoNFuEehQM9VAIQinePEihRfFaEcGuwXjoSZPojm/WzrKbTGazOzGKdGEzb96b+d4339vJ/gDsH/+5AiRofdlsdiSZTN4hhFzGsSlsg6b44pTS9UQicbFUKn3zBXrsaAHjCJJ7rmnaDSQWmhzDxnmTjUZjtVgsjgTkEoalcuRyuSlc/Rqbadv2q1gsti5EEThRufPonuChqEoOcQBRG4/Hz3J/vV6frlQqu7wf1Obz+Vuo3gQf51EyVLmlJUbQOE8Qhhyfw1umHrM9JHsut5QgT6Dask0SleRACLIdHJXkQAiy6xF38hxWYhPPBqtIr+WWbhIG1I8DycyLcBjJZrN5HWN3RXHmG4iC3ZIzP5JMyOJ/TMHFxcXbmJidwqNQKFBhoM351xVs49PRVVewbF0BAk86kKl9BozxrQ5/SIeagubOmpAcI0G0TTBrJ0Py6RgeXcHyp9PIYspBpFQHY2zJRX/0ZQyGf2zAbOqN64tohCe4ZGV/k4KnTktgDnQkN081SNcKYJMq5EffY2w8IifftPAlpvAM2AkQc5BmMwuwbI1C+vNPAPoQNHsbTGvZl0WhE56gNxmBVafbJM4jmSd01WMrmeFLrGdEz5AfkMWpDiamdRN99zz+j6Bnjnj6gaaaghxeT89w02kJObfX95LzDem1E17Bbsjtypo7D9yh7TE3EGyoEzQtdsvaxf/DGRj+vgXNxDGgZAV9R530lJxw2og/6gQBvmLuw7izX0LjgJ8GpdfAyLzzO8P11K9BPZMEW2N3jG03NYEVOJQewj/vx64votEPBQHyqbeY/3hEDtJp6gpK4dWDUoL4otPiKfALw0Fuq7ZeLHzfdnOIcKUlbrVaG/iy48zDLwxVfLdgr489PWiKku35CC58kscxx2tui1rRXcE7jhiGUcVPHxe8zn7ZqN6Lcrk8jXhdFy0tMZuIXxQuIdB9XHWtX8QYFmIuMGwZuX7l28f5pxX4BYQI89X/C0qjAAAAAElFTkSuQmCC);
-    background-size: contain;
-}
-
 .rsc-text-light {
     opacity: 0.7;
 }
@@ -45,4 +36,54 @@
     margin-top: 1rem;
     overflow-y: scroll;
     overflow: break-word;
+}
+
+.rsc-dropbtn {
+  background-color: #3498DB;
+  color: white;
+  padding: 16px;
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+}
+
+/* Dropdown button on hover & focus */
+.rsc-dropbtn:hover, .rsc-dropbtn:focus {
+  background-color: #2980B9;
+}
+
+/* The container <div> - needed to position the dropdown content */
+.rsc-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+/* Dropdown Content (Hidden by Default) */
+.rsc-dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f1f1f1;
+  min-width: 240px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+/* Links inside the dropdown */
+.rsc-dropdown-content a {
+  color: black;
+  padding: 8px 16px;
+  text-decoration: none;
+  font-size: 12px;
+  display: block;
+  height: 32px;
+}
+
+/* Change color of dropdown links on hover */
+.rsc-dropdown-content a:hover {
+    background-color: #ddd
+}
+
+/* Show the dropdown menu (use JS to add this class to the .dropdown-content container when the user clicks on the dropdown button) */
+.rsc-show {
+    display:block;
 }

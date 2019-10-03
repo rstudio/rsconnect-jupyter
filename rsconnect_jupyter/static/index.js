@@ -19,8 +19,7 @@ define([
           })
           .appendTo('head');
 
-        connect.initPublishButton();
-        connect.initManifestButton();
+        connect.init();
       }
     });
   }
