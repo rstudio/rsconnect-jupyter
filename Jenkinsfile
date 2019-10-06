@@ -143,6 +143,20 @@ try {
           },
           'python3.7': {
             img = buildAndTest("3.7")
+          },
+          'code-quality': {
+            img = pullBuildPush(
+                image_name: 'jenkins/rsconnect_jupyter_yarn',
+                image_tag: 'latest',
+                docker_context: './tools/yarn',
+                build_arg_nb_uid: 'JENKINS_UID',
+                build_arg_nb_gid: 'JENKINS_GID',
+                push: !isUserBranch
+            )
+            img.inside('-v ${env.WORKSPACE}:/rsconnect_jupyter') {
+                sh 'make yarn'
+                sh 'make lint'
+            }
           }
         )
       }

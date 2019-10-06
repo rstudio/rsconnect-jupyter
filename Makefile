@@ -121,6 +121,16 @@ mock-server: build/mock-connect/bin/flask
 		. build/mock-connect/bin/activate && \
 		FLASK_APP=mock_connect.py flask run --host=0.0.0.0'
 
+## Code quality tools
+
+yarn:
+	yarn install
+
+lint: lint-js
+
+lint-js:
+	npm run lint
+
 ## Specify that Docker runs with the calling user's uid/gid to avoid file
 ## permission issues on Linux dev hosts.
 DOCKER_RUN_AS=
