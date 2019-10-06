@@ -1,7 +1,9 @@
 FROM node:6.11.0
 LABEL maintainer="RStudio Connect <rsconnect@rstudio.com>"
+ARG NB_UID
+ARG NB_GID
 
-RUN curl -o- -L https://yarnpkg.com/install.sh | \  bash -s -- --version 1.13.0
+RUN npm install -g yarn@1.13.0
 
 RUN getent group ${NB_GID} || groupadd -g ${NB_GID} builder
 RUN useradd --password password \
