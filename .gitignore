@@ -5,8 +5,7 @@
 /.jupyter/
 /.local/
 /node_modules/
-/notebooks2/
-/notebooks3/
+/notebooks*/
 /*.egg-info
 /*.egg
 /*.eggs

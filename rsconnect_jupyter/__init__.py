@@ -9,7 +9,7 @@ from notebook.utils import url_path_join
 from tornado import web
 
 from .api import app_config, app_get, app_search, deploy, task_get, verify_server, verify_api_key, RSConnectException
-from .bundle import list_files, make_html_bundle, make_source_bundle
+from .bundle import list_files, make_html_bundle, make_source_bundle, write_manifest
 
 from ssl import SSLError
 
@@ -57,7 +57,14 @@ class EndpointHandler(APIHandler):
 
             try:
                 canonical_address = verify_server(server_address, disable_tls_check)
-            except SSLError:
+            except SSLError as exc:
+                if exc.reason == u'UNKNOWN_PROTOCOL':
+                    raise web.HTTPError(400,
+                                        u'Received an "SSL:UNKNOWN_PROTOCOL" error when trying to connect securely ' +
+                                        u'to the RStudio Connect server.\n' +
+                                        u'* Try changing "https://" in the "Server Address" field to "http://".\n' +
+                                        u'* If the condition persists, contact your RStudio Connect server ' +
+                                        u'administrator.')
                 raise web.HTTPError(400, u'A TLS error occurred when trying to reach the RStudio Connect server.\n' +
                                     u'* Ensure that the server address you entered is correct.\n' +
                                     u'* Ensure that your Jupyter server has the proper certificates.')
@@ -191,6 +198,14 @@ class EndpointHandler(APIHandler):
             self.finish(json.dumps(retval))
             return
 
+        if action == 'write_manifest':
+            environment = data['environment']
+            nb_path = unquote_plus(data['notebook_path'].strip('/'))
+            os_path = self.contents_manager._get_os_path(nb_path)
+            output_dir = os.path.dirname(os_path)
+            nb_name = os.path.basename(os_path)
+            created, skipped = write_manifest(nb_name, environment, output_dir)
+            self.finish(json.dumps({"created": created, "skipped": skipped}))
 
 
 def load_jupyter_server_extension(nb_app):

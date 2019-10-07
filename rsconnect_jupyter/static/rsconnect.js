@@ -174,7 +174,6 @@ define([
                         disableTLSCheck: src.disableTLSCheck
                     };
                 }
-                debug.info('saving config:', toSave);
                 return Utils.ajax({
                     url: Jupyter.notebook.base_url + 'api/config/rsconnect_jupyter',
                     method: 'PUT',
@@ -189,7 +188,6 @@ define([
                     url: Jupyter.notebook.base_url + 'api/config/rsconnect_jupyter',
                     method: 'GET'
                 }).then(function (data) {
-                    debug.info('fetched config:', data);
                     if (!self.servers) {
                         self.servers = {};
                     }
@@ -204,6 +202,7 @@ define([
                             self.servers[serverId] = entry;
                         }
                     }
+                    debug.info('fetched config:', data);
                 });
             },
 
@@ -220,15 +219,38 @@ define([
                 return this.saveConfig().then(this.saveNotebookMetadata);
             },
 
+            getRunningPythonPath: function () {
+              var cmd = 'import sys; print(sys.executable)';
+              var pythonPath = 'python';
+              var result = $.Deferred();
+
+              function handle_output(message) {
+                try {
+                  pythonPath = message.content.text.trim();
+                  console.log('Using python: ' + pythonPath);
+                  result.resolve(pythonPath);
+                } catch(err) {
+                  result.reject(err);
+                }
+              }
+
+              var callbacks = {
+                  iopub: {
+                      output: handle_output
+                  }
+              };
+              Jupyter.notebook.kernel.execute(cmd, callbacks);
+              return result;
+            },
+
             inspectEnvironment: function () {
+              return this.getRunningPythonPath().then(function(pythonPath) {
                 var path = Jupyter.notebook.notebook_name;
 
                 try {
                     var cmd = [
                         '!',
-                        Jupyter.notebook.kernel_selector.kernelspecs[
-                            Jupyter.notebook.kernel.name
-                            ].spec.argv[0],
+                        pythonPath,
                         ' -m rsconnect_jupyter.environment ${PWD}/',
                         path
                     ].join('');
@@ -266,6 +288,28 @@ define([
 
                 Jupyter.notebook.kernel.execute(cmd, callbacks);
                 return result;
+              });
+            },
+
+            writeManifest: function(notebookTitle, environment) {
+              var self = this;
+              var notebookPath = Utils.encode_uri_components(
+                  Jupyter.notebook.notebook_path
+              );
+
+              var data = {
+                  notebook_path: notebookPath,
+                  notebook_name: self.getNotebookName(notebookTitle),
+                  environment: environment
+              };
+
+              var xhr = Utils.ajax({
+                  url: Jupyter.notebook.base_url + 'rsconnect_jupyter/write_manifest',
+                  method: 'POST',
+                  headers: {'Content-Type': 'application/json'},
+                  data: JSON.stringify(data)
+              });
+              return xhr;
             },
 
             publishContent: function (serverId, appId, notebookTitle, appMode, includeFiles, includeSubdirs) {
