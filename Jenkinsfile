@@ -156,7 +156,7 @@ try {
                 build_args: "--build-arg NB_UID=${uid} --build-arg NB_GID=${gid}",
                 push: !isUserBranch
             )
-            img.inside('-v ${env.WORKSPACE}:/rsconnect_jupyter') {
+            img.inside("-v ${env.WORKSPACE}:/rsconnect_jupyter") {
                 sh 'make yarn'
                 sh 'make lint'
             }
