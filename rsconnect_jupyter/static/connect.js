@@ -592,12 +592,11 @@ define([
       open: function() {
         disableKeyboardManagerIfNeeded();
         // TODO add ability to dismiss via escape key
-        var $deploy_err = $('#rsc-deploy-error');
 
         // clicking on links in the modal body prevents the default
         // behavior (i.e. changing location.hash)
-        publishModal.find("a.modal-body").on("click", function(e) {
-          var target = $(e.target).attr("target");
+        publishModal.find('a.modal-body').on('click', function(e) {
+          var target = $(e.target).attr('target');
           if (target !== '_rsconnect' && target !== '_blank') {
             e.preventDefault();
           }
@@ -1028,7 +1027,7 @@ define([
     });
   }
 
-  function onMenuClicked($button) {
+  function onMenuClicked() {
     // pop up publishing choices
     var $menu = $('#rsc-menu');
     $menu.toggleClass('show', !$menu.hasClass('show'));
@@ -1073,6 +1072,11 @@ define([
       });
   }
 
+  function makeEditLink(filename) {
+    var url = Jupyter.notebook.base_url + 'edit/' + filename;
+    return $('<a target="_blank" style="margin-right: 10px" href="' + url + '">' + filename + '</a>');
+  }
+
   function onCreateManifestClicked() {
     // This function will be passed (env, event) in the first two
     // positional slots. We're not using them.
@@ -1094,11 +1098,18 @@ define([
       title: 'Create Manifest',
       body: [
         '<p>',
-        '    Click Create Manifest to create the manifest.json and requirements.txt',
+        '    Click "Create Manifest" to create the manifest.json and requirements.txt',
         '    files needed for publishing to RStudio Connect via git.',
-        '    Note: requirements.txt will be created only if it does not already exist.',
         '</p>',
-        '<div id="rsc-manifest-status" style="color: red; height: 20px; margin-top: 15px;"></div>'
+        '    ',
+        '<p>',
+        '    The requirements.txt file will be created only if it does not already exist.',
+        '    Once created, it specifies the set of Python packages that Connect will',
+        '    make available on the server during publishing. If you add imports of new',
+        '    packages, you will need to update requirements.txt to include them,',
+        '    or remove it and create the manifest again.',
+        '</p>',
+        '<div id="rsc-manifest-status" style="color: red; height: 40px; margin-top: 15px;"></div>'
       ].join(''),
 
       // allow raw html
@@ -1111,27 +1122,37 @@ define([
         var btnCreateManifest = $(
           '<a class="btn" aria-hidden="true">Create Manifest</a>'
         );
-        btnCreateManifest.on("click", function() {
+        btnCreateManifest.on('click', function() {
           var $status = $('#rsc-manifest-status');
           var $spinner = $('<i class="fa fa-spinner fa-spin" style="margin-left: 15px"></i>');
           btnCreateManifest.append($spinner);
           btnCreateManifest.attr('disabled', true);
-          $status.text('Creating manifest...');
+          $status.empty();
+          $status.append($('<div>Creating manifest...</div>'));
 
           config.inspectEnvironment().then(function(environment) {
             return config.writeManifest(Jupyter.notebook.get_notebook_name(), environment).then(function(response) {
-              var links = response.files.map(function(filename) {
-                var url = Jupyter.notebook.base_url + 'edit/' + filename;
-                return $('<a target="_blank" style="margin-right: 10px" href="' + url + '">' + filename + '</a>');
-              });
-              $status.text('Successfully saved: ');
-              $status.append(links);
-            }).fail(function(response) {
+              var createdLinks = response.created.map(makeEditLink);
+              $status.empty();
+              if (response.created.length > 0) {
+                $status.append($('<span>Successfully saved: </span>'));
+                $status.append(createdLinks);
+              }
+
+              if (response.skipped.length > 0) {
+                var skippedLinks = response.skipped.map(makeEditLink);
+                $status.append($('<br><span>Already existed: </span>'));
+                $status.append(skippedLinks);
+              }
+            })
+.fail(function(response) {
               $status.text(response.responseJSON.message);
             });
-          }).fail(function(response) {
+          })
+.fail(function(response) {
             $status.text(response.responseJSON.message);
-          }).always(function() {
+          })
+.always(function() {
             $spinner.remove();
             btnCreateManifest.attr('disabled', false);
           });

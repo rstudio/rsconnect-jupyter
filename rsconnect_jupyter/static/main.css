@@ -87,3 +87,7 @@
 .rsc-show {
     display:block;
 }
+
+p {
+    margin-top: 15px;
+}

@@ -197,8 +197,8 @@ class EndpointHandler(APIHandler):
             os_path = self.contents_manager._get_os_path(nb_path)
             output_dir = os.path.dirname(os_path)
             nb_name = os.path.basename(os_path)
-            files = write_manifest(nb_name, environment, output_dir)
-            self.finish(json.dumps({"files": files}))
+            created, skipped = write_manifest(nb_name, environment, output_dir)
+            self.finish(json.dumps({"created": created, "skipped": skipped}))
 
 
 def load_jupyter_server_extension(nb_app):
