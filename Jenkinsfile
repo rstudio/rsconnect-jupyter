@@ -153,7 +153,7 @@ try {
                 docker_context: './tools/yarn',
                 build_arg_nb_uid: 'JENKINS_UID',
                 build_arg_nb_gid: 'JENKINS_GID',
-                build_args: "--build-arg NB_UID=${uid} --build-arg NB_GID=${gid}"
+                build_args: "--build-arg NB_UID=${uid} --build-arg NB_GID=${gid}",
                 push: !isUserBranch
             )
             img.inside('-v ${env.WORKSPACE}:/rsconnect_jupyter') {
