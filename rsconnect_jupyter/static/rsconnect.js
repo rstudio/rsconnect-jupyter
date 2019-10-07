@@ -174,7 +174,6 @@ define([
                         disableTLSCheck: src.disableTLSCheck
                     };
                 }
-                debug.info('saving config:', toSave);
                 return Utils.ajax({
                     url: Jupyter.notebook.base_url + 'api/config/rsconnect_jupyter',
                     method: 'PUT',
@@ -189,7 +188,6 @@ define([
                     url: Jupyter.notebook.base_url + 'api/config/rsconnect_jupyter',
                     method: 'GET'
                 }).then(function (data) {
-                    debug.info('fetched config:', data);
                     if (!self.servers) {
                         self.servers = {};
                     }
@@ -204,6 +202,7 @@ define([
                             self.servers[serverId] = entry;
                         }
                     }
+                    debug.info('fetched config:', data);
                 });
             },
 
