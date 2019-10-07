@@ -635,8 +635,8 @@ define([
         publishModal.find('#rsc-add-server').on('click', function() {
           publishModal.modal('hide');
           showAddServerDialog(config)
-            .then(function(serverId) {
-              showSelectServerDialog(serverId);
+            .then(function(selectedServerId) {
+              showSelectServerDialog(selectedServerId);
             })
             .fail(reselectPreviousServer);
         });
