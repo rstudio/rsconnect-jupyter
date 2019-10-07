@@ -42,10 +42,31 @@ define([
     Jupyter.toolbar.add_buttons_group([actionName]);
 
     // re-style the toolbar button to have a custom icon
-    $('button[data-jupyter-action="' + actionName + '"] > i').addClass(
-      'rsc-icon'
-    );
-  }
+    var $button = $('button[data-jupyter-action="' + actionName + '"]');
+    $button.addClass('dropbtn');
+
+    var container = $button.parent();
+    $button.remove();
+
+    var $menuContainer = $('<div class="rsc-dropdown"></div>');
+    var $menu = $('<div id="rsc-menu" class="rsc-dropdown-content"></div>');
+
+    var publishItem = $('<a href="#">Publish to Connect</a>');
+    publishItem.click(onPublishClicked);
+    $menu.append(publishItem);
+
+    var manifestItem = $('<a href="#">Create Manifest for git Publishing</a>');
+    manifestItem.click(onCreateManifestClicked);
+    $menu.append(manifestItem);
+
+    $menuContainer.append($button);
+    $menuContainer.append($menu);
+    container.append($menuContainer);
+
+    $button.find('i')
+      .addClass('rsc-icon')
+      .click(onMenuClicked);
+}
 
   /***********************************************************************
    * Helpers
@@ -575,7 +596,8 @@ define([
         // clicking on links in the modal body prevents the default
         // behavior (i.e. changing location.hash)
         publishModal.find('a.modal-body').on('click', function(e) {
-          if ($(e.target).attr('target') !== '_rsconnect') {
+          var target = $(e.target).attr('target');
+          if (target !== '_rsconnect' && target !== '_blank') {
             e.preventDefault();
           }
         });
@@ -685,6 +707,7 @@ define([
           publishModal.find('.help-block').text('');
           var $deploy_err = $('#rsc-deploy-error');
           $deploy_err.text('');
+          $deploy_err.empty();
 
           var validTitle = txtTitle.val().length >= 3;
 
@@ -1004,6 +1027,16 @@ define([
     });
   }
 
+  function onMenuClicked() {
+    // pop up publishing choices
+    var $menu = $('#rsc-menu');
+    $menu.toggleClass('show', !$menu.hasClass('show'));
+  }
+
+  function closeMenu() {
+    $('#rsc-menu').toggleClass('show', false);
+  }
+
   function onPublishClicked() {
     // This function will be passed (env, event) in the first two
     // positional slots. We're not using them.
@@ -1014,6 +1047,8 @@ define([
       config = new RSConnect(debug);
       window.RSConnect = config;
     }
+
+    closeMenu();
 
     // save before publishing so the server can pick up changes
     Jupyter.notebook
@@ -1035,6 +1070,100 @@ define([
           buttons: { Ok: { class: 'btn-primary' } }
         });
       });
+  }
+
+  function makeEditLink(filename) {
+    var url = Jupyter.notebook.base_url + 'edit/' + filename;
+    return $('<a target="_blank" style="margin-right: 10px" href="' + url + '">' + filename + '</a>');
+  }
+
+  function onCreateManifestClicked() {
+    // This function will be passed (env, event) in the first two
+    // positional slots. We're not using them.
+
+    // lazily load the config when clicked since Jupyter's init
+    // function is racy w.r.t. loading of notebook metadata
+    if (!config) {
+      config = new RSConnect(debug);
+      window.RSConnect = config;
+    }
+
+    closeMenu();
+
+    var dialog = Dialog.modal({
+      // pass the existing keyboard manager so all shortcuts are disabled while
+      // modal is active
+      keyboard_manager: Jupyter.notebook.keyboard_manager,
+
+      title: 'Create Manifest',
+      body: [
+        '<p>',
+        '    Click "Create Manifest" to create the manifest.json and requirements.txt',
+        '    files needed for publishing to RStudio Connect via git.',
+        '</p>',
+        '    ',
+        '<p>',
+        '    The requirements.txt file will be created only if it does not already exist.',
+        '    Once created, it specifies the set of Python packages that Connect will',
+        '    make available on the server during publishing. If you add imports of new',
+        '    packages, you will need to update requirements.txt to include them,',
+        '    or remove it and create the manifest again.',
+        '</p>',
+        '<div id="rsc-manifest-status" style="color: red; height: 40px; margin-top: 15px;"></div>'
+      ].join(''),
+
+      // allow raw html
+      sanitize: false,
+
+      open: function() {
+        var btnCancel = $(
+          '<a class="btn" data-dismiss="modal" aria-hidden="true">Cancel</a>'
+        );
+        var btnCreateManifest = $(
+          '<a class="btn" aria-hidden="true">Create Manifest</a>'
+        );
+        btnCreateManifest.on('click', function() {
+          var $status = $('#rsc-manifest-status');
+          var $spinner = $('<i class="fa fa-spinner fa-spin" style="margin-left: 15px"></i>');
+          btnCreateManifest.append($spinner);
+          btnCreateManifest.attr('disabled', true);
+          $status.empty();
+          $status.append($('<div>Creating manifest...</div>'));
+
+          config.inspectEnvironment().then(function(environment) {
+            return config.writeManifest(Jupyter.notebook.get_notebook_name(), environment).then(function(response) {
+              var createdLinks = response.created.map(makeEditLink);
+              $status.empty();
+              if (response.created.length > 0) {
+                $status.append($('<span>Successfully saved: </span>'));
+                $status.append(createdLinks);
+              }
+
+              if (response.skipped.length > 0) {
+                var skippedLinks = response.skipped.map(makeEditLink);
+                $status.append($('<br><span>Already existed: </span>'));
+                $status.append(skippedLinks);
+              }
+            })
+.fail(function(response) {
+              $status.text(response.responseJSON.message);
+            });
+          })
+.fail(function(response) {
+            $status.text(response.responseJSON.message);
+          })
+.always(function() {
+            $spinner.remove();
+            btnCreateManifest.attr('disabled', false);
+          });
+        });
+
+        dialog
+          .find('.modal-footer')
+          .append(btnCancel)
+          .append(btnCreateManifest);
+      }
+    });
   }
 
   return {

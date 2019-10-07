@@ -8,7 +8,7 @@ import posixpath
 import tarfile
 import tempfile
 
-from os.path import join, relpath, split, splitext
+from os.path import dirname, exists, join, relpath, split, splitext
 
 import nbformat
 from ipython_genutils import text
@@ -107,6 +107,36 @@ def bundle_add_buffer(bundle, filename, contents):
     log.debug('added buffer: %s', filename)
 
 
+def write_manifest(nb_name, environment, output_dir):
+    """Create a manifest for source publishing the specified notebook.
+    
+    The manifest will be written to `manifest.json` in the output directory..
+    A requirements.txt file will be created if one does not exist.
+
+    Returns the list of filenames written.
+    """
+    manifest_filename = 'manifest.json'
+    manifest = make_source_manifest(nb_name, environment, 'jupyter-static')
+    manifest_file = join(output_dir, manifest_filename)
+    created = [manifest_filename]
+    skipped = []
+    
+    with open(manifest_file, 'w') as f:
+        f.write(json.dumps(manifest, indent=2))
+        log.debug('wrote manifest file: %s', manifest_file)
+
+    environment_file = join(output_dir, environment['filename'])
+    if exists(environment_file):
+        skipped.append(environment['filename'])
+    else:
+        with open(environment_file, 'w') as f:
+            f.write(environment['contents'])
+            created.append(environment['filename'])
+            log.debug('wrote environment file: %s', environment_file)
+
+    return created, skipped
+
+
 def list_files(base_dir, include_subdirs, walk=os.walk):
     """List the files in the directory at path.
 
@@ -157,7 +187,7 @@ def make_source_bundle(model, environment, ext_resources_dir, extra_files=[]):
     with tarfile.open(mode='w:gz', fileobj=bundle_file) as bundle:
 
         # add the manifest first in case we want to partially untar the bundle for inspection
-        bundle_add_buffer(bundle, 'manifest.json', json.dumps(manifest))
+        bundle_add_buffer(bundle, 'manifest.json', json.dumps(manifest, indent=2))
         bundle_add_buffer(bundle, nb_name, nb_content)
         bundle_add_buffer(bundle, environment['filename'], environment['contents'])
 
