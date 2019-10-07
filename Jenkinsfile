@@ -143,6 +143,23 @@ try {
           },
           'python3.7': {
             img = buildAndTest("3.7")
+          },
+          'code-quality': {
+            def uid = sh (script: 'id -u jenkins', returnStdout: true).trim()
+            def gid = sh (script: 'id -g jenkins', returnStdout: true).trim()
+            img = pullBuildPush(
+                image_name: 'jenkins/rsconnect_jupyter_yarn',
+                image_tag: 'latest',
+                docker_context: './tools/yarn',
+                build_arg_nb_uid: 'JENKINS_UID',
+                build_arg_nb_gid: 'JENKINS_GID',
+                build_args: "--build-arg NB_UID=${uid} --build-arg NB_GID=${gid}",
+                push: !isUserBranch
+            )
+            img.inside("-v ${env.WORKSPACE}:/rsconnect_jupyter") {
+                sh 'make yarn'
+                sh 'make lint'
+            }
           }
         )
       }
