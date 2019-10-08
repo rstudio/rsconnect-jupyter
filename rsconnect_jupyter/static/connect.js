@@ -197,7 +197,7 @@ define([
           '        </div>',
           '        <div class="form-group">',
           '            <label class="rsc-label" for="rsc-api-key">API Key</label>',
-          '            <input class="form-control" id="rsc-api-key" type="text" placeholder="API key" minlength="32" maxlength="32" required>',
+          '            <input class="form-control" id="rsc-api-key" type="password" placeholder="API key" minlength="32" maxlength="32" required>',
           '            <span class="help-block"></span>',
           '        </div>',
           '        <div class="form-group">',
@@ -1106,7 +1106,7 @@ define([
       .then(config.fetchConfig())
       .then(function() {
         if (Object.keys(config.servers).length === 0) {
-          showAddServerDialog(config, false).then(showSelectServerDialog);
+          showAddServerDialog(config).then(showSelectServerDialog);
         } else {
           showSelectServerDialog(config.previousServerId);
         }
