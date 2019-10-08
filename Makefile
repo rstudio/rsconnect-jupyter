@@ -5,6 +5,7 @@ NB_GID=$(shell id -g)
 
 IMAGE=rstudio/rsconnect-jupyter-py
 VERSION=$(shell cat version.txt).$(shell printenv BUILD_NUMBER || echo 9999)
+PORT = $(shell printenv PORT || echo 9999)
 
 clean:
 	rm -rf build/ dist/ rsconnect_jupyter.egg-info/
@@ -29,7 +30,7 @@ launch:
 		-e NB_GID=$(NB_GID) \
 		-e PY_VERSION=$(PY_VERSION) \
 		-e BUILD_NUMBER=$(BUILD_NUMBER) \
-		-p :9999:9999 \
+		-p :$(PORT):9999 \
 		$(DOCKER_IMAGE) \
 		/rsconnect_jupyter/run.sh $(TARGET)
 
