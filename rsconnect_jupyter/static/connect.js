@@ -1106,7 +1106,7 @@ define([
       .then(config.fetchConfig())
       .then(function() {
         if (Object.keys(config.servers).length === 0) {
-          showAddServerDialog(config, false).then(showSelectServerDialog);
+          showAddServerDialog(config).then(showSelectServerDialog);
         } else {
           showSelectServerDialog(config.previousServerId);
         }
