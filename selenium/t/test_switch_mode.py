@@ -28,6 +28,8 @@ class TestSwitchMode(object):
         # navigate to the notebook
         browser.open_url(jupyter_url + notebook)
 
+        MainToolBar(). \
+            rsconnect_dropdown.click()
         MainToolBar().rsconnect_publish.click()
 
 
@@ -49,6 +51,7 @@ class TestSwitchMode(object):
 
         # republish
         sleep(1) # clicking before waiting results in the event not being triggered
+        m.rsconnect_dropdown.click()
         m.rsconnect_publish.click()
         sleep(1) # racy dialog
 

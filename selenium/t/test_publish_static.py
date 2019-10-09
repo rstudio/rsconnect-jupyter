@@ -27,6 +27,8 @@ class TestPublishStatic(object):
         # navigate to the notebook
         browser.open_url(jupyter_url + notebook)
 
+        MainToolBar(). \
+            rsconnect_dropdown.click()
         MainToolBar().rsconnect_publish.click()
 
 

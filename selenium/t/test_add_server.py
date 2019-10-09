@@ -1,5 +1,7 @@
 import pytest
 
+from time import sleep
+
 from selene.api import browser, be
 
 from .pages.main_toolbar import MainToolBar
@@ -27,6 +29,9 @@ class TestAddServer(object):
         browser.open_url(jupyter_url + notebook)
 
         MainToolBar(). \
+            rsconnect_dropdown.click()
+        MainToolBar().rsconnect_publish.should(be.visible)
+        MainToolBar(). \
             rsconnect_publish.click()
 
     def test_valid_address_valid_name(self, connect_url):
@@ -36,12 +41,17 @@ class TestAddServer(object):
         server_name = generate_random_string()
         api_key = '0123456789abcdef0123456789abcdef'
 
+        # WOAH THERE BUDDY, NOT SO FAST
+        sleep(1)
+
         AddServerForm() \
             .populate_form({
                 'address'   : connect_url,
                 'api_key'   : api_key,
                 'name'      : server_name,
-            }) \
+            })
+
+        AddServerForm() \
             .submit_form()
 
         PublishContentForm() \
