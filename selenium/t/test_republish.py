@@ -28,6 +28,8 @@ class TestRepublish(object):
         # navigate to the notebook
         browser.open_url(jupyter_url + notebook)
 
+        MainToolBar(). \
+            rsconnect_dropdown.click()
         MainToolBar().rsconnect_publish.click()
 
 
@@ -35,10 +37,8 @@ class TestRepublish(object):
         """Publish a static document
         """
         pf = PublishContentForm()
-        pf.api_key.should(be.visible)
         sleep(1) # dialog is racy with event setup
 
-        pf.api_key.set_value('0123456789abcdef0123456789abcdef')
         pf.title.set_value('NotebookRepublish')
         pf.publish_without_source.click()
         pf.submit.click()
@@ -51,11 +51,10 @@ class TestRepublish(object):
 
         # republish
         sleep(1) # clicking before waiting results in the event not being triggered
+        m.rsconnect_dropdown.click()
         m.rsconnect_publish.click()
-        pf.api_key.should(be.visible)
         sleep(1) # racy dialog
 
-        pf.api_key.set_value('0123456789abcdef0123456789abcdef')
         pf.title.set_value('')
         pf.title.set_value('Notebook')
         pf.publish_without_source.click()

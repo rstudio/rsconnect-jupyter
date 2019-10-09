@@ -56,11 +56,11 @@ define([
     var $menuContainer = $('<div class="rsc-dropdown"></div>');
     var $menu = $('<div id="rsc-menu" class="rsc-dropdown-content"></div>');
 
-    var publishItem = $('<a href="#">Publish to Connect</a>');
+    var publishItem = $('<a href="#" id="publish-to-connect">Publish to Connect</a>');
     publishItem.click(onPublishClicked);
     $menu.append(publishItem);
 
-    var manifestItem = $('<a href="#">Create Manifest for git Publishing</a>');
+    var manifestItem = $('<a href="#" id="create-manifest">Create Manifest for git Publishing</a>');
     manifestItem.click(onCreateManifestClicked);
     $menu.append(manifestItem);
 
@@ -69,8 +69,8 @@ define([
     container.append($menuContainer);
 
     $button.find('i')
-      .addClass('rsc-icon')
-      .click(onMenuClicked);
+      .addClass('rsc-icon');
+    $button.click(onMenuClicked);
 }
 
   /***********************************************************************
@@ -588,7 +588,7 @@ define([
         '    </div>',
         '    <div class="form-group">',
         '        <label>Title</label>',
-        '        <input class="form-control" name="title" type="text" minlength="3" maxlength="64" required>',
+        '        <input class="form-control" id="rsc-content-title" name="title" type="text" minlength="3" maxlength="64" required>',
         '        <span class="help-block"></span>',
         '    </div>',
         '    <div class="form-group" id="rsc-publish-source">',

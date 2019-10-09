@@ -26,6 +26,8 @@ class TestPublishSource(object):
 
         # navigate to the notebook
         browser.open_url(jupyter_url + notebook)
+        MainToolBar(). \
+            rsconnect_dropdown.click()
         MainToolBar().rsconnect_publish.should(be.visible)
         MainToolBar().rsconnect_publish.click()
 
@@ -34,11 +36,9 @@ class TestPublishSource(object):
         """Publish a document with source
         """
         pf = PublishContentForm()
-        pf.api_key.should(be.visible)
         # dialog is racy with event setup
         sleep(1)
 
-        pf.api_key.set_value('0123456789abcdef0123456789abcdef')
         pf.title.set_value('NotebookSource')
         pf.publish_with_source.click()
         pf.submit.click()

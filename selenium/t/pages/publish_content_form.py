@@ -33,12 +33,8 @@ class PublishContentForm(FormBase):
 
     @property
     def title(self):
-        return s(by.css('.modal-body [name=title]'))
-
-    @property
-    def api_key(self):
-        return s(by.css('.modal-body [name=api-key]'))
+        return s(by.css('#rsc-content-title'))
 
     @property
     def title_error(self):
-        return s(by.css('.modal-body [name=title] + .help-block'))
+        return s(by.css('#rsc-deploy-error'))
