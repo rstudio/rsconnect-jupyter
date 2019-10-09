@@ -5,7 +5,7 @@ from .form_base import FormBase
 class AddServerForm(FormBase):
 
     def __init__(self):
-        self._fields = ['address', 'name']
+        self._fields = ['address', 'api_key', 'name']
 
     @property
     def close(self):
@@ -14,6 +14,10 @@ class AddServerForm(FormBase):
     @property
     def address(self):
         return s(by.css("#rsc-server"))
+
+    @property
+    def api_key(self):
+        return s(by.css("#rsc-api-key"))
 
     @property
     def name(self):

@@ -34,11 +34,9 @@ class TestPublishStatic(object):
         """Publish a static document
         """
         pf = PublishContentForm()
-        pf.api_key.should(be.visible)
         # dialog is racy with event setup
         sleep(1)
 
-        pf.api_key.set_value('0123456789abcdef0123456789abcdef')
         pf.title.set_value('NotebookStatic')
         pf.publish_without_source.click()
         pf.submit.click()
