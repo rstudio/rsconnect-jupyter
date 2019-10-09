@@ -148,7 +148,7 @@ try {
             def uid = sh (script: 'id -u jenkins', returnStdout: true).trim()
             def gid = sh (script: 'id -g jenkins', returnStdout: true).trim()
             img = pullBuildPush(
-                image_name: 'jenkins/rsconnect_jupyter_yarn',
+                image_name: 'jenkins/rsconnect-jupyter-yarn',
                 image_tag: 'latest',
                 docker_context: './tools/yarn',
                 build_arg_nb_uid: 'JENKINS_UID',
@@ -192,7 +192,7 @@ try {
   // CC the whole connect team.
   slackNameFail = "unknown"
   if (!isUserBranch) {
-    slackNameFail = "${gitAuthor} (cc @nand)"
+    slackNameFail = "${gitAuthor} (cc @rsconnect_jupyter)"
   }
 
   message = "${messagePrefix} by ${slackNameFail} failed: ${err}"
