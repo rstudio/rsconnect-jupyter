@@ -544,7 +544,7 @@ define([
         '            <span class="help-block"></span>',
         '        </div>',
         '    </div>',
-        '    <div class="form-group">',
+        '    <div class="form-group" style="display:none">',
         '        <label>',
         '          <input id="include-files" name="include-files" type="checkbox">',
         '          Include all files in the notebook directory',
