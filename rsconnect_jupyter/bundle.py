@@ -118,12 +118,16 @@ def write_manifest(nb_name, environment, output_dir):
     manifest_filename = 'manifest.json'
     manifest = make_source_manifest(nb_name, environment, 'jupyter-static')
     manifest_file = join(output_dir, manifest_filename)
-    created = [manifest_filename]
+    created = []
     skipped = []
     
-    with open(manifest_file, 'w') as f:
-        f.write(json.dumps(manifest, indent=2))
-        log.debug('wrote manifest file: %s', manifest_file)
+    if exists(manifest_file):
+        skipped.append(manifest_filename)
+    else:
+        with open(manifest_file, 'w') as f:
+            f.write(json.dumps(manifest, indent=2))
+            created.append(manifest_filename)
+            log.debug('wrote manifest file: %s', manifest_file)
 
     environment_file = join(output_dir, environment['filename'])
     if exists(environment_file):

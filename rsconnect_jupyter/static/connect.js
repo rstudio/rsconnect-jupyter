@@ -1148,16 +1148,24 @@ define([
       title: 'Create Manifest',
       body: [
         '<p>',
-        '    Click "Create Manifest" to create the manifest.json and requirements.txt',
-        '    files needed for publishing to RStudio Connect via git.',
+        '  Click <b>Create Manifest</b> to create the files needed ',
+        '  for publishing to RStudio Connect via git:',
         '</p>',
-        '    ',
+        '<div style="margin-left: 20px">',
         '<p>',
-        '    The requirements.txt file will be created only if it does not already exist.',
-        '    Once created, it specifies the set of Python packages that Connect will',
-        '    make available on the server during publishing. If you add imports of new',
-        '    packages, you will need to update requirements.txt to include them,',
-        '    or remove it and create the manifest again.',
+        '  <b>requirements.txt</b> lists the set of Python packages that Connect will',
+        '  make available on the server during publishing. If you add imports of new',
+        '  packages, you will need to update requirements.txt to include them,',
+        '  or remove the file and use the Create Manifest button to create it again.',
+        '</p>',
+        '<p>',
+        '  <b>manifest.json</b> specifies the version of python in use,',
+        '  along with other settings needed during deployment. Update',
+        '  or re-create this file if you update python.',
+        '</p>',
+        '</div>',
+        '<p>',
+        '  Files will be created only if needed. Existing files will not be overwritten.',
         '</p>',
         '<div id="rsc-manifest-status" style="color: red; height: 40px; margin-top: 15px;"></div>'
       ].join(''),
@@ -1187,11 +1195,12 @@ define([
               if (response.created.length > 0) {
                 $status.append($('<span>Successfully saved: </span>'));
                 $status.append(createdLinks);
+                $status.append($('<br>'));
               }
 
               if (response.skipped.length > 0) {
                 var skippedLinks = response.skipped.map(makeEditLink);
-                $status.append($('<br><span>Already existed: </span>'));
+                $status.append($('<span>Already existed: </span>'));
                 $status.append(skippedLinks);
               }
             })
