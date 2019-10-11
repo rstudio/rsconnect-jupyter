@@ -1122,8 +1122,10 @@ define([
       });
   }
 
-  function makeEditLink(filename) {
-    var url = Jupyter.notebook.base_url + 'edit/' + filename;
+  function makeEditLink(filepath) {
+    var url = Jupyter.notebook.base_url + 'edit/' + filepath;
+    var parts = filepath.split('/');
+    var filename = parts[parts.length - 1];
     return $('<a target="_blank" style="margin-right: 10px" href="' + url + '">' + filename + '</a>');
   }
 
