@@ -245,8 +245,6 @@ define([
 
             inspectEnvironment: function () {
               return this.getRunningPythonPath().then(function(pythonPath) {
-                var path = Jupyter.notebook.notebook_name;
-
                 try {
                     var cmd = [
                         '!',
