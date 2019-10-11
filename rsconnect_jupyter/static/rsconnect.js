@@ -251,8 +251,7 @@ define([
                     var cmd = [
                         '!',
                         pythonPath,
-                        ' -m rsconnect_jupyter.environment ${PWD}/',
-                        path
+                        ' -m rsconnect_jupyter.environment ${PWD}'
                     ].join('');
                     console.log('executing: ' + cmd);
                 } catch (e) {
