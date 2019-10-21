@@ -104,6 +104,10 @@ You will also be prompted to enter your API Key. See the [RStudio Connect User
 Guide](http://docs.rstudio.com/connect/user/api-keys.html) for
 instructions on generating API Keys for your user.
 
+When you click the Add Server button, `rsconnect-jupyter` will send a request to the RStudio Connect server to verify that it can be reached via the requested URL and that the API key is valid. 
+
+If your RStudio Connect server was configured with a self-signed certificate (or other certificate that computer hosting your Jupyter notebook server does not trust), the attempt to contact RStudio Connect will fail with a TLS-related error. In this case, please contact your system administrator for instructions on how to configure your computer to trust the certificate they have provided. If trusting the certificate is not an option, you can check the `Disable TLS Certificate Verification` box, which will bypass the certificate check. Your connection to the server will still be encrypted, though the server identity will not be verified.
+
 ![initial dialog that prompts for the location of RStudio Connect](docs/images/add-dialog.png)
 
 ### Publishing options
