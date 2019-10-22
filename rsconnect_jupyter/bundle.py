@@ -107,7 +107,7 @@ def bundle_add_buffer(bundle, filename, contents):
     log.debug('added buffer: %s', filename)
 
 
-def write_manifest(nb_name, environment, output_dir):
+def write_manifest(relative_dir, nb_name, environment, output_dir):
     """Create a manifest for source publishing the specified notebook.
     
     The manifest will be written to `manifest.json` in the output directory..
@@ -121,21 +121,24 @@ def write_manifest(nb_name, environment, output_dir):
     created = []
     skipped = []
     
+    manifest_relpath = join(relative_dir, manifest_filename)
     if exists(manifest_file):
-        skipped.append(manifest_filename)
+        skipped.append(manifest_relpath)
     else:
         with open(manifest_file, 'w') as f:
             f.write(json.dumps(manifest, indent=2))
-            created.append(manifest_filename)
+            created.append(manifest_relpath)
             log.debug('wrote manifest file: %s', manifest_file)
 
-    environment_file = join(output_dir, environment['filename'])
+    environment_filename = environment['filename']
+    environment_file = join(output_dir, environment_filename)
+    environment_relpath = join(relative_dir, environment_filename)
     if exists(environment_file):
-        skipped.append(environment['filename'])
+        skipped.append(environment_relpath)
     else:
         with open(environment_file, 'w') as f:
             f.write(environment['contents'])
-            created.append(environment['filename'])
+            created.append(environment_relpath)
             log.debug('wrote environment file: %s', environment_file)
 
     return created, skipped

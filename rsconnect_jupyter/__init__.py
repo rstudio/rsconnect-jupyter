@@ -201,10 +201,11 @@ class EndpointHandler(APIHandler):
         if action == 'write_manifest':
             environment = data['environment']
             nb_path = unquote_plus(data['notebook_path'].strip('/'))
+            relative_dir = os.path.dirname(nb_path)
             os_path = self.contents_manager._get_os_path(nb_path)
             output_dir = os.path.dirname(os_path)
             nb_name = os.path.basename(os_path)
-            created, skipped = write_manifest(nb_name, environment, output_dir)
+            created, skipped = write_manifest(relative_dir, nb_name, environment, output_dir)
             self.finish(json.dumps({"created": created, "skipped": skipped}))
 
 
