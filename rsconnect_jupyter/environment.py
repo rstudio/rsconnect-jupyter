@@ -122,11 +122,9 @@ def pip_freeze(dirname):
 if __name__ == '__main__':
     try:
         if len(sys.argv) < 2:
-            raise EnvironmentException('Usage: %s NOTEBOOK_PATH' % sys.argv[0])
+            raise EnvironmentException('Usage: %s DIRECTORY' % sys.argv[0])
 
-        notebook_path = sys.argv[1]
-        dirname = os.path.dirname(notebook_path)
-        result = detect_environment(dirname)
+        result = detect_environment(sys.argv[1])
     except EnvironmentException as exc:
         result = dict(error=str(exc))
 
