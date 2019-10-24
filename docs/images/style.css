@@ -24,4 +24,8 @@ p code {
     font-family: Consolas,"Liberation Mono",Menlo,Courier,monospace;
     font-size: 0.85rem;
 }
+
+img {
+    max-width: 100%
+}
 </style>
