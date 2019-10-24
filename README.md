@@ -19,7 +19,7 @@ If using `conda`, `pip` and `wheel` should already be installed.
 # Installation
 
 If you are installing `rsconnect-jupyter` for use in Jupyterhub, please see the
-[Jupyterhub](#Installation-In-Jupyterhub) section below.
+[Jupyterhub](#installation-in-jupyterhub) section below.
 
 We recommend working within a `virtualenv`.  If you
 are unfamiliar, these commands create and activate a `virtualenv`
@@ -160,7 +160,7 @@ You may share notebooks if appropriate.
 
 # Installation in JupyterHub
 
-In JupyterHub, follow the directions [above](#Installation) to install the
+In JupyterHub, follow the directions [above](#installation) to install the
 `rsconnect-jupyter` package into the Python environment where the Jupyter
 notebook server and kernel are installed. Typically those will be the same
 environment. If you've configured separate kernel environments, install the
