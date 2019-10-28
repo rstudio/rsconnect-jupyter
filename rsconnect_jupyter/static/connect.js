@@ -872,6 +872,20 @@ define([
         ) {
           form.trigger('submit');
         }
+        // force the user to update their API key for the first server in the list
+        var firstServerId = Object.keys(config.servers)[0];
+        var firstServer = config.servers[firstServerId];
+        if (!config.getApiKey(firstServer.server)) {
+          if (publishModal) {
+            publishModal.modal('hide');
+          }
+          showAddServerDialog(
+              true,
+              firstServerId,
+              firstServer.server,
+              firstServer.serverName
+          );
+        }
       }
     });
 
