@@ -17,7 +17,7 @@ else:
 print('setup.py using python', sys.version_info[0])
 print('ipython_dependency:', ipython_dependency)
 
-with open('version.txt', 'r') as f:
+with open('rsconnect_jupyter/version.txt', 'r') as f:
     VERSION = f.read().strip()
 
 BUILD = os.environ.get('BUILD_NUMBER', '9999')
