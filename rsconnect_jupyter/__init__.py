@@ -3,6 +3,7 @@ import json
 import os
 
 from six.moves.urllib.parse import unquote_plus, urlparse
+from os.path import dirname, join
 
 from notebook.base.handlers import APIHandler
 from notebook.utils import url_path_join
@@ -13,7 +14,8 @@ from .bundle import list_files, make_html_bundle, make_source_bundle, write_mani
 
 from ssl import SSLError
 
-__version__ = '1.0.0'
+with open(join(dirname(__file__), 'version.txt')) as f:
+    __version__ = f.read().strip()
 
 
 def _jupyter_server_extension_paths():
