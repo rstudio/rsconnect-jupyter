@@ -130,7 +130,7 @@ define([
                     self.servers[id] = {
                         server: data.server_address,
                         serverName: serverName,
-                        disableTLSCheck: disableTLSCheck,
+                        disableTLSCheck: disableTLSCheck
                     };
                     self.apiKeys[server] = apiKey;
                     self.certificates[server] = certificateData;
