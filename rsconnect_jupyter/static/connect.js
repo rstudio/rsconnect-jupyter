@@ -237,8 +237,9 @@ define([
           '            <span class="help-block"></span>',
           '        </div>',
           '        <div class="form-group">',
+          '            <label class="rsc-label" id="rsc-tls-options">Secure Connection Settings (Optional)</label><br />',
           '            <input type="radio" name="tls-option" id="system-tls" checked />',
-          '            <label for="system-tls" class="rsc-label">Use system TLS certificates</label><br />',
+          '            <label for="system-tls" class="rsc-label">Use System TLS Certificates (Default)</label><br />',
           '            <span id="certificate-upload-container"><input type="radio" name="tls-option" id="upload-tls-certificates" />',
           '            <label for="upload-tls-certificates" class="rsc-label">Upload TLS Certificate Bundle</label></span><br />',
           '            <input type="radio" name="tls-option" id="disable-tls-verification" />',
@@ -320,6 +321,24 @@ define([
         .find('.modal-footer')
         .append(this.$btnCancel)
         .append(this.$btnAdd);
+
+      // setup TLS help icon
+
+      var msg =
+        'These settings only affect connections using addresses beginning with "https". Most users should use ' +
+        'System TLS Certificates. If you encounter a TLS error, ask your administrator for a certificate bundle. ' +
+        'If none is available, you can disable TLS verification completely.';
+
+      var helpIcon = $(
+        [
+          '<a tabindex="0" role="button" data-toggle="popover" data-trigger="focus">',
+          '<i class="fa fa-question-circle rsc-fa-icon"></i>'
+        ].join('')
+      )
+        .data('content', msg)
+        .popover();
+
+      $('#rsc-tls-options').append(helpIcon);
     },
 
     closeDialog: function() {
