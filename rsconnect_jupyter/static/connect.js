@@ -237,7 +237,7 @@ define([
           '            <span class="help-block"></span>',
           '        </div>',
           '        <div class="form-group">',
-          '            <label class="rsc-label" id="rsc-tls-options">Secure Connection Settings (Optional)</label><br />',
+          '            <label class="rsc-label" id="rsc-tls-options">Secure Connection Settings</label><br />',
           '            <input type="radio" name="tls-option" id="system-tls" checked />',
           '            <label for="system-tls" class="rsc-label">Use System TLS Certificates (Default)</label><br />',
           '            <span id="certificate-upload-container"><input type="radio" name="tls-option" id="upload-tls-certificates" />',
