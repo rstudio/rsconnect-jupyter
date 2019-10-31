@@ -1,3 +1,8 @@
+# v1.2.2.7
+- Fixed an issue where content could fail to deploy using old server configurations.
+  The plugin will now delete any configuration without an associated API key, and you
+  may have to add the configuration again.
+
 # v1.2.2
 - API key entry has been moved to the Add Server dialog.
 - API keys are validated by the server as part of Add Server.

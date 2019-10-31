@@ -191,16 +191,26 @@ define([
                     if (!self.servers) {
                         self.servers = {};
                     }
-
+                    var didDelete = false;
                     for (var serverId in data) {
-                        // Split out API keys so they're not saved into the notebook metadata.
-                        var entry = data[serverId];
-                        self.apiKeys[entry.server] = entry.apiKey;
-                        delete entry.apiKey;
+                        if (!data[serverId].apiKey) {
+                            var deleted = data[serverId];
+                            delete data[serverId];
+                            debug.info('deleted server because it had no API key: '+JSON.stringify(deleted));
+                            didDelete = true;
+                        } else {
+                            // Split out API keys so they're not saved into the notebook metadata.
+                            var entry = data[serverId];
+                            self.apiKeys[entry.server] = entry.apiKey;
+                            delete entry.apiKey;
 
-                        if (!self.servers[serverId]) {
-                            self.servers[serverId] = entry;
+                            if (!self.servers[serverId]) {
+                                self.servers[serverId] = entry;
+                            }
                         }
+                    }
+                    if (didDelete) {
+                        self.saveConfig().then(self.saveNotebookMetadata);
                     }
                     debug.info('fetched config:', data);
                 });
