@@ -10,3 +10,4 @@
 /*.egg
 /*.eggs
 .DS_Store
+.vagrant
