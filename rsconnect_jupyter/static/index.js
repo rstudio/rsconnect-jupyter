@@ -3,10 +3,11 @@
 define([
   './connect',
   'jquery',
-  'base/js/events',
   'base/js/namespace',
-  'base/js/promises'
-], function(connect, $, events, Jupyter, promises) {
+  'base/js/dialog',
+  'base/js/promises',
+  'base/js/utils'
+], function(connect, $, Jupyter, dialog, promises, utils) {
   function load_ipython_extension() {
     promises.app_initialized.then(function(app) {
       if (app === 'NotebookApp') {
@@ -19,7 +20,7 @@ define([
           })
           .appendTo('head');
 
-        connect.init();
+        connect.init($, Jupyter, dialog, utils);
       }
     });
   }

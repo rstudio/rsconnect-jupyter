@@ -1,14 +1,12 @@
 /* global define */
 
-define([
-  'jquery',
-  'base/js/namespace',
-  'base/js/dialog',
-  './rsconnect'
-], function($, Jupyter, Dialog, RSConnect) {
+// RSConnect = require('./rsconnect');
+
+define(['./rsconnect'], function(RSConnect) {
   /***********************************************************************
    * Extension bootstrap (main)
    ***********************************************************************/
+  var $, Dialog, Jupyter, Utils;
 
   // this will be filled in by `init()`
   var notify = null;
@@ -21,7 +19,12 @@ define([
     Canceled: 'canceled'
   };
 
-  function init() {
+  function init(_$, _Jupyter, _Dialog, _Utils) {
+    $ = _$;
+    Jupyter = _Jupyter;
+    Dialog = _Dialog;
+    Utils = _Utils;
+
     // construct notification widget
     notify = Jupyter.notification_area.widget('rsconnect_jupyter');
 
@@ -1094,7 +1097,7 @@ define([
     // lazily load the config when clicked since Jupyter's init
     // function is racy w.r.t. loading of notebook metadata
     if (!config) {
-      config = new RSConnect(debug);
+      config = new RSConnect($, Utils, Jupyter);
       window.RSConnect = config;
     }
 

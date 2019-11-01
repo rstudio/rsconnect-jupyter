@@ -1,10 +1,8 @@
 /* global define */
 
-define([
-    'jquery',
-    'base/js/utils',
-    'base/js/namespace'
-    ], function ($, Utils, Jupyter) {
+define([], function () {
+    var $, Jupyter, Utils;
+    
     var debug = {
         info: function() {
             var args = [].slice.call(arguments);
@@ -17,7 +15,13 @@ define([
             console.error.apply(null, args);
         }
     };
-        function RSConnect() {
+
+    var encode_uri_components = function (uri) {
+        var parts = uri.split('/');
+        return parts.map(encodeURIComponent).join('/');
+    };
+    
+        function RSConnect(_$, _Utils, _Jupyter) {
             /* sample value of `Jupyter.notebook.metadata`:
                { version: 1,
                  previousServerId: "abc-def-ghi-jkl",
@@ -27,6 +31,10 @@ define([
                  },
                }
             */
+
+            $ = _$;
+            Utils = _Utils;
+            Jupyter = _Jupyter;
 
             this.previousServerId = null;
             this.servers = {};
@@ -300,7 +308,7 @@ define([
 
             writeManifest: function(notebookTitle, environment) {
               var self = this;
-              var notebookPath = Utils.encode_uri_components(
+              var notebookPath = encode_uri_components(
                   Jupyter.notebook.notebook_path
               );
 
@@ -321,7 +329,7 @@ define([
 
             publishContent: function (serverId, appId, notebookTitle, appMode, includeFiles, includeSubdirs) {
                 var self = this;
-                var notebookPath = Utils.encode_uri_components(
+                var notebookPath = encode_uri_components(
                     Jupyter.notebook.notebook_path
                 );
 

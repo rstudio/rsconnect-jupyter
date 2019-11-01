@@ -4,7 +4,8 @@ NB_UID=$(shell id -u)
 NB_GID=$(shell id -g)
 
 IMAGE=rstudio/rsconnect-jupyter-py
-VERSION=$(shell cat rsconnect_jupyter/version.txt).$(shell printenv BUILD_NUMBER || echo 9999)
+BUILD_NUMBER=$(shell printenv BUILD_NUMBER || echo 9999)
+VERSION=$(shell cat rsconnect_jupyter/version.txt).$(BUILD_NUMBER)
 PORT = $(shell printenv PORT || echo 9999)
 
 clean:
@@ -54,7 +55,15 @@ test-selenium:
 	$(MAKE) -C selenium test-env-down || true ; \
 	exit $$EXITCODE
 
-dist:
+lab_build:
+	cd rsconnect_jupyter/static/package && \
+	npm run build && \
+	cd - && \
+	mkdir -p dist && cd rsconnect_jupyter/static && \
+	tar cvzf ../../dist/rsconnect-jupyterlab-$(VERSION).tgz --exclude node_modules package && \
+	cd -
+
+dist: lab_build
 # wheels don't get built if _any_ file it tries to touch has a timestamp < 1980
 # (system files) so use the current timestamp as a point of reference instead
 	SOURCE_DATE_EPOCH="$(shell date +%s)"; python setup.py sdist bdist_wheel
@@ -66,7 +75,7 @@ run:
 # link python package
 	python setup.py develop
 # install rsconnect_jupyter as a jupyter extension
-	jupyter-nbextension install --symlink --user --py rsconnect_jupyter
+	jupyter-nbextension install --user --py rsconnect_jupyter
 # enable js extension
 	jupyter-nbextension enable --py rsconnect_jupyter
 # enable python extension
@@ -85,7 +94,7 @@ dist-run%:
 
 dist-run: dist
 	pip install dist/rsconnect_jupyter-$(VERSION)-py2.py3-none-any.whl
-	jupyter-nbextension install --symlink --user --py rsconnect_jupyter
+	jupyter-nbextension install --user --py rsconnect_jupyter
 	jupyter-nbextension enable --py rsconnect_jupyter
 	jupyter-serverextension enable --py rsconnect_jupyter
 	jupyter-notebook -y --notebook-dir=/notebooks --ip='0.0.0.0' --port=9999 --no-browser --NotebookApp.token=''
@@ -95,7 +104,7 @@ pypi-run%:
 
 pypi-run:
 	pip install rsconnect_jupyter==$(VERSION)
-	jupyter-nbextension install --symlink --user --py rsconnect_jupyter
+	jupyter-nbextension install --user --py rsconnect_jupyter
 	jupyter-nbextension enable --py rsconnect_jupyter
 	jupyter-serverextension enable --py rsconnect_jupyter
 	jupyter-notebook -y --notebook-dir=/notebooks --ip='0.0.0.0' --port=9999 --no-browser --NotebookApp.token=''
@@ -105,7 +114,7 @@ pypi-test-run%:
 
 pypi-test-run:
 	pip install --index-url https://test.pypi.org/simple/ rsconnect_jupyter==$(VERSION)
-	jupyter-nbextension install --symlink --user --py rsconnect_jupyter
+	jupyter-nbextension install --user --py rsconnect_jupyter
 	jupyter-nbextension enable --py rsconnect_jupyter
 	jupyter-serverextension enable --py rsconnect_jupyter
 	jupyter-notebook -y --notebook-dir=/notebooks --ip='0.0.0.0' --port=9999 --no-browser --NotebookApp.token=''
@@ -125,12 +134,14 @@ mock-server: build/mock-connect/bin/flask
 ## Code quality tools
 
 yarn:
-	yarn install
+	pushd rsconnect_jupyter/static/nbextension; yarn install; popd
+	pushd rsconnect_jupyter/static/package; yarn install; popd
 
 lint: lint-js
 
 lint-js:
-	npm run lint
+	pushd rsconnect_jupyter/static/nbextension; npm run lint; popd
+	pushd rsconnect_jupyter/static/package; npm run lint; popd
 
 ## Specify that Docker runs with the calling user's uid/gid to avoid file
 ## permission issues on Linux dev hosts.

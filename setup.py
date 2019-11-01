@@ -21,9 +21,14 @@ with open('rsconnect_jupyter/version.txt', 'r') as f:
     VERSION = f.read().strip()
 
 BUILD = os.environ.get('BUILD_NUMBER', '9999')
+version_string = '{version}.{build}'.format(version=VERSION, build=BUILD)
+
+data_files = [
+  ('share/jupyter/lab/extensions', ['dist/rsconnect-jupyterlab-%s.tgz' % version_string])
+]
 
 setup(name='rsconnect_jupyter',
-      version='{version}.{build}'.format(version=VERSION, build=BUILD),
+      version=version_string,
       description='Jupyter Notebook integration with RStudio Connect',
       long_description=readme(),
       long_description_content_type='text/markdown',
@@ -43,4 +48,5 @@ setup(name='rsconnect_jupyter',
       ] + ipython_dependency,
       python_requires = '>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*',
       include_package_data=True,
-      zip_safe=False)
+      zip_safe=False,
+      data_files=data_files)

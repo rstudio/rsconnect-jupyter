@@ -1,0 +1,20 @@
+{
+  "name": "rsconnect-jupyter",
+  "version": "1.0.0",
+  "description": "RSConnect Jupyter Plugin",
+  "main": "index.js",
+  "scripts": {
+    "lint": "./node_modules/.bin/eslint ../*.js"
+  },
+  "repository": "git@github.com:rstudio/rsconnect-jupyter.git",
+  "contributors": [
+    "Jonathan Curran <jonathan.curran@rstudio.com>",
+    "Scott Jackson <scott.jackson@rstudio.com>",
+    "Michael Marchetti <michael.marchetti@rstudio.com>",
+    "Kevin Gartland <kevin.gartland@rstudio.com>"
+  ],
+  "license": "GPL-2.0",
+  "devDependencies": {
+    "eslint": "^6.4.0"
+  }
+}
