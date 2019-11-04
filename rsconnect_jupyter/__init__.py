@@ -56,9 +56,10 @@ class EndpointHandler(APIHandler):
             server_address = data['server_address']
             api_key = data['api_key']
             disable_tls_check = data['disable_tls_check']
+            cadata = data.get('cadata', None)
 
             try:
-                canonical_address = verify_server(server_address, disable_tls_check)
+                canonical_address = verify_server(server_address, disable_tls_check, cadata)
             except SSLError as exc:
                 if exc.reason == u'UNKNOWN_PROTOCOL':
                     raise web.HTTPError(400,
@@ -69,12 +70,13 @@ class EndpointHandler(APIHandler):
                                         u'administrator.')
                 raise web.HTTPError(400, u'A TLS error occurred when trying to reach the RStudio Connect server.\n' +
                                     u'* Ensure that the server address you entered is correct.\n' +
-                                    u'* Ensure that your Jupyter server has the proper certificates.')
+                                    u'* Ask your RStudio Connect administrator if you need a certificate bundle and\n' +
+                                    u'  upload it using "Upload TLS Certificate Bundle" below.')
             except Exception as err:
                 raise web.HTTPError(400, u'Unable to verify that the provided server is running RStudio Connect: %s' % err)
             if canonical_address is not None:
                 uri = urlparse(canonical_address)
-                if verify_api_key(uri, api_key, disable_tls_check):
+                if verify_api_key(uri, api_key, disable_tls_check, cadata):
                     address_hash = md5(server_address)
                     self.finish(json.dumps({
                         'status': 'Provided server is running RStudio Connect',
@@ -91,9 +93,10 @@ class EndpointHandler(APIHandler):
             title = data['notebook_title']
             app_id = data.get('app_id')
             disable_tls_check = data['disable_tls_check']
+            cadata = data.get('cadata', None)
 
             try:
-                retval = app_search(uri, api_key, title, app_id, disable_tls_check)
+                retval = app_search(uri, api_key, title, app_id, disable_tls_check, cadata)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
             self.finish(json.dumps(retval))
@@ -111,6 +114,7 @@ class EndpointHandler(APIHandler):
             include_files = data['include_files']
             include_subdirs = data['include_subdirs']
             disable_tls_check = data['disable_tls_check']
+            cadata = data.get('cadata', None)
 
             model = self.contents_manager.get(path=nb_path)
             if model['type'] != 'notebook':
@@ -153,7 +157,7 @@ class EndpointHandler(APIHandler):
                 raise web.HTTPError(400, 'Invalid app_mode: %s, must be "static" or "jupyter-static"' % app_mode)
 
             try:
-                retval = deploy(uri, api_key, app_id, nb_name, nb_title, bundle, disable_tls_check)
+                retval = deploy(uri, api_key, app_id, nb_name, nb_title, bundle, disable_tls_check, cadata)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
 
@@ -165,9 +169,10 @@ class EndpointHandler(APIHandler):
             api_key = data['api_key']
             app_id = data['app_id']
             disable_tls_check = data['disable_tls_check']
+            cadata = data.get('cadata', None)
 
             try:
-                retval = app_get(uri, api_key, app_id, disable_tls_check)
+                retval = app_get(uri, api_key, app_id, disable_tls_check, cadata)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
             self.finish(json.dumps(retval))
@@ -180,9 +185,10 @@ class EndpointHandler(APIHandler):
             last_status = data['last_status']
             cookies = data.get('cookies', [])
             disable_tls_check = data['disable_tls_check']
+            cadata = data.get('cadata', None)
 
             try:
-                retval = task_get(uri, api_key, task_id, last_status, cookies, disable_tls_check)
+                retval = task_get(uri, api_key, task_id, last_status, cookies, disable_tls_check, cadata)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
             self.finish(json.dumps(retval))
@@ -193,8 +199,10 @@ class EndpointHandler(APIHandler):
             api_key = data['api_key']
             app_id = data['app_id']
             disable_tls_check = data['disable_tls_check']
+            cadata = data.get('cadata', None)
+
             try:
-                retval = app_config(uri, api_key, app_id, disable_tls_check)
+                retval = app_config(uri, api_key, app_id, disable_tls_check, cadata)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
             self.finish(json.dumps(retval))

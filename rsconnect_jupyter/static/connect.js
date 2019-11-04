@@ -71,7 +71,7 @@ define([
     $button.find('i')
       .addClass('rsc-icon');
     $button.click(onMenuClicked);
-}
+  }
 
   /***********************************************************************
    * Helpers
@@ -103,12 +103,12 @@ define([
     };
   }
 
-    /**
-     * addValidationMarkup adds validation hints to an element
-     * @param {Boolean} valid when true, validation hints are not added
-     * @param {jQuery} $el jQuery handle for the element to add hint to
-     * @param {String} helpText String for validation message. Newlines will be transformed to HTML line breaks
-     */
+  /**
+    * addValidationMarkup adds validation hints to an element
+    * @param {Boolean} valid when true, validation hints are not added
+    * @param {jQuery} $el jQuery handle for the element to add hint to
+    * @param {String} helpText String for validation message. Newlines will be transformed to HTML line breaks
+    */
   function addValidationMarkup(valid, $el, helpText) {
     if (!valid) {
       var helpBlock = $el
@@ -138,6 +138,10 @@ define([
         .text(helpText);
   }
 
+  function maybeRemoveWarningMarkup($el) {
+    addWarningMarkup($el, '');
+  }
+
   function clearValidationMessages($parent) {
     $parent.find('.form-group').removeClass('has-error');
     $parent.find('.help-block').text('');
@@ -154,6 +158,33 @@ define([
     if (Jupyter.keyboard_manager.enabled) {
       Jupyter.keyboard_manager.disable();
     }
+  }
+
+  /**
+   * readFileToPromise reads a file but uses jquery promises rather than
+   * the native callback approach.
+   * This is used to load the CA data from the provided file.
+   * @param file {File} file gathered from input
+   */
+  function readFileToPromise(file) {
+    var reader = new FileReader();
+    var promise = $.Deferred();
+    if (!file) {
+      promise.resolve('');
+      return promise.promise();
+    }
+    reader.onload = function () {
+      promise.resolve(reader.result);
+    };
+    reader.onerror = function (err) {
+      promise.reject(err);
+    };
+    reader.readAsText(file);
+    return promise.promise();
+  }
+
+  function getCertificateUpload(ctx) {
+      return $(ctx).find('#rsc-ca-file')[0];
   }
 
   function showAddServerDialog(_config, inServerAddress, inServerName) {
@@ -197,7 +228,7 @@ define([
           '        </div>',
           '        <div class="form-group">',
           '            <label class="rsc-label" for="rsc-api-key">API Key</label>',
-          '            <input class="form-control" id="rsc-api-key" type="password" placeholder="API key" minlength="32" maxlength="32" required>',
+          '            <input class="form-control" id="rsc-api-key" type="password" placeholder="API key" minlength="32" maxlength="32" autocomplete="off" required>',
           '            <span class="help-block"></span>',
           '        </div>',
           '        <div class="form-group">',
@@ -206,8 +237,13 @@ define([
           '            <span class="help-block"></span>',
           '        </div>',
           '        <div class="form-group">',
-          '            <input class="form-check-input" id="rsc-disable-tls-cert-check" type="checkbox">',
-          '            <label class="rsc-label form-check-label" for="rsc-disable-tls-cert-check">Disable TLS Certificate Verification</label>',
+          '            <label class="rsc-label" id="rsc-tls-options">Secure Connection Settings</label><br />',
+          '            <input type="radio" name="tls-option" id="system-tls" checked />',
+          '            <label for="system-tls" class="rsc-label">Use System TLS Certificates (Default)</label><br />',
+          '            <span id="certificate-upload-container"><input type="radio" name="tls-option" id="upload-tls-certificates" />',
+          '            <label for="upload-tls-certificates" class="rsc-label">Upload TLS Certificate Bundle</label></span><br />',
+          '            <input type="radio" name="tls-option" id="disable-tls-verification" />',
+          '            <label for="disable-tls-verification" class="rsc-label">Disable TLS Verification (Not Recommended)</label>',
           '            <span class="help-block"></span>',
           '        </div>',
           '        <input type="submit" hidden>',
@@ -231,12 +267,43 @@ define([
       this.$txtServer = this.dialog.find('#rsc-server');
       this.$txtServerName = this.dialog.find('#rsc-servername');
       this.$txtApiKey = this.dialog.find('#rsc-api-key');
-      this.$checkDisableTLSCertCheck = this.dialog.find('#rsc-disable-tls-cert-check');
-
+      this.$radioSystemTLS = this.dialog.find('#system-tls');
+      this.$radioUploadTLSCertificates = this.dialog.find('#upload-tls-certificates');
+      this.$radioDisableTLSVerification = this.dialog.find('#disable-tls-verification');
       this.$txtServer.val(this.inServerAddress);
       this.$txtServerName.val(this.inServerName);
-
-      this.$checkDisableTLSCertCheck.change(this.onDisableTLSCertCheckChanged.bind(this));
+      var that = this;
+      function addCertificateUpload() {
+        var certificateUpload = document.createElement('input');
+        certificateUpload.type = 'file';
+        certificateUpload.id = 'rsc-ca-file';
+        certificateUpload.className = 'rsc-file-dialog';
+        that.dialog.find('#certificate-upload-container')
+            .append(certificateUpload);
+      }
+      function maybeRemoveCertificateUpload() {
+        var fileDialog = that.dialog.find('#rsc-ca-file');
+        if (fileDialog) {
+          fileDialog.remove();
+        }
+      }
+      function radioTLSChange() {
+        if (that.$radioDisableTLSVerification.is(':checked')) {
+          maybeRemoveCertificateUpload();
+          var disableTLSWarning = 'Disabling TLS verification will make your connection to RStudio Connect less secure';
+          addWarningMarkup(that.$radioDisableTLSVerification, disableTLSWarning);
+        } else if (that.$radioUploadTLSCertificates.is(':checked')) {
+          maybeRemoveWarningMarkup(that.$radioDisableTLSVerification);
+          addCertificateUpload();
+        } else {
+          // if systemTLS is checked
+          maybeRemoveCertificateUpload();
+          maybeRemoveWarningMarkup(that.$radioDisableTLSVerification);
+        }
+      }
+      this.$radioDisableTLSVerification.change(radioTLSChange);
+      this.$radioSystemTLS.change(radioTLSChange);
+      this.$radioUploadTLSCertificates.change(radioTLSChange);
 
       var form = this.dialog.find('form').on('submit', this.onSubmit.bind(this));
 
@@ -254,6 +321,24 @@ define([
         .find('.modal-footer')
         .append(this.$btnCancel)
         .append(this.$btnAdd);
+
+      // setup TLS help icon
+
+      var msg =
+        'These settings only affect connections using addresses beginning with "https". Most users should use ' +
+        'System TLS Certificates. If you encounter a TLS error, ask your administrator for a certificate bundle. ' +
+        'If none is available, you can disable TLS verification completely.';
+
+      var helpIcon = $(
+        [
+          '<a tabindex="0" role="button" data-toggle="popover" data-trigger="focus">',
+          '<i class="fa fa-question-circle rsc-fa-icon"></i>'
+        ].join('')
+      )
+        .data('content', msg)
+        .popover();
+
+      $('#rsc-tls-options').append(helpIcon);
     },
 
     closeDialog: function() {
@@ -262,18 +347,6 @@ define([
 
     result: function() {
       return this.dialogResult;
-    },
-
-    onDisableTLSCertCheckChanged: function(ev) {
-      var checked = ev.target.checked;
-      if(checked) {
-        addWarningMarkup(
-            this.$checkDisableTLSCertCheck,
-            'Note: Checking "Disable TLS Certificate Verification" will make your connection to RStudio Connect less secure.'
-        );
-      } else {
-        addWarningMarkup(this.$checkDisableTLSCertCheck, '');
-      }
     },
 
     validate: function() {
@@ -349,14 +422,35 @@ define([
 
       if (this.validate()) {
         this.toggleAddButton(false);
-
-        this.config
-          .addServer(
-              this.$txtServer.val(),
-              this.$txtServerName.val(),
-              this.$txtApiKey.val(),
-              this.$checkDisableTLSCertCheck.is(':checked')
-          )
+        var that = this;
+        var fileCaBundleFile = getCertificateUpload(this.dialog);
+        var submit;
+        if (fileCaBundleFile) {
+          // if we have a file, we call `addServer` with TLS checking
+          // enabled and provide CA data
+          submit = readFileToPromise(fileCaBundleFile.files[0])
+              .then(function (cadata) {
+                return that.config
+                  .addServer(
+                    that.$txtServer.val(),
+                    that.$txtServerName.val(),
+                    that.$txtApiKey.val(),
+                    false,
+                    cadata
+                  );
+              });
+        } else {
+          // if not, we optionally disable TLS checking and leave CA data
+          // undefined.
+          submit = that.config
+                .addServer(
+                  that.$txtServer.val(),
+                  that.$txtServerName.val(),
+                  that.$txtApiKey.val(),
+                  that.$radioDisableTLSVerification.is(':checked')
+            );
+        }
+        submit
           .then(function(serverId) {
             self.dialogResult.resolve(serverId);
             self.dialog.modal('hide');

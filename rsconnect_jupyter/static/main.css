@@ -88,6 +88,11 @@
     display:block;
 }
 
+.rsc-file-dialog {
+    margin-left: 1em;
+    display:inline !important;
+}
+
 p {
     margin-top: 15px;
 }

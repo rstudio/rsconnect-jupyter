@@ -54,18 +54,23 @@ def wait_until(predicate, timeout, period=0.1):
 settings_path = '__api__/server_settings'
 max_redirects = 5
 
-def https_helper(hostname, port, disable_tls_check):
-    if disable_tls_check:
+def https_helper(hostname, port, disable_tls_check, cadata):
+    if cadata is not None and disable_tls_check:
+        raise Exception("Cannot both disable TLS checking and provide a custom certificate")
+    if cadata is not None:
+        return http.HTTPSConnection(hostname, port=(port or http.HTTPS_PORT), timeout=10,
+                                    context=ssl.create_default_context(cadata=cadata))
+    elif disable_tls_check:
         return http.HTTPSConnection(hostname, port=(port or http.HTTPS_PORT), timeout=10,
                                     context=ssl._create_unverified_context())
     else:
         return http.HTTPSConnection(hostname, port=(port or http.HTTPS_PORT), timeout=10)
 
-def verify_server(server_address, disable_tls_check):
+def verify_server(server_address, disable_tls_check, cadata):
     server_url = urljoin(server_address, settings_path)
-    return _verify_server(server_url, max_redirects, disable_tls_check)
+    return _verify_server(server_url, max_redirects, disable_tls_check, cadata)
 
-def _verify_server(server_address, max_redirects, disable_tls_check):
+def _verify_server(server_address, max_redirects, disable_tls_check, cadata):
     """
     Verifies that a server is present at the given address.
     Assumes that `__api__/server_settings` is accessible from the jupyter server.
@@ -78,7 +83,7 @@ def _verify_server(server_address, max_redirects, disable_tls_check):
         if r.scheme == 'http':
             conn = http.HTTPConnection(r.hostname, port=(r.port or http.HTTP_PORT), timeout=10)
         else:
-            conn = https_helper(r.hostname, r.port, disable_tls_check)
+            conn = https_helper(r.hostname, r.port, disable_tls_check, cadata)
 
         conn.request('GET', server_address)
         response = conn.getresponse()
@@ -119,13 +124,15 @@ def _verify_server(server_address, max_redirects, disable_tls_check):
 
 
 class RSConnect:
-    def __init__(self, uri, api_key, cookies=[], disable_tls_check=False):
+    def __init__(self, uri, api_key, cookies=[], disable_tls_check=False, cadata=None):
+        if disable_tls_check and (cadata is not None):
+            raise Exception("Cannot both disable TLS checking and provide custom certificate data")
         self.path_prefix = uri.path or '/'
         self.api_key = api_key
         self.conn = None
         self.mk_conn = lambda: http.HTTPConnection(uri.hostname, port=uri.port, timeout=10)
         if uri.scheme == 'https':
-            self.mk_conn = lambda: https_helper(uri.hostname, uri.port, disable_tls_check)
+            self.mk_conn = lambda: https_helper(uri.hostname, uri.port, disable_tls_check, cadata)
         self.http_headers = {
             'Authorization': 'Key %s' % self.api_key,
         }
@@ -264,8 +271,8 @@ def wait_for_task(api, task_id, timeout, period=1.0):
     return None
 
 
-def deploy(uri, api_key, app_id, app_name, app_title, tarball, disable_tls_check):
-    with RSConnect(uri, api_key, disable_tls_check=disable_tls_check) as api:
+def deploy(uri, api_key, app_id, app_name, app_title, tarball, disable_tls_check, cadata):
+    with RSConnect(uri, api_key, disable_tls_check=disable_tls_check, cadata=cadata) as api:
         if app_id is None:
             # create an app if id is not provided
             app = api.app_create(app_name)
@@ -287,18 +294,18 @@ def deploy(uri, api_key, app_id, app_name, app_title, tarball, disable_tls_check
         }
 
 
-def task_get(uri, api_key, task_id, last_status, cookies, disable_tls_check):
-    with RSConnect(uri, api_key, cookies, disable_tls_check=disable_tls_check) as api:
+def task_get(uri, api_key, task_id, last_status, cookies, disable_tls_check, cadata):
+    with RSConnect(uri, api_key, cookies, disable_tls_check=disable_tls_check, cadata=cadata) as api:
         return api.task_get(task_id, first_status=last_status)
 
 
-def app_config(uri, api_key, app_id, disable_tls_check):
-    with RSConnect(uri, api_key, disable_tls_check=disable_tls_check) as api:
+def app_config(uri, api_key, app_id, disable_tls_check, cadata):
+    with RSConnect(uri, api_key, disable_tls_check=disable_tls_check, cadata=cadata) as api:
         return api.app_config(app_id)
 
 
-def verify_api_key(uri, api_key, disable_tls_check):
-    with RSConnect(uri, api_key, disable_tls_check=disable_tls_check) as api:
+def verify_api_key(uri, api_key, disable_tls_check, cadata):
+    with RSConnect(uri, api_key, disable_tls_check=disable_tls_check, cadata=cadata) as api:
         try:
             api.me()
             return True
@@ -314,8 +321,8 @@ app_modes = {
 }
 
 
-def app_search(uri, api_key, app_title, app_id, disable_tls_check):
-    with RSConnect(uri, api_key, disable_tls_check=disable_tls_check) as api:
+def app_search(uri, api_key, app_title, app_id, disable_tls_check, cadata):
+    with RSConnect(uri, api_key, disable_tls_check=disable_tls_check, cadata=cadata) as api:
         data = []
 
         filters = [('count', 5),
@@ -352,6 +359,6 @@ def app_search(uri, api_key, app_title, app_id, disable_tls_check):
         return data
 
 
-def app_get(uri, api_key, app_id, disable_tls_check):
-    with RSConnect(uri, api_key, disable_tls_check=disable_tls_check) as api:
+def app_get(uri, api_key, app_id, disable_tls_check, cadata):
+    with RSConnect(uri, api_key, disable_tls_check=disable_tls_check, cadata=cadata) as api:
         return api.app_get(app_id)
