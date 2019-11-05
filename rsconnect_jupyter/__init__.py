@@ -10,7 +10,7 @@ from notebook.utils import url_path_join
 from tornado import web
 
 from .api import app_config, app_get, app_search, deploy, task_get, verify_server, verify_api_key, RSConnectException
-from .bundle import list_files, make_html_bundle, make_source_bundle, write_manifest
+from .bundle import make_html_bundle, make_source_bundle, write_manifest
 
 from ssl import SSLError
 
@@ -111,10 +111,9 @@ class EndpointHandler(APIHandler):
             api_key = data['api_key']
             app_mode = data['app_mode']
             environment = data.get('environment')
-            include_files = data['include_files']
-            include_subdirs = data['include_subdirs']
             disable_tls_check = data['disable_tls_check']
             cadata = data.get('cadata', None)
+            extra_files = data.get('files', [])
 
             model = self.contents_manager.get(path=nb_path)
             if model['type'] != 'notebook':
@@ -144,11 +143,6 @@ class EndpointHandler(APIHandler):
                     raise web.HTTPError(400, 'environment is required for jupyter-static app_mode')
 
                 try:
-                    if include_files:
-                        extra_files = list_files(ext_resources_dir, include_subdirs)
-                    else:
-                        extra_files = []
-
                     bundle = make_source_bundle(model, environment, ext_resources_dir, extra_files)
                 except Exception as exc:
                     self.log.exception('Bundle creation failed')
