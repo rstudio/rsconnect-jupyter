@@ -7,7 +7,7 @@ import os
 import tarfile
 import tempfile
 
-from os.path import abspath, exists, join, relpath, splitext
+from os.path import exists, join, normpath, relpath, splitext
 
 import nbformat
 from ipython_genutils import text
@@ -185,7 +185,7 @@ def make_source_bundle(model, environment, ext_resources_dir, extra_files=[]):
         extra_files = sorted(list(set(extra_files) - set(skip)))
 
     for rel_path in extra_files:
-        abs_path = abspath(join(ext_resources_dir, rel_path))
+        abs_path = normpath(join(ext_resources_dir, rel_path))
         if not abs_path.startswith(ext_resources_dir):
             raise ValueError('Path %s is not within the notebook directory' % rel_path)
         manifest_add_file(manifest, rel_path, ext_resources_dir)
