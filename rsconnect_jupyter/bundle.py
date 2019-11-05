@@ -4,11 +4,10 @@ import io
 import json
 import logging
 import os
-import posixpath
 import tarfile
 import tempfile
 
-from os.path import dirname, exists, join, relpath, split, splitext
+from os.path import exists, join, relpath, splitext
 
 import nbformat
 from ipython_genutils import text
