@@ -96,3 +96,8 @@
 p {
     margin-top: 15px;
 }
+
+#file-list-group {
+    max-height: 120px;
+    overflow-y: auto;
+}
