@@ -331,7 +331,16 @@ define([
               return xhr;
             },
 
-            publishContent: function (serverId, appId, notebookTitle, appMode, includeFiles, includeSubdirs) {
+            /**
+             * publishContent makes the call to the rsconnect-jupyter backend that will deploy the content
+             * @param serverId {string} the server identifier
+             * @param appId {number} the numeric app ID
+             * @param notebookTitle {string} Title of the notebook to be passed as name/title
+             * @param appMode {'static'|'jupyter-static'} App mode to deploy. 'static' is not rendered.
+             * @param files {Array<String>} paths to files to deploy.
+             * @returns {PromiseLike<T>|*|PromiseLike<any>|Promise<T>}
+             */
+            publishContent: function (serverId, appId, notebookTitle, appMode, files) {
                 var self = this;
                 var notebookPath = Utils.encode_uri_components(
                     Jupyter.notebook.notebook_path
@@ -423,8 +432,7 @@ define([
                         api_key: self.getApiKey(entry.server),
                         app_mode: appMode,
                         environment: environment,
-                        include_files: includeFiles,
-                        include_subdirs: includeSubdirs,
+                        files: files,
                         disable_tls_check: entry.disableTLSCheck,
                         cadata: self.getCAData(entry.server)
                     };

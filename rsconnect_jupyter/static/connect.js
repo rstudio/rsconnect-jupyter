@@ -4,8 +4,9 @@ define([
   'jquery',
   'base/js/namespace',
   'base/js/dialog',
+  'services/contents',
   './rsconnect'
-], function($, Jupyter, Dialog, RSConnect) {
+], function($, Jupyter, Dialog, Contents, RSConnect) {
   /***********************************************************************
    * Extension bootstrap (main)
    ***********************************************************************/
@@ -20,6 +21,9 @@ define([
     New: 'new',
     Canceled: 'canceled'
   };
+
+  var ContentsManager = new Contents.Contents({ base_url: Jupyter.notebook.base_url });
+  var notebookDirectory = Jupyter.notebook.notebook_path.slice(0, Jupyter.notebook.notebook_path.lastIndexOf('/'));
 
   function init() {
     // construct notification widget
@@ -145,6 +149,121 @@ define([
   function clearValidationMessages($parent) {
     $parent.find('.form-group').removeClass('has-error');
     $parent.find('.help-block').text('');
+  }
+
+  /**
+   * FileListItemManager creates a manager for the file list dropdown.
+   * @param $listGroup {jQuery} the element of the added-files list
+   * @param $dropDown {jQuery} the element of the dropdown list
+   * @param availableFiles {Array<String>} the list of available files
+   * @param fileList {Array<String>} the list of files staged for deploy
+   * @param contents {Array<Object>} content list from the content manager
+   * @param basePath {String} base path of the notebook
+   * @param notebookPath {String} the notebooke path from `Jupyter.notebook.notebook_path`
+   * @returns {Object}
+   * @constructor
+   */
+  function FileListItemManager($listGroup, $dropDown, availableFiles, fileList, contents, basePath, notebookPath) {
+    return {
+      $listGroup: $listGroup,
+      $dropDown: $dropDown,
+      availableFiles: availableFiles,
+      fileList: fileList,
+      contents: contents,
+      basePath: basePath,
+      notebookPath: notebookPath,
+      /**
+       * pathSanitizer removes the basePath from the given path.
+       * @param path {string} path to sanitize
+       * @returns {string} path with basepath removed
+       */
+      pathSanitizer: function(path) {
+        // Assumption in here is that `path` contains `this.basePath`
+        return path.slice(this.basePath.length+1);
+      },
+      /**
+       * addAllFiles adds all files from the dropdown to the file list
+       */
+      addAllFiles: function() {
+        this.fileList = this.fileList.concat(this.availableFiles);
+        this.availableFiles = [];
+        this.updateDropDownItems();
+        this.updateListGroupItems();
+      },
+      /**
+       * updateListGroupItems updates the list group from the list of staged files
+       * @private Do not use outside of the FileListManager. If you need to do
+       * something specific that has to update the list group items, implement
+       * it as part of the manager. If you don't have access to reference vars
+       * that you need for it, add them to the constructor.
+       */
+      updateListGroupItems: function() {
+        var that = this;
+        that.$listGroup.empty();
+        that.contents.forEach(function (item) {
+          if (that.fileList.indexOf(item.path) !== -1) {
+            var li = document.createElement('li');
+            var i = document.createElement('i');
+            i.className = 'fa fa-times';
+            li.className = 'list-group-item';
+            li.appendChild(i);
+            li.appendChild(document.createTextNode(' ' + that.pathSanitizer(item.path)));
+            li.addEventListener('click', that.listGroupItemClicked(item.path));
+            that.$listGroup.append(li);
+          }
+        });
+      },
+      /**
+       * listGroupItemClicked creates a click handler for the given item name
+       * @param item {string} item name
+       * @returns {function} bound click handler
+       */
+      listGroupItemClicked: function(item) {
+        function handler() {
+          this.availableFiles.push(item);
+          this.fileList.splice(this.fileList.indexOf(item), 1);
+          this.updateDropDownItems();
+          this.updateListGroupItems();
+        }
+        return handler.bind(this);
+      },
+      /**
+       * updateDropDownItems updates the dropdown list with the list of available-but-not-staged items.
+       * @private Do not use outside of the FileListManager. If you need to do
+       * something specific that has to update the list group items, implement
+       * it as part of the manager. If you don't have access to reference vars
+       * that you need for it, add them to the constructor.
+       */
+      updateDropDownItems: function() {
+        var that = this;
+        that.$dropDown.empty();
+        that.contents.forEach(function (item) {
+          if (that.availableFiles.indexOf(item.path) !== -1) {
+            var li = document.createElement('li');
+            var a = document.createElement('a');
+            a.href = '#';
+            a.innerText = that.pathSanitizer(item.path.toString());
+            a.addEventListener('click', that.dropDownItemClicked(item.path));
+            li.appendChild(a);
+            that.$dropDown.append(li);
+          }
+        });
+      },
+      /**
+       * dropDownItemClicked creates a click handler for dropdown items
+       * @param item {string} item name
+       * @returns {function} bound click handler
+       */
+      dropDownItemClicked: function(item) {
+        function handler() {
+          this.fileList.push(item);
+          this.availableFiles.splice(this.availableFiles.indexOf(item), 1);
+          this.updateDropDownItems();
+          this.updateListGroupItems();
+        }
+        return handler.bind(this);
+      }
+    };
   }
 
   // Disable the keyboard shortcut manager if it is enabled. This
@@ -492,7 +611,7 @@ define([
 
     var entry = config.servers[selectedEntryId];
     var previousAppMode = entry && entry.appMode;
-    var appMode = selectedAppMode || previousAppMode || 'static';
+    var appMode = selectedAppMode || previousAppMode || 'jupyter-static';
 
     // will be set during modal initialization
     var btnPublish = null;
@@ -706,14 +825,18 @@ define([
         '        </div>',
         '    </div>',
         '    <div class="form-group">',
-        '        <label>',
-        '          <input id="include-files" name="include-files" type="checkbox">',
-        '          Include all files in the notebook directory',
-        '        </label>',
-        '        <label>',
-        '          <input id="include-subdirs" name="include-subdirs" type="checkbox" style="margin-left: 30px">',
-        '          Include subdirectories',
-        '        </label>',
+        '        <label>Additional Files</label>',
+        '        <div class="dropdown">',
+        '          <button class="btn btn-default dropdown-toggle" type="button" id="file-select" data-toggle="dropdown" disabled>',
+        '          Add a file to deploy',
+        '          <span class="caret"></span>',
+        '          </button>',
+        '          <ul class="dropdown-menu" aria-labeledby="file-select" id="file-select-menu">',
+        '          </ul>',
+        '        </div>',
+        '        <ul class="list-group" id="file-list-group">',
+        '        </ul>',
+        '        <button class="btn btn-default" type="button" id="file-include-all">Add All Files In Directory</button>',
         '    </div>',
         '    <pre id="rsc-log" hidden></pre>',
         '    <div class="form-group">',
@@ -730,6 +853,14 @@ define([
       // triggered when dialog is visible (would be better if it was
       // post-node creation but before being visible)
       open: function() {
+        // The temporary reassignment of `this` is important for the
+        // content manager promise to avoid losing our broader dialog
+        // scope.
+        // However, we try to pass things by reference as much as
+        // possible and not depend on `this` too much. For example,
+        // the file list manager accepts reference arguments rather
+        // than binding itself to the dialog scope.
+        var that = this;
         disableKeyboardManagerIfNeeded();
         // TODO add ability to dismiss via escape key
 
@@ -767,6 +898,51 @@ define([
         // add default title
         txtTitle = publishModal.find('[name=title]');
         txtTitle.val(initialTitle);
+
+        // generate file list
+        var fileSelectMenu = publishModal.find('#file-select-menu');
+        var fileSelectDropdown = publishModal.find('#file-select');
+        var fileListGroup = publishModal.find('#file-list-group');
+        this.fileListItemManager = null;
+        ContentsManager.list_contents(notebookDirectory)
+            .then(function (contents) {
+              // build available files list
+              that.availableFiles = [];
+              // These files are always included except in static mode
+              var excludedFiles = [
+                  Jupyter.notebook.notebook_path,
+                  notebookDirectory+'requirements.txt',
+                  notebookDirectory+'manifest.json'
+              ];
+              contents.content.forEach(function (content) {
+                if (excludedFiles.indexOf(content.path) !== -1) {
+                  that.availableFiles.push(content.path);
+                }
+              });
+
+              that.fileList = [];
+
+              that.fileListItemManager = new FileListItemManager(
+                  fileListGroup,
+                  fileSelectMenu,
+                  that.availableFiles,
+                  that.fileList,
+                  contents.content,
+                  notebookDirectory,
+                  Jupyter.notebook.notebook_path
+              );
+              that.fileListItemManager.updateListGroupItems();
+              that.fileListItemManager.updateDropDownItems();
+              fileSelectDropdown.attr('disabled', false);
+
+            });
+
+        var fileIncludeAll = publishModal.find('#file-include-all');
+        fileIncludeAll.click(function() {
+          // remember that the fileListItemManager exists conditionally to the file list being loaded
+          // via the content manager promise which was immediately above at the time this code was written.
+          that.fileListItemManager.addAllFiles();
+        });
 
         function updateDeployNextButton() {
           var lastPublishedTitle =
@@ -911,8 +1087,7 @@ define([
                 appId,
                 txtTitle.val(),
                 appMode,
-                $('#include-files').prop('checked'),
-                $('#include-subdirs').prop('checked')
+                that.fileList
               )
               .always(function() {
                 togglePublishButton(true);
