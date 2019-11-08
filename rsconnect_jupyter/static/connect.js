@@ -911,11 +911,11 @@ define([
               // These files are always included except in static mode
               var excludedFiles = [
                   Jupyter.notebook.notebook_path,
-                  notebookDirectory+'requirements.txt',
-                  notebookDirectory+'manifest.json'
+                  notebookDirectory+'/requirements.txt',
+                  notebookDirectory+'/manifest.json'
               ];
               contents.content.forEach(function (content) {
-                if (excludedFiles.indexOf(content.path) !== -1) {
+                if (excludedFiles.indexOf(content.path) === -1) {
                   that.availableFiles.push(content.path);
                 }
               });
