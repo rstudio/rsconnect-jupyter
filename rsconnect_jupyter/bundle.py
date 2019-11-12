@@ -1,6 +1,7 @@
 
 import hashlib
 import io
+import itertools
 import json
 import logging
 import os
@@ -143,29 +144,29 @@ def write_manifest(relative_dir, nb_name, environment, output_dir):
     return created, skipped
 
 
-def list_files(base_dir, include_subdirs, walk=os.walk):
-    """List the files in the directory at path.
+def list_files(base_dir, files, walk=os.walk, isdir=os.path.isdir):
+    """Recursively list the files/directories specified by `files`,
+    relative to the directory at base_dir.
 
-    If include_subdirs is True, recursively list
-    files in subdirectories.
-
-    Returns an iterable of file paths relative to base_dir.
+    Returns a list of file paths relative to base_dir.
     """
     skip_dirs = ['.ipynb_checkpoints', '.git']
 
-    def iter_files():
-        for root, subdirs, files in walk(base_dir):
-            if include_subdirs:
+    def iter_files(entry):
+        path = join(base_dir, entry)
+        if isdir(path):
+            for root, subdirs, files in walk(join(base_dir, entry)):
                 for skip in skip_dirs:
                     if skip in subdirs:
                         subdirs.remove(skip)
-            else:
-                # tell walk not to traverse any subdirs
-                subdirs[:] = []
 
-            for filename in files:
-                yield relpath(join(root, filename), base_dir)
-    return list(iter_files())
+                for filename in files:
+                    yield relpath(join(root, filename), base_dir)
+        else:
+            # file
+            yield relpath(path, base_dir)
+
+    return list(itertools.chain.from_iterable([iter_files(entry) for entry in files]))
 
 
 def make_source_bundle(model, environment, ext_resources_dir, extra_files=[]):
@@ -179,16 +180,18 @@ def make_source_bundle(model, environment, ext_resources_dir, extra_files=[]):
     manifest = make_source_manifest(nb_name, environment, 'jupyter-static')
     manifest_add_buffer(manifest, nb_name, nb_content)
     manifest_add_buffer(manifest, environment['filename'], environment['contents'])
+    paths = []
 
     if extra_files:
+        paths = list_files(ext_resources_dir, extra_files)
         skip = [nb_name, environment['filename'], 'manifest.json']
-        extra_files = sorted(list(set(extra_files) - set(skip)))
+        paths = sorted(list(set(paths) - set(skip)))
 
-    for rel_path in extra_files:
-        abs_path = normpath(join(ext_resources_dir, rel_path))
-        if not abs_path.startswith(ext_resources_dir):
-            raise ValueError('Path %s is not within the notebook directory' % rel_path)
-        manifest_add_file(manifest, rel_path, ext_resources_dir)
+        for rel_path in paths:
+            abs_path = normpath(join(ext_resources_dir, rel_path))
+            if not abs_path.startswith(ext_resources_dir):
+                raise ValueError('Path %s is not within the notebook directory' % rel_path)
+            manifest_add_file(manifest, rel_path, ext_resources_dir)
 
     log.debug('manifest: %r', manifest)
 
@@ -200,7 +203,7 @@ def make_source_bundle(model, environment, ext_resources_dir, extra_files=[]):
         bundle_add_buffer(bundle, nb_name, nb_content)
         bundle_add_buffer(bundle, environment['filename'], environment['contents'])
 
-        for rel_path in extra_files:
+        for rel_path in paths:
             bundle_add_file(bundle, rel_path, ext_resources_dir)
 
     bundle_file.seek(0)

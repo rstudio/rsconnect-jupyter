@@ -7,7 +7,7 @@ import tarfile
 
 from datetime import datetime
 from unittest import TestCase
-from os.path import basename, dirname, exists, join
+from os.path import basename, dirname, exists, join, relpath
 
 import nbformat
 
@@ -147,21 +147,23 @@ class TestBundle(TestCase):
 
     def test_list_files(self):
         paths = [
-            'notebook.ipynb',
-            'somedata.csv',
-            'subdir/subfile',
-            'subdir2/subfile2',
-            '.ipynb_checkpoints/notebook.ipynb',
-            '.git/config',
+            '/foo/notebook.ipynb',
+            '/foo/somedata.csv',
+            '/foo/subdir/subfile',
+            '/foo/subdir2/subfile2',
+            '/foo/.ipynb_checkpoints/notebook.ipynb',
+            '/foo/.git/config',
         ]
 
         def walk(base_dir):
+            walkable_paths = filter(lambda s:s.startswith(base_dir), paths)
             dirnames = []
             filenames = []
 
-            for path in paths:
+            for path in walkable_paths:
+                path = relpath(path, base_dir)
                 if '/' in path:
-                    dirname, filename = path.split('/', 1)
+                    dirname, filename = path.rsplit('/', 1)
                     dirnames.append(dirname)
                 else:
                     filenames.append(path)
@@ -169,15 +171,23 @@ class TestBundle(TestCase):
             yield (base_dir, dirnames, filenames)
 
             for subdir in dirnames:
-                for path in paths:
+                for path in walkable_paths:
                     if path.startswith(subdir + '/'):
                         yield (base_dir + '/' + subdir, [], [path.split('/', 1)[1]])
 
-        files = list_files('/', True, walk=walk)
-        self.assertEqual(files, paths[:4])
+        def isdir(path):
+            return path in (
+                '/foo/subdir',
+                '/foo/subdir2',
+                '/foo/.ipynb_checkpoints',
+                '/foo/.git'
+            )
 
-        files = list_files('/', False, walk=walk)
-        self.assertEqual(files, paths[:2])
+        files = list_files('/foo', ['notebook.ipynb', 'somedata.csv', 'subdir', 'subdir2'], walk=walk, isdir=isdir)
+        self.assertEqual(files, ['notebook.ipynb', 'somedata.csv', 'subdir/subfile', 'subdir2/subfile2'])
+
+        files = list_files('/foo', ['notebook.ipynb', 'somedata.csv'], walk=walk, isdir=isdir)
+        self.assertEqual(files, ['notebook.ipynb', 'somedata.csv'])
 
     def test_html_bundle1(self):
         self.do_test_html_bundle(self.get_dir('pip1'))
