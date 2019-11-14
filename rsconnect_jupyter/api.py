@@ -158,6 +158,12 @@ class RSConnect:
         except (IOError, OSError) as e:
             logger.error('IO/OS Error: %s' % e)
             raise RSConnectException(str(e))
+        except (socket.error, socket.herror, socket.gaierror) as e:
+            logger.error('Socket Error: %s' % e)
+            raise RSConnectException(str(e))
+        except socket.timeout:
+            logger.error('Socket Timeout')
+            raise RSConnectException('Connection timed out')
 
     def _handle_set_cookie(self, response):
         headers = filter(lambda h: h[0].lower() == 'set-cookie', response.getheaders())
