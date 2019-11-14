@@ -870,16 +870,19 @@ define([
 
           function handleFailure(xhr) {
             var msg;
-            if (xhr.responseJSON) {
+            if (xhr.status === 500) {
+                msg = 'An internal error occurred.';
+            }
+            else if (xhr.responseJSON) {
               if(xhr.responseJSON.message) {
-                msg = xhr.responseJSON.message;
+                msg = 'Error: ' + xhr.responseJSON.message;
               }
               else {
                 msg = 'An unknown error occurred.';
               }
             }
             else if(xhr.responseText) {
-              msg = xhr.responseText;
+              msg = 'Error: ' + xhr.responseText;
             }
             else {
               msg = 'An unknown error occurred.';
