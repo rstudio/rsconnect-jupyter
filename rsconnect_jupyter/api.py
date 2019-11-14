@@ -152,6 +152,7 @@ class RSConnect:
         logger.debug('Performing: %s %s' % (method, request_path))
         try:
             self.conn.request(method, request_path, *args, **kwargs)
+            return self.json_response()
         except http.HTTPException as e:
             logger.error('HTTPException: %s' % e)
             raise RSConnectException(str(e))
@@ -185,6 +186,7 @@ class RSConnect:
 
     def json_response(self):
         response = self.conn.getresponse()
+
         self._handle_set_cookie(response)
         raw = response.read().decode('utf-8')
 
@@ -203,38 +205,31 @@ class RSConnect:
             return data
 
     def me(self):
-        self.request('GET', '__api__/me', None, self.http_headers)
-        return self.json_response()
+        return self.request('GET', '__api__/me', None, self.http_headers)
 
     def app_find(self, filters):
         params = urlencode(filters)
-        self.request('GET', '__api__/applications?' + params, None, self.http_headers)
-        data = self.json_response()
+        data = self.request('GET', '__api__/applications?' + params, None, self.http_headers)
         if data['count'] > 0:
             return data['applications']
 
     def app_create(self, name):
         params = json.dumps({'name': name})
-        self.request('POST', '__api__/applications', params, self.http_headers)
-        return self.json_response()
+        return self.request('POST', '__api__/applications', params, self.http_headers)
 
     def app_get(self, app_id):
-        self.request('GET', '__api__/applications/%d' % app_id, None, self.http_headers)
-        return self.json_response()
+        return self.request('GET', '__api__/applications/%d' % app_id, None, self.http_headers)
 
     def app_upload(self, app_id, tarball):
-        self.request('POST', '__api__/applications/%d/upload' % app_id, tarball, self.http_headers)
-        return self.json_response()
+        return self.request('POST', '__api__/applications/%d/upload' % app_id, tarball, self.http_headers)
 
     def app_update(self, app_id, updates):
         params = json.dumps(updates)
-        self.request('POST', '__api__/applications/%d' % app_id, params, self.http_headers)
-        return self.json_response()
+        return self.request('POST', '__api__/applications/%d' % app_id, params, self.http_headers)
 
     def app_deploy(self, app_id, bundle_id = None):
         params = json.dumps({'bundle': bundle_id})
-        self.request('POST', '__api__/applications/%d/deploy' % app_id, params, self.http_headers)
-        return self.json_response()
+        return self.request('POST', '__api__/applications/%d/deploy' % app_id, params, self.http_headers)
 
     def app_publish(self, app_id, access):
         params = json.dumps({
@@ -242,19 +237,16 @@ class RSConnect:
             'id': app_id,
             'needs_config': False
         })
-        self.request('POST', '__api__/applications/%d' % app_id, params, self.http_headers)
-        return self.json_response()
+        return self.request('POST', '__api__/applications/%d' % app_id, params, self.http_headers)
 
     def app_config(self, app_id):
-        self.request('GET', '__api__/applications/%d/config' % app_id, None, self.http_headers)
-        return self.json_response()
+        return self.request('GET', '__api__/applications/%d/config' % app_id, None, self.http_headers)
 
     def task_get(self, task_id, first_status=None):
         url = '__api__/tasks/%s' % task_id
         if first_status is not None:
             url += '?first_status=%d' % first_status
-        self.request('GET', url, None, self.http_headers)
-        return self.json_response()
+        return self.request('GET', url, None, self.http_headers)
 
 
 def wait_for_task(api, task_id, timeout, period=1.0):
