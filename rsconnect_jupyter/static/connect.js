@@ -357,7 +357,6 @@ define([
       },
       /**
        * updateListGroupItems updates the list group from the list of staged files
-       * @private
        */
       updateListGroupItems: function() {
         var that = this;
@@ -993,6 +992,7 @@ define([
             notebookDirectory,
             Jupyter.notebook.notebook_path
         );
+        that.fileListItemManager.updateListGroupItems();
         disableKeyboardManagerIfNeeded();
         // TODO add ability to dismiss via escape key
 
@@ -1249,7 +1249,7 @@ define([
                         txtTitle.val(),
                         currentAppId,
                         appMode,
-                        files
+                        that.fileListItemManager.fileList
                       );
                     }
                   });
