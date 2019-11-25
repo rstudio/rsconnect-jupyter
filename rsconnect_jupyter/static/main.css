@@ -102,7 +102,13 @@ p {
     overflow-y: auto;
 }
 
-#file-select-menu {
-    max-height: 120px;
+#file-list-container {
+    max-height: 240px;
     overflow-y: auto;
+}
+
+#file-list-label {
+    font-size: 1.2em;
+    padding-left: 1em;
+    font-weight: bold;
 }

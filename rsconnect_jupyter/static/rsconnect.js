@@ -163,7 +163,7 @@ define([
                         app_id: appId,
                         server_address: entry.server,
                         api_key: self.getApiKey(entry.server),
-                        disable_tls_check: entry.disableTLSCheck,
+                        disable_tls_check: entry.disableTLSCheck || false,
                         cadata: self.getCAData(entry.server)
                     })
                 });
@@ -364,7 +364,7 @@ define([
                                 task_id: deployResult['task_id'],
                                 last_status: lastStatus,
                                 cookies: deployResult.cookies || [],
-                                disable_tls_check: entry.disableTLSCheck,
+                                disable_tls_check: entry.disableTLSCheck || false,
                                 cadata: self.getCAData(entry.server)
 
                             })
@@ -411,7 +411,7 @@ define([
                             server_address: entry.server,
                             api_key: self.getApiKey(entry.server),
                             app_id: receivedAppId,
-                            disable_tls_check: entry.disableTLSCheck,
+                            disable_tls_check: entry.disableTLSCheck || false,
                             cadata: self.getCAData(entry.server)
                         })
                     }).then(function (config) {
@@ -433,7 +433,7 @@ define([
                         app_mode: appMode,
                         environment: environment,
                         files: files,
-                        disable_tls_check: entry.disableTLSCheck,
+                        disable_tls_check: entry.disableTLSCheck || false,
                         cadata: self.getCAData(entry.server)
                     };
 
@@ -482,7 +482,7 @@ define([
                         app_id: appId,
                         server_address: entry.server,
                         api_key: self.getApiKey(entry.server),
-                        disable_tls_check: entry.disableTLSCheck,
+                        disable_tls_check: entry.disableTLSCheck || false,
                         cadata: self.getCAData(entry.server)
                     })
                 });
