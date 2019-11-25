@@ -163,7 +163,7 @@ define([
                         app_id: appId,
                         server_address: entry.server,
                         api_key: self.getApiKey(entry.server),
-                        disable_tls_check: entry.disableTLSCheck,
+                        disable_tls_check: entry.disableTLSCheck || false,
                         cadata: self.getCAData(entry.server)
                     })
                 });
@@ -331,7 +331,16 @@ define([
               return xhr;
             },
 
-            publishContent: function (serverId, appId, notebookTitle, appMode, includeFiles, includeSubdirs) {
+            /**
+             * publishContent makes the call to the rsconnect-jupyter backend that will deploy the content
+             * @param serverId {string} the server identifier
+             * @param appId {number} the numeric app ID
+             * @param notebookTitle {string} Title of the notebook to be passed as name/title
+             * @param appMode {'static'|'jupyter-static'} App mode to deploy. 'static' is not rendered.
+             * @param files {Array<String>} paths to files to deploy.
+             * @returns {PromiseLike<T>|*|PromiseLike<any>|Promise<T>}
+             */
+            publishContent: function (serverId, appId, notebookTitle, appMode, files) {
                 var self = this;
                 var notebookPath = Utils.encode_uri_components(
                     Jupyter.notebook.notebook_path
@@ -355,7 +364,7 @@ define([
                                 task_id: deployResult['task_id'],
                                 last_status: lastStatus,
                                 cookies: deployResult.cookies || [],
-                                disable_tls_check: entry.disableTLSCheck,
+                                disable_tls_check: entry.disableTLSCheck || false,
                                 cadata: self.getCAData(entry.server)
 
                             })
@@ -402,7 +411,7 @@ define([
                             server_address: entry.server,
                             api_key: self.getApiKey(entry.server),
                             app_id: receivedAppId,
-                            disable_tls_check: entry.disableTLSCheck,
+                            disable_tls_check: entry.disableTLSCheck || false,
                             cadata: self.getCAData(entry.server)
                         })
                     }).then(function (config) {
@@ -423,9 +432,8 @@ define([
                         api_key: self.getApiKey(entry.server),
                         app_mode: appMode,
                         environment: environment,
-                        include_files: includeFiles,
-                        include_subdirs: includeSubdirs,
-                        disable_tls_check: entry.disableTLSCheck,
+                        files: files,
+                        disable_tls_check: entry.disableTLSCheck || false,
                         cadata: self.getCAData(entry.server)
                     };
 
@@ -474,7 +482,7 @@ define([
                         app_id: appId,
                         server_address: entry.server,
                         api_key: self.getApiKey(entry.server),
-                        disable_tls_check: entry.disableTLSCheck,
+                        disable_tls_check: entry.disableTLSCheck || false,
                         cadata: self.getCAData(entry.server)
                     })
                 });
