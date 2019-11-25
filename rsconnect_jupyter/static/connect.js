@@ -1176,13 +1176,20 @@ define([
               appId = parseInt(selectedDeployLocation, 10);
             }
 
+            var normalizedFiles = [];
+            files.forEach(function (file) {
+              normalizedFiles.push(
+                file.slice(notebookDirectory.length+1)
+              );
+            });
+
             config
               .publishContent(
                 selectedEntryId,
                 appId,
                 txtTitle.val(),
                 appMode,
-                files
+                normalizedFiles
               )
               .always(function() {
                 togglePublishButton(true);
