@@ -26,7 +26,7 @@ define([
   var lastSlashInNotebookPath = Jupyter.notebook.notebook_path.lastIndexOf('/');
   var notebookDirectory = '';
   if (lastSlashInNotebookPath !== -1) {
-    notebookDirectory = Jupyter.notebook.notebook_path.slice(0, Jupyter.notebook.notebook_path.lastIndexOf('/'));
+    notebookDirectory = Jupyter.notebook.notebook_path.slice(0, lastSlashInNotebookPath);
   }
 
   function init() {
