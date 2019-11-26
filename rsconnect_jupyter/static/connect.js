@@ -23,7 +23,11 @@ define([
   };
 
   var ContentsManager = new Contents.Contents({ base_url: Jupyter.notebook.base_url });
-  var notebookDirectory = Jupyter.notebook.notebook_path.slice(0, Jupyter.notebook.notebook_path.lastIndexOf('/'));
+  var lastSlashInNotebookPath = Jupyter.notebook.notebook_path.lastIndexOf('/');
+  var notebookDirectory = '';
+  if (lastSlashInNotebookPath !== -1) {
+    notebookDirectory = Jupyter.notebook.notebook_path.slice(0, Jupyter.notebook.notebook_path.lastIndexOf('/'));
+  }
 
   function init() {
     // construct notification widget
@@ -179,7 +183,9 @@ define([
       excludedFiles: [
                   notebookPath,
                   basePath+'/requirements.txt',
-                  basePath+'/manifest.json'
+                  basePath+'/manifest.json',
+                  'requirements.txt',
+                  'manifest.json'
               ],
       currentPath: basePath,
       /**
@@ -244,6 +250,9 @@ define([
        * @private
        */
       pathSanitizer: function(path) {
+        if (this.basePath === '') {
+          return path;
+        }
         // Assumption in here is that `path` contains `this.basePath`
         return path.slice(this.basePath.length+1);
       },
@@ -296,7 +305,7 @@ define([
                   var i2 = document.createElement('i');
                   i2.className = 'fa fa-folder';
                   li2.appendChild(i2);
-                  li2.addEventListener('click', that.directoryClicked(that.pathSanitizer(item.path)));
+                  li2.addEventListener('click', that.directoryClicked(item.path));
                 } else {
                   var input = document.createElement('input');
                   input.type = 'checkbox';
@@ -337,7 +346,12 @@ define([
        */
       directoryUp: function() {
         function handler() {
-          this.currentPath = this.currentPath.slice(0, this.currentPath.lastIndexOf('/'));
+          var lastSlashIndex = this.currentPath.lastIndexOf('/');
+          if (lastSlashIndex === -1) {
+            this.currentPath = '';
+          } else {
+            this.currentPath = this.currentPath.slice(0, lastSlashIndex);
+          }
           this.fillFileList();
         }
         return handler.bind(this);
@@ -350,7 +364,7 @@ define([
        */
       directoryClicked: function(directory) {
         function handler() {
-          this.currentPath = this.currentPath + '/' + directory;
+          this.currentPath = directory;
           this.fillFileList();
         }
         return handler.bind(this);
@@ -958,7 +972,7 @@ define([
         '        </div>',
         '    </div>',
         '    <div id="add-files">'+
-        '      <label for="rsc-add-files" class="rsc-label">Additional Files</label>',
+        '      <label for="rsc-add-files" id="rsc-add-files-label" class="rsc-label">Additional Files</label>',
         '      <button id="rsc-add-files" class="btn btn-default">Select Files...</button>',
         '      <ul class="list-group" id="file-list-group">',
         '      </ul>',
@@ -1022,7 +1036,10 @@ define([
 
         // add files button
         publishModal.find('#rsc-add-files').on('click', function(ev) {
-          that.fileListItemManager.showAddFilesDialog();
+          that.fileListItemManager.showAddFilesDialog()
+              .then(function(result) {
+                  files = result;
+              });
           // We `preventDefault` because this was causing the form to submit.
           // Possibly the default button behavior?
           ev.preventDefault();

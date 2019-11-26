@@ -112,3 +112,8 @@ p {
     padding-left: 1em;
     font-weight: bold;
 }
+
+#rsc-add-files-label {
+    margin-right: 1em;
+    margin-bottom: 2em;
+}
