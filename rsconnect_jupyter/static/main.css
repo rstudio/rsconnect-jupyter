@@ -96,3 +96,24 @@
 p {
     margin-top: 15px;
 }
+
+#file-list-group {
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+#file-list-container {
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+#file-list-label {
+    font-size: 1.2em;
+    padding-left: 1em;
+    font-weight: bold;
+}
+
+#rsc-add-files-label {
+    margin-right: 1em;
+    margin-bottom: 2em;
+}

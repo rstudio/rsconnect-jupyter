@@ -4,8 +4,9 @@ define([
   'jquery',
   'base/js/namespace',
   'base/js/dialog',
+  'services/contents',
   './rsconnect'
-], function($, Jupyter, Dialog, RSConnect) {
+], function($, Jupyter, Dialog, Contents, RSConnect) {
   /***********************************************************************
    * Extension bootstrap (main)
    ***********************************************************************/
@@ -20,6 +21,13 @@ define([
     New: 'new',
     Canceled: 'canceled'
   };
+
+  var ContentsManager = new Contents.Contents({ base_url: Jupyter.notebook.base_url });
+  var lastSlashInNotebookPath = Jupyter.notebook.notebook_path.lastIndexOf('/');
+  var notebookDirectory = '';
+  if (lastSlashInNotebookPath !== -1) {
+    notebookDirectory = Jupyter.notebook.notebook_path.slice(0, lastSlashInNotebookPath);
+  }
 
   function init() {
     // construct notification widget
@@ -145,6 +153,254 @@ define([
   function clearValidationMessages($parent) {
     $parent.find('.form-group').removeClass('has-error');
     $parent.find('.help-block').text('');
+  }
+
+  /**
+   * fileName returns the filename from a path
+   * @param path {String} file path
+   * @returns {String} filename
+   */
+  function fileName(path) {
+    return path.slice(path.lastIndexOf('/')+1);
+  }
+
+  /**
+   * FileListItemManager creates a manager for the file list dropdown.
+   * @param $listGroup {jQuery} the file list in the publish dialog
+   * @param fileList {Array<String>} object with the list of files staged for deploy
+   * @param basePath {String} base path of the notebook
+   * @param notebookPath {String} the notebooke path from `Jupyter.notebook.notebook_path`
+   * @returns {Object}
+   * @constructor
+   */
+  function FileListItemManager($listGroup, fileList, basePath, notebookPath) {
+    return {
+      $listGroup: $listGroup,
+      fileList: fileList,
+      stagedFiles: fileList.slice(0),
+      basePath: basePath,
+      notebookPath: notebookPath,
+      excludedFiles: [
+                  notebookPath,
+                  basePath+'/requirements.txt',
+                  basePath+'/manifest.json',
+                  'requirements.txt',
+                  'manifest.json'
+              ],
+      currentPath: basePath,
+      /**
+       * Shows the file selector widget
+       * `fileList` should be initialized before this.
+       * @returns {PromiseLike<Array<String>,String>} List of files or rejection message
+       * @public
+       */
+      showAddFilesDialog: function() {
+        var result = $.Deferred();
+        var that = this;
+        that.currentPath = that.basePath;
+        this.dialog = Dialog.modal({
+          // pass the existing keyboard manager so all shortcuts are disabled while
+          // modal is active
+          keyboard_manager: Jupyter.notebook.keyboard_manager,
+
+          title: 'Add Files to Deploy',
+          body: '<label id="file-list-label"></label>' +
+              '<ul class="list-group" id="file-list-container">' +
+              '</ul>',
+          buttons: {
+            'Cancel': {
+              'id': 'add-files-dialog-cancel',
+              /**
+               * Reject the staged files and replace with filelist
+               * Note: `.slice(0)` is how you clone arrays in JS
+               */
+              click: function() {
+                that.stagedFiles = that.fileList.slice(0);
+                result.reject('User cancelled');
+              }
+            },
+            'Accept': {
+              'id': 'add-files-dialog-accept',
+              class: 'btn-primary',
+              /**
+               * Accept the staged files as the new file list
+               */
+              click: function() {
+                that.fileList = that.stagedFiles.slice(0);
+                that.updateListGroupItems();
+                result.resolve(that.fileList);
+              }
+            }
+          },
+          sanitize: false,
+          /**
+           * Opens the file dialog.
+           */
+          open: function() {
+            that.stagedFiles = that.fileList.slice(0);
+            that.fillFileList();
+          }
+        });
+        return result;
+      },
+      /**
+       * pathSanitizer removes the basePath from the given path.
+       * @param path {string} path to sanitize
+       * @returns {string} path with basepath removed
+       * @private
+       */
+      pathSanitizer: function(path) {
+        if (this.basePath === '') {
+          return path;
+        }
+        // Assumption in here is that `path` contains `this.basePath`
+        return path.slice(this.basePath.length+1);
+      },
+      /**
+       * fillFileList fills the file selection dialog based on the current
+       * state of the FileListItemManager.
+       * Important state variables:
+       * - currentPath (where we have navigated to)
+       * - stagedFiles (which files are ready to replace the `fileList`)
+       * @private
+       */
+      fillFileList: function() {
+        var that = this;
+        var $container = $('#file-list-container');
+        var $label = $('#file-list-label');
+        $label.empty().text(that.currentPath + '/');
+        $container.empty();
+        ContentsManager.list_contents(that.currentPath)
+            .then(function(contents) {
+              var content = contents.content.sort(function (a, b) {
+                // Directories come first
+                if (a.type === 'directory' ? b.type !== 'directory' : b.type === 'directory') {
+                  return a.type === 'directory' ? -1 : 1;
+                }
+                // There is no 0 case because we trust no name collisions in content manager.
+                // If they have the same normalized-case value, capital comes first.
+                if (a.name.toLowerCase() === b.name.toLowerCase()) {
+                  return a.name < b.name ? -1 : 1;
+                }
+                return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1;
+              });
+              // If we're not on the base path, add a ".."
+              if (that.currentPath !== that.basePath) {
+                var li = document.createElement('li');
+                var i = document.createElement('i');
+                i.className = 'fa fa-folder';
+                li.appendChild(i);
+                li.className = 'list-group-item';
+                li.appendChild(document.createTextNode(' ..'));
+                li.addEventListener('click', that.directoryUp());
+                $container.append(li);
+              }
+              content.forEach(function(item) {
+                // If the file is excluded, don't show
+                if (that.excludedFiles.indexOf(item.path) !== -1) {
+                  return;
+                }
+                var li2 = document.createElement('li');
+                if (item.type === 'directory') {
+                  var i2 = document.createElement('i');
+                  i2.className = 'fa fa-folder';
+                  li2.appendChild(i2);
+                  li2.addEventListener('click', that.directoryClicked(item.path));
+                } else {
+                  var input = document.createElement('input');
+                  input.type = 'checkbox';
+                  input.name = item.name;
+                  input.value = item.path;
+                  if (that.stagedFiles.indexOf(item.path) !== -1) {
+                    input.checked = true;
+                  }
+                  $(input).change(function () {
+                    if(input.checked) {
+                      that.stagedFiles.push(item.path);
+                    } else {
+                      that.stagedFiles.splice(that.stagedFiles.indexOf(item.path), 1);
+                    }
+                  });
+                  li2.appendChild(input);
+                  $(li2).click(function(ev) {
+                    if (ev.target !== input) {
+                      input.checked = !input.checked;
+                      if (input.checked) {
+                        that.stagedFiles.push(item.path);
+                      } else {
+                        that.stagedFiles.splice(that.stagedFiles.indexOf(item.path), 1);
+                      }
+                    }
+                  });
+                }
+                li2.className = 'list-group-item';
+                li2.appendChild(document.createTextNode(' ' + fileName(item.path)));
+                $container.append(li2);
+              });
+            });
+      },
+      /**
+       * directoryUp is a factory creating a handler for clicking the `..` item in the directory list
+       * @returns {function} click handler
+       * @private
+       */
+      directoryUp: function() {
+        function handler() {
+          var lastSlashIndex = this.currentPath.lastIndexOf('/');
+          if (lastSlashIndex === -1) {
+            this.currentPath = '';
+          } else {
+            this.currentPath = this.currentPath.slice(0, lastSlashIndex);
+          }
+          this.fillFileList();
+        }
+        return handler.bind(this);
+      },
+      /**
+       * directoryClicked is a factory that creates a handler for the click of a directory in the file dialog
+       * @param directory {String} directory that is clicked
+       * @returns {function} click handler
+       * @private
+       */
+      directoryClicked: function(directory) {
+        function handler() {
+          this.currentPath = directory;
+          this.fillFileList();
+        }
+        return handler.bind(this);
+      },
+      /**
+       * updateListGroupItems updates the list group from the list of staged files
+       */
+      updateListGroupItems: function() {
+        var that = this;
+        that.$listGroup.empty();
+        that.fileList = that.fileList.sort();
+        that.fileList.forEach(function (item) {
+          var li = document.createElement('li');
+          var i = document.createElement('i');
+          i.className = 'fa fa-times';
+          li.className = 'list-group-item';
+          li.appendChild(i);
+          li.appendChild(document.createTextNode(' ' + that.pathSanitizer(item)));
+          li.addEventListener('click', that.listGroupItemClicked(item));
+          that.$listGroup.append(li);
+        });
+      },
+      /**
+       * listGroupItemClicked creates a click handler for the given item name
+       * @param item {string} item name
+       * @returns {function} bound click handler
+       * @private
+       */
+      listGroupItemClicked: function(item) {
+        function handler() {
+          this.fileList.splice(this.fileList.indexOf(item), 1);
+          this.updateListGroupItems();
+        }
+        return handler.bind(this);
+      }
+    };
   }
 
   // Disable the keyboard shortcut manager if it is enabled. This
@@ -469,10 +725,20 @@ define([
     }
   };
 
+  /**
+   * showSelectServerDialog shows the publishing dialog
+   * @param serverId {String} Server Unique Identifier
+   * @param fileList {Array<String>} list of file paths to be included
+   * @param userEditedTitle {String} title as edited by user
+   * @param selectedDeployLocation {DeploymentLocation.Canceled|DeploymentLocation.New|String} whether this is a new
+   * deployment, a canceled deployment, or has an app id
+   * @param selectedAppMode {'jupyter-static'|'static'} App mode
+   */
   function showSelectServerDialog(
-    // serverId and userEditedTitle are shuttled
+    // serverId, fileList, and userEditedTitle are shuttled
     // between content selection dialog and this dialog.
     serverId,
+    fileList,
     userEditedTitle,
     // selectedDeployLocation is set to: DeploymentLocation.Canceled when
     // content selection was canceled, DeploymentLocation.New when user wants to
@@ -482,7 +748,7 @@ define([
     selectedAppMode
   ) {
     var dialogResult = $.Deferred();
-
+    var files = fileList || [];
     var servers = Object.keys(config.servers);
     if (servers.length === 1) {
       serverId = servers[0];
@@ -492,7 +758,7 @@ define([
 
     var entry = config.servers[selectedEntryId];
     var previousAppMode = entry && entry.appMode;
-    var appMode = selectedAppMode || previousAppMode || 'static';
+    var appMode = selectedAppMode || previousAppMode || 'jupyter-static';
 
     // will be set during modal initialization
     var btnPublish = null;
@@ -705,15 +971,11 @@ define([
         '            <span class="help-block"></span>',
         '        </div>',
         '    </div>',
-        '    <div class="form-group">',
-        '        <label>',
-        '          <input id="include-files" name="include-files" type="checkbox">',
-        '          Include all files in the notebook directory',
-        '        </label>',
-        '        <label>',
-        '          <input id="include-subdirs" name="include-subdirs" type="checkbox" style="margin-left: 30px">',
-        '          Include subdirectories',
-        '        </label>',
+        '    <div id="add-files">'+
+        '      <label for="rsc-add-files" id="rsc-add-files-label" class="rsc-label">Additional Files</label>',
+        '      <button id="rsc-add-files" class="btn btn-default">Select Files...</button>',
+        '      <ul class="list-group" id="file-list-group">',
+        '      </ul>',
         '    </div>',
         '    <pre id="rsc-log" hidden></pre>',
         '    <div class="form-group">',
@@ -730,6 +992,21 @@ define([
       // triggered when dialog is visible (would be better if it was
       // post-node creation but before being visible)
       open: function() {
+        // The temporary reassignment of `this` is important for the
+        // content manager promise to avoid losing our broader dialog
+        // scope.
+        // However, we try to pass things by reference as much as
+        // possible and not depend on `this` too much. For example,
+        // the file list manager accepts reference arguments rather
+        // than binding itself to the dialog scope.
+        var that = this;
+        that.fileListItemManager = new FileListItemManager(
+            $('#file-list-group'),
+            files,
+            notebookDirectory,
+            Jupyter.notebook.notebook_path
+        );
+        that.fileListItemManager.updateListGroupItems();
         disableKeyboardManagerIfNeeded();
         // TODO add ability to dismiss via escape key
 
@@ -755,6 +1032,17 @@ define([
               showSelectServerDialog(selectedServerId);
             })
             .fail(reselectPreviousServer);
+        });
+
+        // add files button
+        publishModal.find('#rsc-add-files').on('click', function(ev) {
+          that.fileListItemManager.showAddFilesDialog()
+              .then(function(result) {
+                  files = result;
+              });
+          // We `preventDefault` because this was causing the form to submit.
+          // Possibly the default button behavior?
+          ev.preventDefault();
         });
 
         // generate server list
@@ -908,14 +1196,24 @@ define([
               appId = parseInt(selectedDeployLocation, 10);
             }
 
+            var normalizedFiles = [];
+            if (notebookDirectory.length !== 0) {
+                files.forEach(function (file) {
+                    normalizedFiles.push(
+                        file.slice(notebookDirectory.length + 1)
+                    );
+                });
+            } else {
+                normalizedFiles = files;
+            }
+
             config
               .publishContent(
                 selectedEntryId,
                 appId,
                 txtTitle.val(),
                 appMode,
-                $('#include-files').prop('checked'),
-                $('#include-subdirs').prop('checked')
+                normalizedFiles
               )
               .always(function() {
                 togglePublishButton(true);
@@ -981,7 +1279,8 @@ define([
                         selectedEntryId,
                         txtTitle.val(),
                         currentAppId,
-                        appMode
+                        appMode,
+                        that.fileListItemManager.fileList
                       );
                     }
                   });
@@ -1048,12 +1347,22 @@ define([
     return dialogResult;
   }
 
+  /**
+   * showSearchDialog is the dialog shown if we're redeploying content
+   * @param searchResults {Array<Object>} List of apps
+   * @param serverId {String} Server Unique Identifier
+   * @param title {String} App title
+   * @param appId {Number} App ID
+   * @param appMode {'static'|'jupyter-static'} App mode
+   * @param files {Array<String>} list of file paths that will be included
+   */
   function showSearchDialog(
     searchResults,
     serverId,
     title,
     appId,
-    appMode
+    appMode,
+    files
   ) {
     function getUserAppMode(mode) {
       if (mode === 'static') {
@@ -1141,6 +1450,7 @@ define([
           searchDialog.modal('hide');
           showSelectServerDialog(
             serverId,
+            files,
             title,
             location,
             selectedAppMode
