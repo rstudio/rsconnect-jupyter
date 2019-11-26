@@ -1194,11 +1194,15 @@ define([
             }
 
             var normalizedFiles = [];
-            files.forEach(function (file) {
-              normalizedFiles.push(
-                file.slice(notebookDirectory.length+1)
-              );
-            });
+            if (notebookDirectory.length !== 0) {
+                files.forEach(function (file) {
+                    normalizedFiles.push(
+                        file.slice(notebookDirectory.length + 1)
+                    );
+                });
+            } else {
+                normalizedFiles = files;
+            }
 
             config
               .publishContent(
