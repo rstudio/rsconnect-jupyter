@@ -42,10 +42,12 @@ all-tests: test2 test3.5 test3.6 test3.7
 
 test:
 # TODO run in container
+	pip install --extra-index-url=https://test.pypi.org/simple rsconnect-python
 	python -V
 	python -Wi setup.py test
 
 test%:
+	### TEMPORARY - install rsconnect-python from Test PyPI since it's not on PyPI yet.
 	make DOCKER_IMAGE=rstudio/rsconnect-jupyter-py$* PY_VERSION=$* TARGET=test launch
 
 test-selenium:
@@ -63,6 +65,8 @@ package:
 	make DOCKER_IMAGE=$(IMAGE)3 PY_VERSION=3 TARGET=dist launch
 
 run:
+	### TEMPORARY - install rsconnect-python from Test PyPI since it's not on PyPI yet.
+	pip install --extra-index-url=https://test.pypi.org/simple rsconnect-python
 # link python package
 	python setup.py develop
 # install rsconnect_jupyter as a jupyter extension
