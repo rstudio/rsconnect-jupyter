@@ -9,8 +9,8 @@ from notebook.base.handlers import APIHandler
 from notebook.utils import url_path_join
 from tornado import web
 
-from .api import app_config, app_get, app_search, deploy, task_get, verify_server, verify_api_key, RSConnectException
-from .bundle import make_html_bundle, make_source_bundle, write_manifest
+from rsconnect.api import app_config, app_get, app_search, deploy, task_get, verify_server, verify_api_key, RSConnectException
+from rsconnect.bundle import make_notebook_html_bundle, make_notebook_source_bundle, write_manifest
 
 from ssl import SSLError
 
@@ -120,21 +120,14 @@ class EndpointHandler(APIHandler):
                 # not a notebook
                 raise web.HTTPError(400, u"Not a notebook: %s" % nb_path)
 
-            if hasattr(self.contents_manager, '_get_os_path'):
-                os_path = self.contents_manager._get_os_path(nb_path)
-                ext_resources_dir, _ = os.path.split(os_path)
-            else:
-                ext_resources_dir = None
+            if not hasattr(self.contents_manager, '_get_os_path'):
+                raise web.HTTPError(400, u"Notebook does not live on a mounted filesystem")
+
+            os_path = self.contents_manager._get_os_path(nb_path)
 
             if app_mode == 'static':
-                # If the notebook relates to a real file (default contents manager),
-                # give its path to nbconvert.
-
-                config_dir = self.application.settings['config_dir']
-
                 try:
-                    bundle = make_html_bundle(model, nb_title, config_dir,
-                                              ext_resources_dir, self.config, self.log)
+                    bundle = make_notebook_html_bundle(os_path, sys.executable)
                 except Exception as exc:
                     self.log.exception('Bundle creation failed')
                     raise web.HTTPError(500, u"Bundle creation failed: %s" % exc)
@@ -143,7 +136,7 @@ class EndpointHandler(APIHandler):
                     raise web.HTTPError(400, 'environment is required for jupyter-static app_mode')
 
                 try:
-                    bundle = make_source_bundle(model, environment, ext_resources_dir, extra_files)
+                    bundle = make_notebook_source_bundle(os_path, environment, extra_files)
                 except Exception as exc:
                     self.log.exception('Bundle creation failed')
                     raise web.HTTPError(500, u"Bundle creation failed: %s" % exc)
