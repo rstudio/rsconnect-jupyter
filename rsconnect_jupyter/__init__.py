@@ -1,6 +1,7 @@
 import hashlib
 import json
 import os
+import sys
 
 from six.moves.urllib.parse import unquote_plus, urlparse
 from os.path import dirname, join
