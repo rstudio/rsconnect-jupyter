@@ -25,11 +25,18 @@ def detect_environment(dirname):
     on failure.
     """
     result = (output_file(dirname, 'requirements.txt', 'pip') or
-              pip_freeze(dirname))
+              output_file(dirname, 'environment.yml', 'conda'))
+
+    if result is None:
+        if has_conda(os.environ):
+            result = conda_env_export()
+            result['conda'] = get_version('conda', use_path=True)
+        else:
+            result = pip_freeze(dirname)
+            result['pip'] = get_version('pip')
 
     if result is not None:
         result['python'] = get_python_version()
-        result['pip'] = get_version('pip')
         result['locale'] = get_default_locale()
 
     return result
@@ -49,7 +56,7 @@ def get_version(module):
         args = [sys.executable, '-m', module, '--version']
         proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         stdout, stderr = proc.communicate()
-        match = version_re.search(stdout)
+        match = version_re.search(stdout or stderr)
         if match:
             return match.group()
 
@@ -116,6 +123,41 @@ def pip_freeze(dirname):
         'contents': pip_stdout,
         'source': 'pip_freeze',
         'package_manager': 'pip',
+    }
+
+
+def has_conda(env):
+    """Return true if there is current a conda environment active"""
+    result = env.get('CONDA_PREFIX') or env.get('CONDA_DEFAULT_ENV')
+    return result is not None
+
+
+def conda_env_export():
+    """Inspect the environment using `conda env export`.
+
+    Returns a dictionary containing the filename
+    (always 'environment.yml') and contents if successful,
+    or raises an EnvironmentException on failure.
+    """
+    try:
+        proc = subprocess.Popen(
+            ['conda', 'env', 'export'],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+
+        stdout, stderr = proc.communicate()
+        status = proc.returncode
+    except Exception as exc:
+        raise EnvironmentException('Error during conda env export: %s' % str(exc))
+
+    if status != 0:
+        msg = stderr or ('exited with code %d' % status)
+        raise EnvironmentException('Error during conda env export: %s' % msg)
+
+    return {
+        'filename': 'environment.yml',
+        'contents': stdout,
+        'source': 'conda_env_export',
+        'package_manager': 'conda',
     }
 
 
