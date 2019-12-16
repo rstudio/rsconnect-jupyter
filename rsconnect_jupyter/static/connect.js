@@ -1005,11 +1005,13 @@ define([
         '            <span class="help-block"></span>',
         '        </div>',
         '    </div>',
-        '    <div id="add-files">'+
+        '    <div id="add-files">',
         '      <label for="rsc-add-files" id="rsc-add-files-label" class="rsc-label">Additional Files</label>',
         '      <button id="rsc-add-files" class="btn btn-default">Select Files...</button>',
         '      <ul class="list-group" id="file-list-group">',
         '      </ul>',
+        '    </div>',
+        '    <div id="requirements-txt-container">',
         '    </div>',
         '    <pre id="rsc-log" hidden></pre>',
         '    <div class="form-group">',
@@ -1035,6 +1037,7 @@ define([
         // the file list manager accepts reference arguments rather
         // than binding itself to the dialog scope.
         var that = this;
+        var hasRequirementsTxt = false;
         publishModal.find('#version-info').html(
             'rsconnect-jupyter server extension version: ' +
             rsconnectVersionInfo.rsconnect_jupyter_server_extension + '<br />' +
@@ -1086,6 +1089,17 @@ define([
           ev.preventDefault();
         });
 
+        ContentsManager.list_contents(notebookDirectory)
+            .then(function (contents) {
+              for(var index in contents.content) {
+                if (contents.content[index].name === 'requirements.txt') {
+                  hasRequirementsTxt = true;
+                  break;
+                }
+              }
+              prepareRequirementsTxtDialog(hasRequirementsTxt);
+            });
+
         // generate server list
         var serverItems = Object.keys(config.servers).map(function(id) {
           var matchingServer = serverId === id;
@@ -1134,6 +1148,30 @@ define([
 
           updateCheckboxStates();
         });
+
+        /**
+         * Prepares the radio buttons for requirements.txt if it
+         * exists, or the verbiage to place in the field otherwise.
+         * @param hasRequirements {boolean} Whether or not we have requirements.txt already
+         */
+        function prepareRequirementsTxtDialog(hasRequirements) {
+          var requirementsTxtContainer = $('#requirements-txt-container');
+          var html = '<label for="requirements-txt" class="rsc-label">Environment Restore</label><br />' +
+              '<p><i class="fa fa-question-circle"></i> A <span class="code">requirements.txt</span> file was not found in the notebook ' +
+              'directory. One will be generated automatically from your current python environment.</p>';
+          if (hasRequirements) {
+            html = '<label for="requirements-txt" class="rsc-label">Environment Restore</label><br />' +
+                '<input type="radio" name="requirements-txt" id="use-existing" value="use-existing" checked />' +
+                '<label for="use-existing">' +
+                ' Use the existing <span class="code">requirements.txt</span> file in the notebook directory.' +
+                '</label><br />' +
+                '<input type="radio" name="requirements-txt" id="generate-new" value="generate-new" />' +
+                '<label for="generate-new">' +
+                '  Generate a <span class="code">requirements.txt</span> from the current python environment.' +
+                '</label>';
+          }
+          requirementsTxtContainer.append(html);
+        }
 
         function bindCheckbox(id) {
           // save/restore value in server settings
