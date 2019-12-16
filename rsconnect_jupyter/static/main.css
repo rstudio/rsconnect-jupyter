@@ -117,3 +117,11 @@ p {
     margin-right: 1em;
     margin-bottom: 2em;
 }
+
+.code {
+    font-family: monospace;
+}
+
+#requirements-txt-container input {
+    margin-right: 1em;
+}
