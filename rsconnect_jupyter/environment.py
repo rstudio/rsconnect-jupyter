@@ -30,10 +30,10 @@ def detect_environment(dirname):
     if result is None:
         if has_conda(os.environ):
             result = conda_env_export()
-            result['conda'] = get_version('conda', use_path=True)
+            result['conda'] = get_binary_version('conda')
         else:
             result = pip_freeze(dirname)
-            result['pip'] = get_version('pip')
+            result['pip'] = get_module_version('pip')
 
     if result is not None:
         result['python'] = get_python_version()
@@ -51,9 +51,8 @@ def get_default_locale():
     return '.'.join(locale.getdefaultlocale())
 
 
-def get_version(module):
+def _parse_version_output(args, module):
     try:
-        args = [sys.executable, '-m', module, '--version']
         proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         stdout, stderr = proc.communicate()
         match = version_re.search(stdout or stderr)
@@ -64,6 +63,16 @@ def get_version(module):
         raise EnvironmentException(msg)
     except Exception as exc:
         raise EnvironmentException("Error getting '%s' version: %s" % (module, str(exc)))
+
+
+def get_module_version(module):
+    args = [sys.executable, '-m', module, '--version']
+    return _parse_version_output(args, module)
+
+
+def get_binary_version(binary):
+    args = [binary, '--version']
+    return _parse_version_output(args, binary)
 
 
 def output_file(dirname, filename, package_manager):
