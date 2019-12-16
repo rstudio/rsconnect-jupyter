@@ -4,7 +4,8 @@ NB_UID=$(shell id -u)
 NB_GID=$(shell id -g)
 
 IMAGE=rstudio/rsconnect-jupyter-py
-VERSION=$(shell cat rsconnect_jupyter/version.txt).$(shell printenv BUILD_NUMBER || echo 9999)
+BUILD_NUMBER=$(shell printenv BUILD_NUMBER || echo 9999)
+VERSION=$(shell cat rsconnect_jupyter/version.txt).$(BUILD_NUMBER)
 PORT = $(shell printenv PORT || echo 9999)
 
 clean:
