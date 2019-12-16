@@ -439,6 +439,23 @@ define([
     return promise.promise();
   }
 
+  function notebookExecuteToPromise(cmd) {
+    var promise = $.Deferred();
+    var callbacks = {
+      iopub: {
+        output: function (res) {
+          if (res.message_type === 'error') {
+            promise.reject(res);
+          } else {
+            promise.resolve(res);
+          }
+        }
+      }
+    };
+    Jupyter.notebook.kernel.execute(cmd, callbacks);
+    return promise.promise();
+  }
+
   function getCertificateUpload(ctx) {
       return $(ctx).find('#rsc-ca-file')[0];
   }
@@ -1003,6 +1020,8 @@ define([
         // than binding itself to the dialog scope.
         var that = this;
         var hasRequirementsTxt = false;
+        var hasEnvironmentYml = false;
+        var isCondaEnvironment = false;
         that.fileListItemManager = new FileListItemManager(
             $('#file-list-group'),
             files,
@@ -1047,16 +1066,34 @@ define([
           // Possibly the default button behavior?
           ev.preventDefault();
         });
-
-        ContentsManager.list_contents(notebookDirectory)
+        var condaDetector = 'import os\n' +
+            'print("CONDA_PREFIX\t"+str(os.environ.get("CONDA_PREFIX")))\n' +
+            'print("CONDA_DEFAULT_ENV\t"+str(os.environ.get("CONDA_DEFAULT_ENV")))\n';
+        notebookExecuteToPromise(condaDetector)
+            .then(function (response) {
+              var output = response.content.text;
+              var lines = output.split('\n');
+              var map = {};
+              lines.forEach(function (line) {
+                var token = line.split('\t');
+                map[token[0]] = token[1];
+                if(token[1] !== 'None' && token[0] !== '') {
+                  isCondaEnvironment = true;
+                }
+              });
+            })
+            .then(function() {
+              return ContentsManager.list_contents(notebookDirectory);
+            })
             .then(function (contents) {
               for(var index in contents.content) {
                 if (contents.content[index].name === 'requirements.txt') {
                   hasRequirementsTxt = true;
-                  break;
+                } else if (contents.content[index].name === 'environment.yml') {
+                  hasEnvironmentYml = true;
                 }
               }
-              prepareRequirementsTxtDialog(hasRequirementsTxt);
+              prepareRequirementsTxtDialog(hasRequirementsTxt, hasEnvironmentYml, isCondaEnvironment);
             });
 
         // generate server list
@@ -1112,24 +1149,68 @@ define([
          * Prepares the radio buttons for requirements.txt if it
          * exists, or the verbiage to place in the field otherwise.
          * @param hasRequirements {boolean} Whether or not we have requirements.txt already
+         * @param hasEnvironment {boolean} Whether or not we have environment.yml already
+         * @param isConda {boolean} Whether or not we detected a running conda environment
          */
-        function prepareRequirementsTxtDialog(hasRequirements) {
+        function prepareRequirementsTxtDialog(hasRequirements, hasEnvironment, isConda) {
+          isConda = true;
           var requirementsTxtContainer = $('#requirements-txt-container');
-          var html = '<label for="requirements-txt" class="rsc-label">Environment Restore</label><br />' +
-              '<p><i class="fa fa-question-circle"></i> A <span class="code">requirements.txt</span> file was not found in the notebook ' +
-              'directory. One will be generated automatically from your current python environment.</p>';
+          requirementsTxtContainer.empty();
+          requirementsTxtContainer.append(
+              '<label for="requirements-txt" class="rsc-label">Environment Restore</label><br />'
+          );
+          if (!hasRequirements && !hasEnvironment) {
+            var message = '<p><i class="fa fa-question-circle"></i> ' +
+                'A <span class="code">requirements.txt</span> or <span class="code">environment.yml</span> file was ' +
+                'not found in the notebook directory.';
+
+            if (isConda) {
+              message += ' An environment file will be generated from your current conda environment.</p>';
+            } else {
+              message += ' An environment file will be generated from your current pip environment.</p>';
+            }
+            requirementsTxtContainer.append(message);
+            return;
+          }
+          if (hasEnvironment) {
+            requirementsTxtContainer.append(
+                '<input ' +
+                '  type="radio"' +
+                '  name="requirements-txt"' +
+                '  id="use-existing-conda" ' +
+                '  value="use-existing-conda" checked />' +
+                '<label for="use-existing-conda">' +
+                ' Use the existing <span class="code">environment.yml</span> file in the notebook directory.' +
+                '</label><br />'
+            );
+          }
           if (hasRequirements) {
-            html = '<label for="requirements-txt" class="rsc-label">Environment Restore</label><br />' +
-                '<input type="radio" name="requirements-txt" id="use-existing" value="use-existing" checked />' +
-                '<label for="use-existing">' +
+            requirementsTxtContainer.append(
+                '<input ' +
+                '  type="radio"' +
+                '  name="requirements-txt"' +
+                '  id="use-existing-pip" ' +
+                '  value="use-existing-pip" '+ (hasEnvironment ? '' : 'checked') + ' />' +
+                '<label for="use-existing-pip">' +
                 ' Use the existing <span class="code">requirements.txt</span> file in the notebook directory.' +
-                '</label><br />' +
+                '</label><br />'
+            );
+          }
+          if (isConda) {
+            requirementsTxtContainer.append(
+              '<input type="radio" name="requirements-txt" id="generate-new" value="generate-new" />' +
+              '<label for="generate-new">' +
+              '  Generate an <span class="code">environment.yml</span> from the current conda environment.' +
+              '</label>'
+          );
+          } else {
+            requirementsTxtContainer.append(
                 '<input type="radio" name="requirements-txt" id="generate-new" value="generate-new" />' +
                 '<label for="generate-new">' +
-                '  Generate a <span class="code">requirements.txt</span> from the current python environment.' +
-                '</label>';
+                '  Generate a <span class="code">requirements.txt</span> from the current pip environment.' +
+                '</label>'
+            );
           }
-          requirementsTxtContainer.append(html);
         }
 
         function bindCheckbox(id) {
