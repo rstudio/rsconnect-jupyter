@@ -203,7 +203,6 @@ class TestBundle(TestCase):
         # the test environment. Don't do this in the production code, which
         # runs in the notebook server. We need the introspection to run in
         # the kernel environment and not the notebook server environment.
-        environment = detect_environment(dir)
         notebook = self.read_notebook(nb_path)
 
         # borrowed these from the running notebook server in the container
