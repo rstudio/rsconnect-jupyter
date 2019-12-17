@@ -6,16 +6,16 @@ import re
 import subprocess
 import sys
 
+from os.path import dirname, exists, join
 
 version_re = re.compile(r'\d+\.\d+(\.\d+)?')
-exec_dir = os.path.dirname(sys.executable)
 
 
 class EnvironmentException(Exception):
     pass
 
 
-def detect_environment(dirname):
+def detect_environment(directory, python):
     """Determine the python dependencies in the environment.
 
     `pip freeze` will be used to introspect the environment.
@@ -24,21 +24,23 @@ def detect_environment(dirname):
     and contents if successful, or a dictionary containing 'error'
     on failure.
     """
-    result = (output_file(dirname, 'requirements.txt', 'pip') or
-              output_file(dirname, 'environment.yml', 'conda'))
+    result = (output_file(directory, 'environment.yml', 'conda') or
+              output_file(directory, 'requirements.txt', 'pip'))
 
     if result is None:
-        if has_conda(os.environ):
-            result = conda_env_export()
-            result['conda'] = get_binary_version('conda')
+        if has_conda(python):
+            result = conda_env_export(python)
         else:
-            result = pip_freeze(dirname)
-            result['pip'] = get_module_version('pip')
+            result = pip_freeze(python)
 
-    if result is not None:
-        result['python'] = get_python_version()
-        result['locale'] = get_default_locale()
+    manager = result['package_manager']
+    if manager == 'pip':
+        result['pip'] = get_module_version('pip')
+    elif manager == 'conda':
+        result['conda'] = get_binary_version('conda')
 
+    result['python'] = get_python_version()
+    result['locale'] = get_default_locale()
     return result
 
 
@@ -75,7 +77,7 @@ def get_binary_version(binary):
     return _parse_version_output(args, binary)
 
 
-def output_file(dirname, filename, package_manager):
+def output_file(directory, filename, package_manager):
     """Read an existing package spec file.
 
     Returns a dictionary containing the filename and contents
@@ -83,7 +85,7 @@ def output_file(dirname, filename, package_manager):
     or a dictionary containing 'error' on failure.
     """
     try:
-        path = os.path.join(dirname, filename)
+        path = os.path.join(directory, filename)
         if not os.path.exists(path):
             return None
 
@@ -103,7 +105,7 @@ def output_file(dirname, filename, package_manager):
         raise EnvironmentException('Error reading %s: %s' % (filename, str(exc)))
 
 
-def pip_freeze(dirname):
+def pip_freeze(python):
     """Inspect the environment using `pip freeze`.
 
     Returns a dictionary containing the filename
@@ -112,7 +114,7 @@ def pip_freeze(dirname):
     """
     try:
         proc = subprocess.Popen(
-            [sys.executable, '-m', 'pip', 'freeze'],
+            [python, '-m', 'pip', 'freeze'],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
 
         pip_stdout, pip_stderr = proc.communicate()
@@ -135,13 +137,17 @@ def pip_freeze(dirname):
     }
 
 
-def has_conda(env):
+def _conda_env_path(python):
+    return dirname(dirname(python))
+
+
+def has_conda(python):
     """Return true if there is current a conda environment active"""
-    result = env.get('CONDA_PREFIX') or env.get('CONDA_DEFAULT_ENV')
-    return result is not None
+    conda_meta_path = join(_conda_env_path(python), 'conda-meta')
+    return exists(conda_meta_path)
 
 
-def conda_env_export():
+def conda_env_export(python):
     """Inspect the environment using `conda env export`.
 
     Returns a dictionary containing the filename
@@ -149,8 +155,9 @@ def conda_env_export():
     or raises an EnvironmentException on failure.
     """
     try:
+        env_path = _conda_env_path(python)
         proc = subprocess.Popen(
-            ['conda', 'env', 'export'],
+            ['conda', 'env', 'export', '-p', env_path],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
 
         stdout, stderr = proc.communicate()
@@ -173,9 +180,14 @@ def conda_env_export():
 if __name__ == '__main__':
     try:
         if len(sys.argv) < 2:
-            raise EnvironmentException('Usage: %s DIRECTORY' % sys.argv[0])
+            raise EnvironmentException('Usage: %s DIRECTORY [PYTHON]' % sys.argv[0])
 
-        result = detect_environment(sys.argv[1])
+        if len(sys.argv) > 2:
+            python = sys.argv[2]
+        else:
+            python = sys.executable
+
+        result = detect_environment(sys.argv[1], python)
     except EnvironmentException as exc:
         result = dict(error=str(exc))
 

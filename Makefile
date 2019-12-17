@@ -17,7 +17,7 @@ image%:
 	docker build \
 		--tag $(IMAGE)$* \
 		--file Dockerfile \
-		--build-arg BASE_IMAGE=continuumio/miniconda:4.4.10 \
+		--build-arg BASE_IMAGE=continuumio/miniconda:4.7.12 \
 		--build-arg NB_UID=$(NB_UID) \
 		--build-arg NB_GID=$(NB_GID) \
 		--build-arg PY_VERSION=$* \
