@@ -40,7 +40,7 @@ class TestBundle(TestCase):
         # the test environment. Don't do this in the production code, which
         # runs in the notebook server. We need the introspection to run in
         # the kernel environment and not the notebook server environment.
-        environment = detect_environment(dir)
+        environment = detect_environment(dir, sys.executable)
         notebook = self.read_notebook(nb_path)
         with make_source_bundle(notebook, environment, dir) as bundle, \
             tarfile.open(mode='r:gz', fileobj=bundle) as tar:
@@ -93,7 +93,7 @@ class TestBundle(TestCase):
         # the test environment. Don't do this in the production code, which
         # runs in the notebook server. We need the introspection to run in
         # the kernel environment and not the notebook server environment.
-        environment = detect_environment(dir)
+        environment = detect_environment(dir, sys.executable)
         notebook = self.read_notebook(nb_path)
 
         with make_source_bundle(notebook, environment, dir, extra_files=['data.csv']) as bundle, \
@@ -103,11 +103,11 @@ class TestBundle(TestCase):
             self.assertEqual(names, [
                 'data.csv',
                 'dummy.ipynb',
+                'environment.yml',
                 'manifest.json',
-                'requirements.txt',
             ])
 
-            reqs = tar.extractfile('requirements.txt').read()
+            reqs = tar.extractfile('environment.yml').read()
 
             # these are the dependencies declared in our setup.py
             self.assertIn(b'notebook', reqs)
@@ -116,7 +116,7 @@ class TestBundle(TestCase):
             manifest = json.loads(tar.extractfile('manifest.json').read().decode('utf-8'))
 
             # don't check requirements.txt since we don't know the checksum
-            del manifest['files']['requirements.txt']
+            del manifest['files']['environment.yml']
 
             # also don't check locale value, just require it be present
             del manifest['locale']
@@ -131,8 +131,8 @@ class TestBundle(TestCase):
                 u"python": {
                     u"version": self.python_version(),
                     u"package_manager": {
-                        u"name": u"pip",
-                        u"package_file": u"requirements.txt"
+                        u"name": u"conda",
+                        u"package_file": u"environment.yml"
                     }
                 },
                 u"files": {

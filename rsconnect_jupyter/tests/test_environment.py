@@ -4,7 +4,7 @@ import sys
 from unittest import TestCase
 from os.path import dirname, exists, join
 
-from rsconnect_jupyter.environment import detect_environment
+from rsconnect_jupyter.environment import detect_environment, pip_freeze
 
 version_re = re.compile(r'\d+\.\d+(\.\d+)?')
 
@@ -18,7 +18,7 @@ class TestEnvironment(TestCase):
     	return '.'.join(map(str, sys.version_info[:3]))
 
     def test_file(self):
-        result = detect_environment(self.get_dir('pip1'))
+        result = detect_environment(self.get_dir('pip1'), sys.executable)
 
         pip_version = result.pop('pip')
         self.assertTrue(version_re.match(pip_version))
@@ -36,23 +36,15 @@ class TestEnvironment(TestCase):
         })
 
     def test_pip_freeze(self):
-        result = detect_environment(self.get_dir('pip2'))
+        result = pip_freeze(sys.executable)
         contents = result.pop('contents')
 
         # these are the dependencies declared in our setup.py
         self.assertIn('notebook', contents)
         self.assertIn('nbformat', contents)
 
-        pip_version = result.pop('pip')
-        self.assertTrue(version_re.match(pip_version))
-
-        locale = result.pop('locale')
-        self.assertIsInstance(locale, str)
-        self.assertIn('.', locale)
-
         self.assertEqual(result, {
             'package_manager': 'pip',
             'source': 'pip_freeze',
             'filename': 'requirements.txt',
-            'python': self.python_version(),
         })
