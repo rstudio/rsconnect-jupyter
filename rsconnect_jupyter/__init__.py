@@ -148,6 +148,7 @@ class EndpointHandler(APIHandler):
             try:
                 with RSConnect(uri, api_key, None, disable_tls_check, cadata) as api_client:
                     retval = api_client.deploy(app_id, nb_name, nb_title, bundle)
+                    retval['cookies'] = api_client.cookies
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
 
