@@ -36,6 +36,7 @@ setup(name='rsconnect_jupyter',
       license='GPL-2.0',
       packages=['rsconnect_jupyter'],
       install_requires=[
+          'rsconnect-python==0.1.*',
           'notebook',
           'nbformat',
           'nbconvert>=5.0',
