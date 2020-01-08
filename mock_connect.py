@@ -11,12 +11,15 @@
 
 import io
 import tarfile
+import uuid
 from datetime import datetime
 from json import dumps, loads
 from functools import wraps
 from pprint import pprint
 
+# noinspection PyPackageRequirements
 from flask import Flask, Blueprint, abort, after_this_request, g, request, url_for, jsonify
+
 
 def error(code, reason):
     def set_code(response):
@@ -30,21 +33,26 @@ def error(code, reason):
     }
 
 
+class IdGenerator(object):
+    def __init__(self):
+        self._value = 0
+
+    def next(self):
+        self._value = self._value + 1
+        return self._value
+
+
 app = Flask(__name__)
 
-apps = {}
-app_id = 0
 
-bundles = {}
-bundle_id = 0
-
-tasks = {}
-task_id = 0
-
-apikeys = {
+apps, app_id_generator = {}, IdGenerator()
+bundles, bundle_id_generator = {}, IdGenerator()
+tasks, task_id_generator = {}, IdGenerator()
+api_keys = {
     '0123456789abcdef0123456789abcdef': 'admin'
 }
 
+# noinspection SpellCheckingInspection
 users = {
     'admin': {
         "username": "admin",
@@ -83,6 +91,7 @@ users = {
     }
 }
 
+
 def authenticated(f):
     @wraps(f)
     def wrapper(*args, **kw):
@@ -90,12 +99,13 @@ def authenticated(f):
         if auth is None or not auth.startswith('Key '):
             abort(401)
         key = auth[4:]
-        if key not in apikeys:
+        if key not in api_keys:
             abort(401)
 
-        g.user = users[apikeys[key]]
+        g.user = users[api_keys[key]]
         return f(*args, **kw)
     return wrapper
+
 
 def json(f):
     @wraps(f)
@@ -103,18 +113,21 @@ def json(f):
         return jsonify(f(*args, **kw))
     return wrapper
 
+
 def item_by_id(d):
     def decorator(f):
         @wraps(f)
-        def wrapper(id, *args, **kw):
-            item = d.get(id)
+        def wrapper(object_id, *args, **kw):
+            item = d.get(object_id)
             if item is None:
                 return dumps(error(404, 'Not found'))
             return f(item, *args, **kw)
         return wrapper
     return decorator
 
+
 api = Blueprint('api', __name__)
+
 
 @app.route('/')
 def index():
@@ -137,36 +150,34 @@ def timestamp():
 @json
 def applications():
     if request.method == 'POST':
-        app = request.get_json(force=True)
-        name = app.get('name')
-        if name and [app for app in apps.values() if app.get('name') == name]:
+        connect_app = request.get_json(force=True)
+        name = connect_app.get('name')
+        if name and [existing_app for existing_app in apps.values() if existing_app.get('name') == name]:
             return error(409, 'An object with that name already exists.')
 
-        global app_id
-        app_id = app_id + 1
-
-        app['id'] = app_id
-        app['url'] = '{0}content/{1}'.format(url_for('index', _external=True), app_id)
-        app['owner_username'] = g.user.get('username')
-        app['owner_first_name'] = g.user.get('first_name')
-        app['owner_last_name'] = g.user.get('last_name')
-        app['owner_email'] = g.user.get('email')
-        app['owner_locked'] = g.user.get('locked')
-        app['bundle_id'] = None
-        app['needs_config'] = True
-        app['access_type'] = None
-        app['description'] = ''
-        app['app_mode'] = None
-        app['created_time'] = timestamp()
-        app.setdefault('title', '')
-        apps[str(app_id)] = app
-        return app
+        connect_app['id'] = app_id_generator.next()
+        connect_app['guid'] = str(uuid.uuid4())
+        connect_app['url'] = '{0}content/{1}'.format(url_for('index', _external=True), connect_app['id'])
+        connect_app['owner_username'] = g.user.get('username')
+        connect_app['owner_first_name'] = g.user.get('first_name')
+        connect_app['owner_last_name'] = g.user.get('last_name')
+        connect_app['owner_email'] = g.user.get('email')
+        connect_app['owner_locked'] = g.user.get('locked')
+        connect_app['bundle_id'] = None
+        connect_app['needs_config'] = True
+        connect_app['access_type'] = None
+        connect_app['description'] = ''
+        connect_app['app_mode'] = None
+        connect_app['created_time'] = timestamp()
+        connect_app.setdefault('title', '')
+        apps[str(connect_app['id'])] = connect_app
+        return connect_app
     else:
         count = int(request.args.get('count', 10000))
         search = request.args.get('search')
 
-        def match(app):
-            return (search is None or (app.get('title') or '').startswith(search))
+        def match(app_to_match):
+            return search is None or (app_to_match.get('title') or '').startswith(search)
 
         matches = list(filter(match, apps.values()))[:count]
         return {
@@ -176,40 +187,42 @@ def applications():
         }
 
 
-@api.route('applications/<id>', methods=['GET', 'POST'])
+# noinspection PyUnresolvedReferences
+@api.route('applications/<object_id>', methods=['GET', 'POST'])
 @authenticated
 @json
 @item_by_id(apps)
-def application(app):
+def application(connect_app):
     if request.method == 'GET':
-        return app
+        return connect_app
     else:
-        app.update(request.get_json(force=True))
-        return app
+        connect_app.update(request.get_json(force=True))
+        return connect_app
 
 
-@api.route('applications/<id>/config')
+# noinspection PyUnresolvedReferences
+@api.route('applications/<object_id>/config')
 @authenticated
 @json
 @item_by_id(apps)
-def config(app):
+def config(connect_app):
     return {
-        'config_url': '{0}content/apps/{1}'.format(url_for('index', _external=True), app['id'])
+        'config_url': '{0}content/apps/{1}'.format(url_for('index', _external=True), connect_app['id'])
     }
 
 
-@api.route('applications/<id>/upload', methods=['POST'])
+# noinspection PyUnresolvedReferences
+@api.route('applications/<object_id>/upload', methods=['POST'])
 @authenticated
 @json
 @item_by_id(apps)
-def upload(app):
-    global bundle_id
-    bundle_id = bundle_id + 1
+def upload(connect_app):
+    bundle_id = bundle_id_generator.next()
     ts = timestamp()
 
     bundle = {
         'id': bundle_id,
-        'app_id': app['id'],
+        'app_id': connect_app['id'],
         'created_time': ts,
         'updated_time': ts,
     }
@@ -222,26 +235,32 @@ def read_bundle_file(tarball, filename):
     with tarfile.open('r:gz', fileobj=bio) as tar:
         return tar.extractfile(filename).read()
 
+
 def read_manifest(tarball):
     manifest_data = read_bundle_file(tarball, 'manifest.json').decode('utf-8')
     return loads(manifest_data)
 
+
 def read_html(tarball):
     manifest = read_manifest(tarball)
     meta = manifest['metadata']
+    # noinspection SpellCheckingInspection
     filename = meta.get('primary_html') or meta.get('entrypoint')
     return read_bundle_file(tarball, filename).decode('utf-8')
+
 
 app_modes = {
     'static': 4,
     'jupyter-static': 7,
 }
 
-@api.route('applications/<id>/deploy', methods=['POST'])
+
+# noinspection PyUnresolvedReferences
+@api.route('applications/<object_id>/deploy', methods=['POST'])
 @authenticated
 @json
 @item_by_id(apps)
-def deploy(app):
+def deploy(connect_app):
     bundle_id = request.get_json(force=True).get('bundle')
     if bundle_id is None:
         return error(400, 'bundle_id is required')  # message and status code probably wrong
@@ -254,19 +273,18 @@ def deploy(app):
     manifest = read_manifest(tarball)
     pprint(manifest)
 
-    old_app_mode = app['app_mode']
+    old_app_mode = connect_app['app_mode']
+    # noinspection SpellCheckingInspection
     new_app_mode = app_modes[manifest['metadata']['appmode']]
 
     if old_app_mode is not None and old_app_mode != new_app_mode:
         return error(400, 'Cannot change app mode once deployed')  # message and status code probably wrong
 
-    app['app_mode'] = new_app_mode
-    app['bundle_id'] = bundle_id
-    app['last_deployed_time'] = timestamp()
+    connect_app['app_mode'] = new_app_mode
+    connect_app['bundle_id'] = bundle_id
+    connect_app['last_deployed_time'] = timestamp()
 
-    global task_id
-    task_id = task_id + 1
-
+    task_id = task_id_generator.next()
     task = {
         'id': task_id,
         'user_id': 0,
@@ -280,7 +298,8 @@ def deploy(app):
     return task
 
 
-@api.route('tasks/<id>')
+# noinspection PyUnresolvedReferences
+@api.route('tasks/<object_id>')
 @authenticated
 @json
 @item_by_id(tasks)
@@ -295,10 +314,11 @@ def server_settings():
     return {}
 
 
-@app.route('/content/apps/<id>')
+# noinspection PyUnresolvedReferences
+@app.route('/content/apps/<object_id>')
 @item_by_id(apps)
-def content(app):
-    bundle, tarball = bundles[app['bundle_id']]
+def content(connect_app):
+    bundle, tarball = bundles[connect_app['bundle_id']]
     return read_html(tarball)
 
 
