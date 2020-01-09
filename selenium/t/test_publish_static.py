@@ -45,5 +45,6 @@ class TestPublishStatic(object):
 
         m = MainToolBar()
         notification = m.rsconnect_notification
+        sleep(1) # race
         notification.should(be.visible)
         notification.should(have.text('Successfully published content'))
