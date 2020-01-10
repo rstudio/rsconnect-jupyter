@@ -1,3 +1,17 @@
+# v1.3.0
+- Core functionality was moved to the `rsconnect-python` package, which includes a
+  command-line interface for convenience. See https://github.com/rstudio/rsconnect-python
+  for more information.
+- Extra files may now be included with a deployed bundle. Use the `Add Files` button in
+  the deployment dialog.
+- In addition to disabling TLS checking entirely, users now have the option of uploading
+  their own self-signed certificate bundle as a more secure TLS alternative.
+- Network errors when connecting to an RStudio Connect server are now described more
+  clearly.
+- Users may now prepare a repository for git-based deployment from `rsconnect-jupyter`.
+  The `Create Manifest` menu will create the necessary files for RStudio Connect to
+  recognize the jupyter notebook as deployable from git.
+
 # v1.2.2.7
 - Fixed an issue where content could fail to deploy using old server configurations.
   The plugin will now delete any configuration without an associated API key, and you
