@@ -3,3 +3,5 @@ include rsconnect_jupyter/static/*.js
 include rsconnect_jupyter/static/main.css
 include rsconnect_jupyter/static/images/*.png
 include rsconnect_jupyter/version.txt
+include jupyter-config/jupyter_notebook_config.d/*.json
+include jupyter-config/nbconfig/notebook.d/*.json

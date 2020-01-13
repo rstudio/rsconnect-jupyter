@@ -1,0 +1,5 @@
+{
+  "load_extensions": {
+    "rsconnect_jupyter/index": true
+  }
+}

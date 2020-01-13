@@ -42,6 +42,17 @@ setup(name='rsconnect_jupyter',
           'nbconvert>=5.0',
           'six'
       ] + ipython_dependency,
-      python_requires = '>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*',
+      data_files=[
+          ("share/jupyter/nbextensions/rsconnect_jupyter", [
+             "rsconnect_jupyter/static/index.js"
+          ]),
+          ("etc/jupyter/nbconfig/notebook.d", [
+              "jupyter-config/nbconfig/notebook.d/rsconnect_jupyter.json"
+          ]),
+          ("etc/jupyter/jupyter_notebook_config.d", [
+              "jupyter-config/jupyter_notebook_config.d/rsconnect_jupyter.json"
+          ])
+      ],
+      python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*',
       include_package_data=True,
       zip_safe=False)
