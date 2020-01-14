@@ -1158,7 +1158,15 @@ define([
 
           function handleFailure(xhr) {
             var msg;
-            if (xhr.status === 500) {
+            if (
+                typeof xhr === 'string' &&
+                xhr.match(/ModuleNotFoundError: No module named 'rsconnect'/) !== null
+            ) {
+                msg = 'The rsconnect-python package is not installed in your current notebook kernel.<br />' +
+                    'See the <a href="https://docs.rstudio.com/rsconnect-jupyter/#installation" target="_blank">' +
+                    'Installation Section of the rsconnect-jupyter documentation</a> for more information.';
+            }
+            else if (xhr.status === 500) {
                 msg = 'An internal error occurred.';
             }
             else if (xhr.responseJSON) {
@@ -1613,14 +1621,25 @@ define([
                 $status.append(skippedLinks);
               }
             })
-.fail(function(response) {
+            .fail(function(response) {
               $status.text(response.responseJSON.message);
             });
           })
-.fail(function(response) {
-            $status.text(response.responseJSON.message);
+          .fail(function(response) {
+            if (
+              typeof response === 'string' &&
+              response.match(/ModuleNotFoundError: No module named 'rsconnect'/) !== null
+            ) {
+              $status.html(
+             'The rsconnect-python package is not installed in your current notebook kernel.<br />' +
+                  'See the <a href="https://docs.rstudio.com/rsconnect-jupyter/#installation" target="_blank">' +
+                  'Installation Section of the rsconnect-jupyter documentation</a> for more information.'
+              );
+            } else {
+              $status.text(response.responseJSON.message);
+            }
           })
-.always(function() {
+          .always(function() {
             $spinner.remove();
             btnCreateManifest.attr('disabled', false);
           });
