@@ -61,6 +61,10 @@ jupyter-serverextension enable --sys-prefix --py rsconnect_jupyter
 Note: The above commands only need to be run once when installing
 `rsconnect_jupyter`.
 
+Note: In order to deploy content, you will need at least the 
+[rsconnect-python](https://github.com/rstudio/rsconnect-python) package
+in every kernel you plan to deploy from.
+
 Note: If you run into an issue during installation please let us know by filing
 a bug [here](https://github.com/rstudio/rsconnect-jupyter/issues).
 
