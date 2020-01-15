@@ -93,7 +93,7 @@ re-install it.
 
 # Usage
 
-Open a notebook and click the blue "Publish to RStudio Connect" icon
+Open a notebook and click the blue icon and select `Publish to RStudio Connect`
 to publish the current notebook to RStudio Connect.
 
 ![blue toolbar icon used for publishing the notebook](docs/images/publish-icon.gif)
@@ -108,9 +108,24 @@ You will also be prompted to enter your API Key. See the [RStudio Connect User
 Guide](http://docs.rstudio.com/connect/user/api-keys.html) for
 instructions on generating API Keys for your user.
 
-When you click the Add Server button, `rsconnect-jupyter` will send a request to the RStudio Connect server to verify that it can be reached via the requested URL and that the API key is valid. 
+When you click the Add Server button, `rsconnect-jupyter` will send a request 
+to the RStudio Connect server to verify that it can be reached via the requested 
+URL and that the API key is valid. 
 
-If your RStudio Connect server was configured with a self-signed certificate (or other certificate that computer hosting your Jupyter notebook server does not trust), the attempt to contact RStudio Connect will fail with a TLS-related error. In this case, please contact your system administrator for instructions on how to configure your computer to trust the certificate they have provided. If trusting the certificate is not an option, you can check the `Disable TLS Certificate Verification` box, which will bypass the certificate check. Your connection to the server will still be encrypted, though the server identity will not be verified.
+If your RStudio Connect server was configured with a self-signed certificate 
+(or other certificate that computer hosting your Jupyter notebook server does 
+not trust), the attempt to contact RStudio Connect may fail with a 
+TLS-related error. You have multiple options in this case, depending on your needs:
+ 1. If your RStudio Connect Administrator can give you the Certificate Authority (CA)
+ Bundle for your RStudio Connect server, ask your Jupyter Administrator if it
+ can be added to the trusted system store.
+ 2. If the CA Bundle cannot be added to the trusted system store, you may select
+ `Upload TLS Certificate Bundle` to upload the bundle to Jupyter, which will verify
+ your secure connection to RStudio Connect.
+ 3. If you cannot obtain the CA bundle, you can disable TLS verification completely
+ by selecting the `Disable TLS Certificate Verification` box. Your connection to
+ RStudio Connect will still be encrypted, but you will not be able to verify the
+ identity of the RStudio Connect server.
 
 ![initial dialog that prompts for the location of RStudio Connect](docs/images/add-dialog.png)
 
@@ -118,9 +133,19 @@ If your RStudio Connect server was configured with a self-signed certificate (or
 
 ![publish dialog](docs/images/manage.png)
 
-There are two different publication modes. Selecting "Publish finished document only" will publish an HTML snapshot of the notebook to RStudio Connect. HTML snapshots are static and cannot be scheduled or re-run on the RStudio Connect server.
+There are two different publication modes. Selecting `Publish finished document only` will 
+publish an HTML snapshot of the notebook to RStudio Connect. HTML snapshots are static and 
+cannot be scheduled or re-run on the RStudio Connect server.
 
-If you select "Publish document with source code", the notebook file and a list of the Python packages installed in your environment will be sent to RStudio Connect. This enables RStudio Connect to recreate the environment and re-run the notebook at a later time.
+If you select `Publish document with source code`, the notebook file and a list of the Python 
+packages installed in your environment will be sent to RStudio Connect. This enables RStudio 
+Connect to recreate the environment and re-run the notebook at a later time.
+
+#### Additional Files
+
+If your notebook needs some external file in order to render, add the file using the 
+`Select Files` button. You can select any file within the notebook folder. However,
+these files may not be made available to users after render.
 
 #### Environment detection with pip
 
@@ -135,6 +160,28 @@ The command `pip freeze` will be used to inspect the environment. The output
 of `pip freeze` lists all packages currently installed, as well as their
 versions, which enables RStudio Connect to recreate the same environment.
 
+### Generating Manifests for git Publishing
+
+RStudio Connect can poll git repositories for deployable content and update
+as you add new commits to your repository. In order to be deployable, a
+directory must have a valid `manifest.json`. Python content should also have
+some kind of environment file (i.e.: `requirements.txt`) in order to be able
+to restore the package set in your current environment.
+
+![Deployment drop-down menu showing "Publish to Connect" and "Create Manifest for git Publishing"](docs/images/deploy-options.png)
+
+To begin, select `Create Manifest for git Publishing`.
+
+![Dialog titled "Create Manifest" explaining the manifest creation process with "Cancel" and "Create Manifest" options](docs/images/git-backed.png)
+
+When you click `Create Manifest`, a `manifest.json` and `requirements.txt`
+will be generated for the current notebook using your current environment,
+if they do not exist. If they do exist, you will be presented with a message
+informing you of this fact. If you need to regenerate the files, delete them
+in the Jupyter UI or using the console, then repeat this process.
+
+For more information on git publishing, see the 
+[RStudio Connect User Guide](https://docs.rstudio.com/connect/user/git-backed.html#git-backed-publishing)
 
 ### Handling conflicts
 If content that matches your notebook's title is found on RStudio Connect, you
@@ -142,7 +189,9 @@ may choose to overwrite the existing content or create new content.
 
 ![dialog that prompts for overwriting or publishing new content](docs/images/overwrite.png)
 
-Choosing "New location" will create a new document in RStudio Connect. You can choose either publication mode - an HTML snapshot or a document with source code.
+Choosing `New location` will create a new document in RStudio Connect. 
+You can choose either publication mode - an HTML snapshot or a document 
+with source code.
 
 Updating an existing document will not change its publication mode.
 
