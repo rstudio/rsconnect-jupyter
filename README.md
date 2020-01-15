@@ -93,7 +93,7 @@ re-install it.
 
 # Usage
 
-Open a notebook and click the blue "Publish to RStudio Connect" icon
+Open a notebook and click the blue icon and select `Publish to RStudio Connect`
 to publish the current notebook to RStudio Connect.
 
 ![blue toolbar icon used for publishing the notebook](docs/images/publish-icon.gif)
@@ -133,11 +133,11 @@ TLS-related error. You have multiple options in this case, depending on your nee
 
 ![publish dialog](docs/images/manage.png)
 
-There are two different publication modes. Selecting "Publish finished document only" will 
+There are two different publication modes. Selecting `Publish finished document only` will 
 publish an HTML snapshot of the notebook to RStudio Connect. HTML snapshots are static and 
 cannot be scheduled or re-run on the RStudio Connect server.
 
-If you select "Publish document with source code", the notebook file and a list of the Python 
+If you select `Publish document with source code`, the notebook file and a list of the Python 
 packages installed in your environment will be sent to RStudio Connect. This enables RStudio 
 Connect to recreate the environment and re-run the notebook at a later time.
 
@@ -168,7 +168,7 @@ directory must have a valid `manifest.json`. Python content should also have
 some kind of environment file (i.e.: `requirements.txt`) in order to be able
 to restore the package set in your current environment.
 
-![Deployment drop-down menu showing "Publish to Connect" and "Create Manifest for git Publishing](docs/images/deploy-options.png)
+![Deployment drop-down menu showing "Publish to Connect" and "Create Manifest for git Publishing"](docs/images/deploy-options.png)
 
 To begin, select `Create Manifest for git Publishing`.
 
@@ -189,7 +189,9 @@ may choose to overwrite the existing content or create new content.
 
 ![dialog that prompts for overwriting or publishing new content](docs/images/overwrite.png)
 
-Choosing "New location" will create a new document in RStudio Connect. You can choose either publication mode - an HTML snapshot or a document with source code.
+Choosing `New location` will create a new document in RStudio Connect. 
+You can choose either publication mode - an HTML snapshot or a document 
+with source code.
 
 Updating an existing document will not change its publication mode.
 
