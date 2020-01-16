@@ -64,7 +64,7 @@ define([
     var $menuContainer = $('<div class="rsc-dropdown"></div>');
     var $menu = $('<div id="rsc-menu" class="rsc-dropdown-content"></div>');
 
-    var publishItem = $('<a href="#" id="publish-to-connect">Publish to Connect</a>');
+    var publishItem = $('<a href="#" id="publish-to-connect">Publish to RStudio Connect</a>');
     publishItem.click(onPublishClicked);
     $menu.append(publishItem);
 
@@ -1117,7 +1117,7 @@ define([
         // setup app mode choices help icon
         (function() {
           var msg =
-            'To deploy a new deployment, change the title, ' +
+            'To create a new deployment, change the title, ' +
             'click "Next", select "New location", and then ' +
             'you’ll be able to pick a new mode and publish.';
 
