@@ -509,6 +509,21 @@ define([
                 }
                 // default title
                 return Jupyter.notebook.get_notebook_name();
+            },
+
+            getVersionInfo: function () {
+                return Utils.ajax({
+                    url: Jupyter.notebook.base_url + 'rsconnect_jupyter/plugin_version'
+                })
+                    .then(function (version_info) {
+                        return Utils.ajax({
+                            url: Jupyter.notebook.base_url + 'nbextensions/rsconnect_jupyter/version.json'
+                        })
+                            .then(function (js_version_info) {
+                                version_info.js_version = js_version_info.version;
+                                return version_info;
+                            });
+                    });
             }
         };
 

@@ -117,3 +117,8 @@ p {
     margin-right: 1em;
     margin-bottom: 2em;
 }
+
+#version-info {
+    font-size: .7em;
+    text-align: right;
+}

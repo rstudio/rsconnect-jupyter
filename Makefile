@@ -1,10 +1,11 @@
-.PHONY: clean all-images image% launch notebook% package dist run test all-tests test% shell shell% dist-run dist-run% pypi-run pypi-run% mock-server docs-build docs-image
+.PHONY: clean all-images image% launch notebook% package dist run test all-tests test% shell shell% dist-run dist-run% pypi-run pypi-run% mock-server docs-build docs-image version-frontend
 
 NB_UID=$(shell id -u)
 NB_GID=$(shell id -g)
 
 IMAGE=rstudio/rsconnect-jupyter-py
-VERSION=$(shell cat rsconnect_jupyter/version.txt).$(shell printenv BUILD_NUMBER || echo 9999)
+VERSION=$(shell cat rsconnect_jupyter/version.txt)
+VERSION_BUILD=${VERSION}.$(shell printenv BUILD_NUMBER || echo 9999)
 PORT = $(shell printenv PORT || echo 9999)
 
 clean:
@@ -40,13 +41,12 @@ notebook%:
 
 all-tests: test2 test3.5 test3.6 test3.7
 
-test:
+test: version-frontend
 # TODO run in container
 	python -V
 	python -Wi setup.py test
 
-test%:
-	### TEMPORARY - install rsconnect-python from Test PyPI since it's not on PyPI yet.
+test%: version-frontend
 	make DOCKER_IMAGE=rstudio/rsconnect-jupyter-py$* PY_VERSION=$* TARGET=test launch
 
 test-selenium:
@@ -55,7 +55,7 @@ test-selenium:
 	$(MAKE) -C selenium test-env-down || true ; \
 	exit $$EXITCODE
 
-dist:
+dist: version-frontend
 # wheels don't get built if _any_ file it tries to touch has a timestamp < 1980
 # (system files) so use the current timestamp as a point of reference instead
 	SOURCE_DATE_EPOCH="$(shell date +%s)"; python setup.py sdist bdist_wheel
@@ -64,8 +64,6 @@ package:
 	make DOCKER_IMAGE=$(IMAGE)3 PY_VERSION=3 TARGET=dist launch
 
 run:
-	### TEMPORARY - install rsconnect-python from Test PyPI since it's not on PyPI yet.
-	pip install --extra-index-url=https://test.pypi.org/simple rsconnect-python
 # link python package
 	python setup.py develop
 # install rsconnect_jupyter as a jupyter extension
@@ -87,7 +85,7 @@ dist-run%:
 	make DOCKER_IMAGE=$(IMAGE)$* PY_VERSION=$* TARGET=dist-run launch
 
 dist-run: dist
-	pip install dist/rsconnect_jupyter-$(VERSION)-py2.py3-none-any.whl
+	pip install dist/rsconnect_jupyter-$(VERSION_BUILD)-py2.py3-none-any.whl
 	jupyter-nbextension install --symlink --user --py rsconnect_jupyter
 	jupyter-nbextension enable --py rsconnect_jupyter
 	jupyter-serverextension enable --py rsconnect_jupyter
@@ -97,7 +95,7 @@ pypi-run%:
 	make DOCKER_IMAGE=$(IMAGE)$* PY_VERSION=$* TARGET=pypi-run launch
 
 pypi-run:
-	pip install rsconnect_jupyter==$(VERSION)
+	pip install rsconnect_jupyter==$(VERSION_BUILD)
 	jupyter-nbextension install --symlink --user --py rsconnect_jupyter
 	jupyter-nbextension enable --py rsconnect_jupyter
 	jupyter-serverextension enable --py rsconnect_jupyter
@@ -107,7 +105,7 @@ pypi-test-run%:
 	make DOCKER_IMAGE=$(IMAGE)$* PY_VERSION=$* TARGET=pypi-test-run launch
 
 pypi-test-run:
-	pip install --index-url https://test.pypi.org/simple/ rsconnect_jupyter==$(VERSION)
+	pip install --index-url https://test.pypi.org/simple/ rsconnect_jupyter==$(VERSION_BUILD)
 	jupyter-nbextension install --symlink --user --py rsconnect_jupyter
 	jupyter-nbextension enable --py rsconnect_jupyter
 	jupyter-serverextension enable --py rsconnect_jupyter
@@ -145,10 +143,10 @@ endif
 ## Inside Jenkins (when JOB_NAME is defined), we are in the right type of
 ## Docker container. Otherwise, launch pandoc inside a
 ## rstudio/connect:docs container.
-BUILD_DOC=env VERSION=${VERSION} ./docs/build-doc.sh
+BUILD_DOC=env VERSION=${VERSION_BUILD} ./docs/build-doc.sh
 ifeq (${JOB_NAME},)
 	BUILD_DOC=docker run --rm=true ${DOCKER_RUN_AS} \
-		-e VERSION=${VERSION} \
+		-e VERSION=${VERSION_BUILD} \
 		${DOCKER_ARGS} \
 		-v $(CURDIR):/rsconnect_jupyter \
 		-w /rsconnect_jupyter \
@@ -162,5 +160,8 @@ docs-build:
 	${BUILD_DOC}
 
 
-dist/rsconnect-jupyter-${VERSION}.pdf: docs/README.md docs/*.gif
+dist/rsconnect-jupyter-${VERSION_BUILD}.pdf: docs/README.md docs/*.gif
 	${BUILD_DOC}
+
+version-frontend:
+	echo '{ "version": "${VERSION}"}' > rsconnect_jupyter/static/version.json

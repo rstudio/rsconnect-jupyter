@@ -10,7 +10,7 @@ from notebook.base.handlers import APIHandler
 from notebook.utils import url_path_join
 from tornado import web
 
-from rsconnect.api import app_search, verify_server, verify_api_key, RSConnect, RSConnectException
+from rsconnect.api import app_search, verify_server, verify_api_key, RSConnect, RSConnectException, VERSION
 from rsconnect.bundle import make_notebook_html_bundle, make_notebook_source_bundle, write_manifest
 
 from ssl import SSLError
@@ -211,6 +211,17 @@ class EndpointHandler(APIHandler):
             nb_name = os.path.basename(os_path)
             created, skipped = write_manifest(relative_dir, nb_name, environment, output_dir)
             self.finish(json.dumps({"created": created, "skipped": skipped}))
+
+    @web.authenticated
+    def get(self, action):
+        if action == 'plugin_version':
+            rsconnect_jupyter_server_extension = __version__
+            rsconnect_python_version = VERSION
+            self.finish(json.dumps({
+                "rsconnect_jupyter_server_extension": rsconnect_jupyter_server_extension,
+                "rsconnect_python_version": rsconnect_python_version
+            }))
+
 
 
 def load_jupyter_server_extension(nb_app):

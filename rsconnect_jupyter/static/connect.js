@@ -16,6 +16,7 @@ define([
 
   // this will be filled in lazily
   var config = null;
+  var rsconnectVersionInfo = null;
 
   var DeploymentLocation = {
     New: 'new',
@@ -27,6 +28,39 @@ define([
   var notebookDirectory = '';
   if (lastSlashInNotebookPath !== -1) {
     notebookDirectory = Jupyter.notebook.notebook_path.slice(0, lastSlashInNotebookPath);
+  }
+
+  function maybeCreateConfig() {
+      if (!config) {
+        config = new RSConnect(debug);
+        window.RSConnect = config;
+        config.getVersionInfo()
+            .then(function(info) {
+              console.log('rsconnect-jupyter nbextension version:', info.js_version);
+              console.log('rsconnect-jupyter serverextension version:', info.rsconnect_jupyter_server_extension);
+              console.log('rsconnect-python version:', info.rsconnect_python_version);
+              rsconnectVersionInfo = info;
+              window.rsconnectVersionInfo = info;
+              if (info.js_version !== info.rsconnect_jupyter_server_extension) {
+                console.error('Version Mismatch: rsconnect-jupyter has been installed incorrectly.');
+                Dialog.modal({
+                  title: 'Error',
+                  body: 'Plugin Version Mismatch: rsconnect-jupyter has been installed incorrectly. ' +
+                      'The javascript extension version reports ' + info.js_version + ' but the server ' +
+                      'extension reports ' + info.rsconnect_jupyter_server_extension + '.<br />' +
+                      '<ul>' +
+                      '<li>Refer to the <a href="https://docs.rstudio.com/rsconnect-jupyter/#installation">' +
+                      'installation instructions</a> for more information.</li>' +
+                      '<li>Try completely uninstalling every version of the plugin and reinstalling. ' +
+                      'Your server information will be saved.</li>' +
+                      '<li>Continuing to use the plugin as-is may lead to unexpected issues.</li>' +
+                      '</ul>',
+                  sanitize: false,
+                  buttons: { Ok: { class: 'btn-primary' } }
+                });
+              }
+            });
+      }
   }
 
   function init() {
@@ -983,7 +1017,8 @@ define([
         '    </div>',
         '    <div class="text-center" data-id="configUrl"></div>',
         '    <input type="submit" hidden>',
-        '</form>'
+        '</form>',
+        '<div id="version-info"></div>'
       ].join(''),
 
       // allow raw html
@@ -1000,6 +1035,12 @@ define([
         // the file list manager accepts reference arguments rather
         // than binding itself to the dialog scope.
         var that = this;
+        publishModal.find('#version-info').html(
+            'rsconnect-jupyter server extension version: ' +
+            rsconnectVersionInfo.rsconnect_jupyter_server_extension + '<br />' +
+            'rsconnect-jupyter nbextension version: ' + rsconnectVersionInfo.js_version + '<br />' +
+            'rsconnect-python version:' + rsconnectVersionInfo.rsconnect_python_version
+        );
         that.fileListItemManager = new FileListItemManager(
             $('#file-list-group'),
             files,
@@ -1508,10 +1549,7 @@ define([
 
     // lazily load the config when clicked since Jupyter's init
     // function is racy w.r.t. loading of notebook metadata
-    if (!config) {
-      config = new RSConnect(debug);
-      window.RSConnect = config;
-    }
+    maybeCreateConfig();
 
     closeMenu();
 
@@ -1550,10 +1588,7 @@ define([
 
     // lazily load the config when clicked since Jupyter's init
     // function is racy w.r.t. loading of notebook metadata
-    if (!config) {
-      config = new RSConnect(debug);
-      window.RSConnect = config;
-    }
+    maybeCreateConfig();
 
     closeMenu();
 
@@ -1584,13 +1619,22 @@ define([
         '<p>',
         '  Files will be created only if needed. Existing files will not be overwritten.',
         '</p>',
-        '<div id="rsc-manifest-status" style="color: red; height: 40px; margin-top: 15px;"></div>'
+        '<div id="rsc-manifest-status" style="color: red; height: 40px; margin-top: 15px;"></div>',
+        '<div id="version-info"></div>'
       ].join(''),
 
       // allow raw html
       sanitize: false,
 
       open: function() {
+
+        dialog.find('#version-info').html(
+            'rsconnect-jupyter server extension version: ' +
+            rsconnectVersionInfo.rsconnect_jupyter_server_extension + '<br />' +
+            'rsconnect-jupyter nbextension version: ' + rsconnectVersionInfo.js_version + '<br />' +
+            'rsconnect-python version:' + rsconnectVersionInfo.rsconnect_python_version
+        );
+
         var btnCancel = $(
           '<a class="btn" data-dismiss="modal" aria-hidden="true">Cancel</a>'
         );

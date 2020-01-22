@@ -12,3 +12,4 @@
 /*.eggs
 .DS_Store
 .vagrant
+/rsconnect_jupyter/static/version.json
