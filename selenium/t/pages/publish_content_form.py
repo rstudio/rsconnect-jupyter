@@ -38,3 +38,7 @@ class PublishContentForm(FormBase):
     @property
     def title_error(self):
         return s(by.css('#rsc-deploy-error'))
+
+    @property
+    def version_info(self):
+        return s(by.css('#version-info'))

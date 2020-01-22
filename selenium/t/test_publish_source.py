@@ -39,6 +39,7 @@ class TestPublishSource(object):
         # dialog is racy with event setup
         sleep(1)
 
+        pf.version_info.should(be.visible)
         pf.title.set_value('NotebookSource')
         pf.publish_with_source.click()
         pf.submit.click()
