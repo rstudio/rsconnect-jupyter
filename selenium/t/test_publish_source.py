@@ -40,6 +40,7 @@ class TestPublishSource(object):
         sleep(1)
 
         pf.version_info.should(be.visible)
+        pf.version_info.should(have.text('rsconnect-python version'))
         pf.title.set_value('NotebookSource')
         pf.publish_with_source.click()
         pf.submit.click()
