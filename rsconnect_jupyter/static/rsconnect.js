@@ -269,9 +269,9 @@ define([
               return this.getRunningPythonPath().then(function(pythonPath) {
                 try {
                     var cmd = [
-                        '!',
+                        '!"',
                         pythonPath,
-                        ' -m rsconnect.environment ${PWD}'
+                        '" -m rsconnect.environment "${PWD}"'
                     ].join('');
                     console.log('executing: ' + cmd);
                 } catch (e) {
