@@ -7,7 +7,7 @@ TITLE='rsconnect-jupyter User Guide'
 pandoc -f markdown-implicit_figures \
     --self-contained \
     -o dist/rsconnect_jupyter-${VERSION}.html \
-    -H docs/images/style.css \
+    -H docs/images/style.fragment.html \
     -T "${TITLE}" \
     -M "title:${TITLE}" \
     README.md
