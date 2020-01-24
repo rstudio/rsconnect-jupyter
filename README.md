@@ -116,12 +116,15 @@ If your RStudio Connect server was configured with a self-signed certificate
 (or other certificate that computer hosting your Jupyter notebook server does 
 not trust), the attempt to contact RStudio Connect may fail with a 
 TLS-related error. You have multiple options in this case, depending on your needs:
+
  1. If your RStudio Connect Administrator can give you the Certificate Authority (CA)
  Bundle for your RStudio Connect server, ask your Jupyter Administrator if it
  can be added to the trusted system store.
+ 
  2. If the CA Bundle cannot be added to the trusted system store, you may select
  `Upload TLS Certificate Bundle` to upload the bundle to Jupyter, which will verify
  your secure connection to RStudio Connect.
+ 
  3. If you cannot obtain the CA bundle, you can disable TLS verification completely
  by selecting the `Disable TLS Certificate Verification` box. Your connection to
  RStudio Connect will still be encrypted, but you will not be able to verify the
