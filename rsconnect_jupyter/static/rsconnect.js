@@ -275,7 +275,7 @@ define([
                     var cmd = [
                         '!"',
                         pythonPath,
-                        '" -m rsconnect.environmentt ' +
+                        '" -m rsconnect.environment ' +
                         flags + ' "${PWD}"'
                     ].join('');
                     console.log('executing: ' + cmd);

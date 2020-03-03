@@ -1117,7 +1117,7 @@ define([
                   break;
                 }
               }
-              prepareRequirementsTxtDialog(hasRequirementsTxt, forceGenerate);
+              preparePublishRequirementsTxtDialog(hasRequirementsTxt, forceGenerate);
             });
 
         // generate server list
@@ -1175,7 +1175,7 @@ define([
          * @param hasRequirements {boolean} Whether or not we have requirements.txt already
          * @param forceGenerateChecked {boolean} Whether we had previously selected to generate the `requirements.txt`
          */
-        function prepareRequirementsTxtDialog(hasRequirements, forceGenerateChecked) {
+        function preparePublishRequirementsTxtDialog(hasRequirements, forceGenerateChecked) {
           var requirementsTxtContainer = $('#requirements-txt-container');
           var html = '<label for="requirements-txt" class="rsc-label">Environment Restore</label><br />' +
               '<p><i class="fa fa-question-circle"></i> A <span class="code">requirements.txt</span> file was not found in the notebook ' +
@@ -1718,7 +1718,7 @@ define([
         var compatibilityMode = false;
         var forceGenerate = false;
         var hasRequirementsTxt = false;
-        function prepareRequirementsTxtDialog(hasRequirements) {
+        function prepareManifestRequirementsTxtDialog(hasRequirements) {
           var info = dialog.find('#write-manifest-overwrite-info');
           if (!hasRequirements) {
             info.html(
@@ -1753,7 +1753,7 @@ define([
                   break;
                 }
               }
-              prepareRequirementsTxtDialog(hasRequirementsTxt);
+              prepareManifestRequirementsTxtDialog(hasRequirementsTxt);
             });
 
         var btnCancel = $(

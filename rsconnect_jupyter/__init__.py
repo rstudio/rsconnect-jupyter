@@ -4,7 +4,7 @@ import os
 import sys
 
 from rsconnect.actions import test_server
-from six.moves.urllib.parse import unquote_plus, urlparse
+from six.moves.urllib.parse import unquote_plus
 from os.path import dirname, join
 
 from notebook.base.handlers import APIHandler
@@ -100,14 +100,13 @@ class EndpointHandler(APIHandler):
             cadata = data.get('cadata', None)
 
             try:
-                with RSConnect(
-                    RSConnectServer(
+                server = RSConnectServer(
                         uri,
                         api_key,
                         disable_tls_check,
                         cadata
                     )
-                ) as client:
+                with RSConnect(server) as client:
                     retval = client.app_search(
                         {
                             "title": title,
@@ -161,7 +160,8 @@ class EndpointHandler(APIHandler):
                 raise web.HTTPError(400, 'Invalid app_mode: %s, must be "static" or "jupyter-static"' % app_mode)
 
             try:
-                with RSConnect(RSConnectServer(uri, api_key, disable_tls_check, cadata)) as api_client:
+                server = RSConnectServer(uri, api_key, disable_tls_check, cadata)
+                with RSConnect(server) as api_client:
                     retval = api_client.deploy(app_id, nb_name, nb_title, bundle)
                     retval['cookies'] = api_client._cookies
             except RSConnectException as exc:
@@ -178,7 +178,8 @@ class EndpointHandler(APIHandler):
             cadata = data.get('cadata', None)
 
             try:
-                with RSConnect(RSConnectServer(uri, api_key, disable_tls_check, cadata)) as api_client:
+                server = RSConnectServer(uri, api_key, disable_tls_check, cadata)
+                with RSConnect(server) as api_client:
                     retval = api_client.app_get(app_id)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
@@ -210,7 +211,8 @@ class EndpointHandler(APIHandler):
             cadata = data.get('cadata', None)
 
             try:
-                with RSConnect(RSConnectServer(uri, api_key, disable_tls_check, cadata)) as api_client:
+                server = RSConnectServer(uri, api_key, disable_tls_check, cadata)
+                with RSConnect(server) as api_client:
                     retval = api_client.app_config(app_id)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
