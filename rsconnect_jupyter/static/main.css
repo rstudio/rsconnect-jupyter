@@ -118,6 +118,14 @@ p {
     margin-bottom: 2em;
 }
 
+.code {
+    font-family: monospace;
+}
+
+#requirements-txt-container input {
+    margin-right: 1em;
+}
+
 #version-info {
     font-size: .7em;
     text-align: right;

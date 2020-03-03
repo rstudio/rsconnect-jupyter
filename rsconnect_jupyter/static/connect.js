@@ -766,7 +766,9 @@ define([
    * @param userEditedTitle {String} title as edited by user
    * @param selectedDeployLocation {DeploymentLocation.Canceled|DeploymentLocation.New|String} whether this is a new
    * deployment, a canceled deployment, or has an app id
-   * @param selectedAppMode {'jupyter-static'|'static'} App mode
+   * @param selectedAppMode {'jupyter-static'|'static'|null} App mode
+   * @param compatibilityMode {boolean} whether to force using `requirements.txt` even in a conda environment
+   * @param forceGenerate {boolean} whether to force generating `requirements.txt` even if one exists
    */
   function showSelectServerDialog(
     // serverId, fileList, and userEditedTitle are shuttled
@@ -779,7 +781,9 @@ define([
     // deploy to a new location, and a stringy appId in case the user wishes to
     // overwrite content
     selectedDeployLocation,
-    selectedAppMode
+    selectedAppMode,
+    compatibilityMode,
+    forceGenerate
   ) {
     var dialogResult = $.Deferred();
     var files = fileList || [];
@@ -803,10 +807,26 @@ define([
       // didn't save API keys, so there could be a saved server without one.
       if (selectedEntryId && 
           !config.getApiKey(config.servers[selectedEntryId].server)) {
-          showSelectServerDialog();
+          showSelectServerDialog(
+              null,
+              null,
+              null,
+              null,
+              null,
+              compatibilityMode,
+              forceGenerate
+          );
       }
       else {
-        showSelectServerDialog(selectedEntryId);
+        showSelectServerDialog(
+            selectedEntryId,
+            null,
+            null,
+              null,
+              null,
+              compatibilityMode,
+            forceGenerate
+        );
       }
     }
 
@@ -1005,11 +1025,13 @@ define([
         '            <span class="help-block"></span>',
         '        </div>',
         '    </div>',
-        '    <div id="add-files">'+
+        '    <div id="add-files">',
         '      <label for="rsc-add-files" id="rsc-add-files-label" class="rsc-label">Additional Files</label>',
         '      <button id="rsc-add-files" class="btn btn-default">Select Files...</button>',
         '      <ul class="list-group" id="file-list-group">',
         '      </ul>',
+        '    </div>',
+        '    <div id="requirements-txt-container">',
         '    </div>',
         '    <pre id="rsc-log" hidden></pre>',
         '    <div class="form-group">',
@@ -1035,6 +1057,7 @@ define([
         // the file list manager accepts reference arguments rather
         // than binding itself to the dialog scope.
         var that = this;
+        var hasRequirementsTxt = false;
         publishModal.find('#version-info').html(
             'rsconnect-jupyter server extension version: ' +
             rsconnectVersionInfo.rsconnect_jupyter_server_extension + '<br />' +
@@ -1086,6 +1109,17 @@ define([
           ev.preventDefault();
         });
 
+        ContentsManager.list_contents(notebookDirectory)
+            .then(function (contents) {
+              for(var index in contents.content) {
+                if (contents.content[index].name === 'requirements.txt') {
+                  hasRequirementsTxt = true;
+                  break;
+                }
+              }
+              preparePublishRequirementsTxtDialog(hasRequirementsTxt, forceGenerate);
+            });
+
         // generate server list
         var serverItems = Object.keys(config.servers).map(function(id) {
           var matchingServer = serverId === id;
@@ -1134,6 +1168,35 @@ define([
 
           updateCheckboxStates();
         });
+
+        /**
+         * Prepares the radio buttons for requirements.txt if it
+         * exists, or the verbiage to place in the field otherwise.
+         * @param hasRequirements {boolean} Whether or not we have requirements.txt already
+         * @param forceGenerateChecked {boolean} Whether we had previously selected to generate the `requirements.txt`
+         */
+        function preparePublishRequirementsTxtDialog(hasRequirements, forceGenerateChecked) {
+          var requirementsTxtContainer = $('#requirements-txt-container');
+          var html = '<label for="requirements-txt" class="rsc-label">Environment Restore</label><br />' +
+              '<p><i class="fa fa-question-circle"></i> A <span class="code">requirements.txt</span> file was not found in the notebook ' +
+              'directory. One will be generated automatically from your current python environment.</p>';
+          if (hasRequirements) {
+            var useExistingText = forceGenerateChecked ? '' : 'checked';
+            var forceGenerateText = forceGenerateChecked ? 'checked' : '';
+            html = '<label for="requirements-txt" class="rsc-label">Environment Restore</label><br />' +
+                '<input type="radio" name="requirements-txt" id="use-existing" value="use-existing" ' +
+                useExistingText + ' />' +
+                '<label for="use-existing">' +
+                ' Use the existing <span class="code">requirements.txt</span> file in the notebook directory.' +
+                '</label><br />' +
+                '<input type="radio" name="requirements-txt" id="generate-new" value="generate-new" ' +
+                forceGenerateText + ' />' +
+                '<label for="generate-new">' +
+                '  Generate a <span class="code">requirements.txt</span> from the current python environment.' +
+                '</label>';
+          }
+          requirementsTxtContainer.append(html);
+        }
 
         function bindCheckbox(id) {
           // save/restore value in server settings
@@ -1201,11 +1264,13 @@ define([
             var msg;
             if (
                 typeof xhr === 'string' &&
-                xhr.match(/ModuleNotFoundError: No module named 'rsconnect'/) !== null
+                xhr.match(/No module named .*rsconnect.*/) !== null
             ) {
                 msg = 'The rsconnect-python package is not installed in your current notebook kernel.<br />' +
                     'See the <a href="https://docs.rstudio.com/rsconnect-jupyter/#installation" target="_blank">' +
                     'Installation Section of the rsconnect-jupyter documentation</a> for more information.';
+            } else if (typeof xhr === 'string') {
+              msg = 'An unexpected error occurred: '+ xhr;
             }
             else if (xhr.status === 500) {
                 msg = 'An internal error occurred.';
@@ -1229,6 +1294,9 @@ define([
           }
 
           function publish() {
+            if (hasRequirementsTxt && publishModal.find('#generate-new').is(':checked')) {
+              forceGenerate = true;
+            }
             // assume the user is re-deploying to the same location
             var appId = config.servers[selectedEntryId].appId;
 
@@ -1262,7 +1330,9 @@ define([
                 appId,
                 txtTitle.val(),
                 appMode,
-                normalizedFiles
+                normalizedFiles,
+                compatibilityMode,
+                forceGenerate
               )
               .always(function() {
                 togglePublishButton(true);
@@ -1314,7 +1384,7 @@ define([
                   )
                   .fail(handleFailure)
                   .then(function(searchResults) {
-                    if (searchResults.length === 0) {
+                    if (searchResults.count === 0) {
                       // no matching content so publish to new endpoint
                       selectedDeployLocation = DeploymentLocation.New;
                       publish();
@@ -1323,13 +1393,16 @@ define([
                       // note: in case of single match we can't be 100% sure
                       // that the user wants to overwrite the content
                       publishModal.modal('hide');
+                      var forceGenerateSelected = publishModal.find('#generate-new').is(':checked');
                       showSearchDialog(
-                        searchResults,
+                        searchResults.applications,
                         selectedEntryId,
                         txtTitle.val(),
                         currentAppId,
                         appMode,
-                        that.fileListItemManager.fileList
+                        that.fileListItemManager.fileList,
+                        compatibilityMode,
+                        forceGenerateSelected
                       );
                     }
                   });
@@ -1404,6 +1477,8 @@ define([
    * @param appId {Number} App ID
    * @param appMode {'static'|'jupyter-static'} App mode
    * @param files {Array<String>} list of file paths that will be included
+   * @param compatibilityMode {boolean} Whether to force `requirements.txt` usage despite conda support
+   * @param forceGenerate {boolean} Whether to force generating a `requirements.txt` even if it exists
    */
   function showSearchDialog(
     searchResults,
@@ -1411,12 +1486,14 @@ define([
     title,
     appId,
     appMode,
-    files
+    files,
+    compatibilityMode,
+    forceGenerate
   ) {
     function getUserAppMode(mode) {
-      if (mode === 'static') {
+      if (mode === 'static' || mode === 4) {
         return '[document]';
-      } else if (mode === 'jupyter-static') {
+      } else if (mode === 'jupyter-static' || mode === 7) {
         return '[document with source code]';
       } else {
         return '[unknown type]';
@@ -1502,7 +1579,9 @@ define([
             files,
             title,
             location,
-            selectedAppMode
+            selectedAppMode,
+            compatibilityMode,
+            forceGenerate
           );
         }
 
@@ -1561,7 +1640,15 @@ define([
         if (Object.keys(config.servers).length === 0) {
           showAddServerDialog(config).then(showSelectServerDialog);
         } else {
-          showSelectServerDialog(config.previousServerId);
+          showSelectServerDialog(
+              config.previousServerId,
+              null,
+              null,
+              null,
+              null,
+              false,
+              false
+          );
         }
       })
       .catch(function(err) {
@@ -1604,19 +1691,19 @@ define([
         '  for publishing to RStudio Connect via git:',
         '</p>',
         '<div style="margin-left: 20px">',
-        '<p>',
+        '<p id="write-manifest-environment-info">',
         '  <b>requirements.txt</b> lists the set of Python packages that Connect will',
         '  make available on the server during publishing. If you add imports of new',
         '  packages, you will need to update requirements.txt to include them,',
         '  or remove the file and use the Create Manifest button to create it again.',
         '</p>',
-        '<p>',
+        '<p id="write-manifest-manifest-info">',
         '  <b>manifest.json</b> specifies the version of python in use,',
         '  along with other settings needed during deployment. Update',
         '  or re-create this file if you update python.',
         '</p>',
         '</div>',
-        '<p>',
+        '<p id="write-manifest-overwrite-info">',
         '  Files will be created only if needed. Existing files will not be overwritten.',
         '</p>',
         '<div id="rsc-manifest-status" style="color: red; height: 40px; margin-top: 15px;"></div>',
@@ -1626,14 +1713,48 @@ define([
       // allow raw html
       sanitize: false,
 
-      open: function() {
-
+    open: function() {
+        // TODO: Use this in the conda support branch
+        var compatibilityMode = false;
+        var forceGenerate = false;
+        var hasRequirementsTxt = false;
+        function prepareManifestRequirementsTxtDialog(hasRequirements) {
+          var info = dialog.find('#write-manifest-overwrite-info');
+          if (!hasRequirements) {
+            info.html(
+               '<p><i class="fa fa-question-circle"></i> A <span class="code">requirements.txt</span> file was not found in the notebook ' +
+              'directory. One will be generated automatically from your current python environment.</p>'
+            );
+          } else {
+            info.html(
+                '<div id="requirements-txt-container">' +
+                '<input type="radio" name="requirements-txt" id="use-existing" value="use-existing" checked />' +
+                '<label for="use-existing">' +
+                ' Use the existing <span class="code">requirements.txt</span> file in the notebook directory.' +
+                '</label><br />' +
+                '<input type="radio" name="requirements-txt" id="generate-new" value="generate-new" />' +
+                '<label for="generate-new">' +
+                '  Generate a <span class="code">requirements.txt</span> from the current python environment.' +
+                '</label></div>'
+            );
+          }
+        }
         dialog.find('#version-info').html(
             'rsconnect-jupyter server extension version: ' +
             rsconnectVersionInfo.rsconnect_jupyter_server_extension + '<br />' +
             'rsconnect-jupyter nbextension version: ' + rsconnectVersionInfo.js_version + '<br />' +
             'rsconnect-python version:' + rsconnectVersionInfo.rsconnect_python_version
         );
+        ContentsManager.list_contents(notebookDirectory)
+            .then(function (contents) {
+              for(var index in contents.content) {
+                if (contents.content[index].name === 'requirements.txt') {
+                  hasRequirementsTxt = true;
+                  break;
+                }
+              }
+              prepareManifestRequirementsTxtDialog(hasRequirementsTxt);
+            });
 
         var btnCancel = $(
           '<a class="btn" data-dismiss="modal" aria-hidden="true">Cancel</a>'
@@ -1649,7 +1770,11 @@ define([
           $status.empty();
           $status.append($('<div>Creating manifest...</div>'));
 
-          config.inspectEnvironment().then(function(environment) {
+          if (hasRequirementsTxt && dialog.find('#generate-new').is(':checked')) {
+            forceGenerate = true;
+          }
+
+          config.inspectEnvironment(compatibilityMode, forceGenerate).then(function(environment) {
             return config.writeManifest(Jupyter.notebook.get_notebook_name(), environment).then(function(response) {
               var createdLinks = response.created.map(makeEditLink);
               $status.empty();
@@ -1672,12 +1797,16 @@ define([
           .fail(function(response) {
             if (
               typeof response === 'string' &&
-              response.match(/ModuleNotFoundError: No module named 'rsconnect'/) !== null
+              response.match(/No module named .*rsconnect.*/) !== null
             ) {
               $status.html(
              'The rsconnect-python package is not installed in your current notebook kernel.<br />' +
                   'See the <a href="https://docs.rstudio.com/rsconnect-jupyter/#installation" target="_blank">' +
                   'Installation Section of the rsconnect-jupyter documentation</a> for more information.'
+              );
+            } else if (typeof response === 'string') {
+              $status.html(
+                  'An unexpected error occurred while inspecting the environment: ' + response
               );
             } else {
               $status.text(response.responseJSON.message);

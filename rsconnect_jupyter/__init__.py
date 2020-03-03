@@ -3,14 +3,16 @@ import json
 import os
 import sys
 
-from six.moves.urllib.parse import unquote_plus, urlparse
+from rsconnect.actions import test_server
+from six.moves.urllib.parse import unquote_plus
 from os.path import dirname, join
 
 from notebook.base.handlers import APIHandler
 from notebook.utils import url_path_join
 from tornado import web
 
-from rsconnect.api import app_search, verify_server, verify_api_key, RSConnect, RSConnectException, VERSION
+from rsconnect import VERSION
+from rsconnect.api import verify_api_key, RSConnect, RSConnectException, RSConnectServer
 from rsconnect.bundle import make_notebook_html_bundle, make_notebook_source_bundle, write_manifest
 
 from ssl import SSLError
@@ -60,7 +62,7 @@ class EndpointHandler(APIHandler):
             cadata = data.get('cadata', None)
 
             try:
-                canonical_address = verify_server(server_address, disable_tls_check, cadata)
+                canonical_address, result = test_server(RSConnectServer(server_address, api_key, disable_tls_check, cadata))
             except SSLError as exc:
                 if exc.reason == u'UNKNOWN_PROTOCOL':
                     raise web.HTTPError(400,
@@ -76,21 +78,21 @@ class EndpointHandler(APIHandler):
             except Exception as err:
                 raise web.HTTPError(400, u'Unable to verify that the provided server is running RStudio Connect: %s' % err)
             if canonical_address is not None:
-                uri = urlparse(canonical_address)
+                uri = canonical_address.url
                 try:
-                    verify_api_key(uri, api_key, disable_tls_check, cadata)
+                    verify_api_key(RSConnectServer(uri, api_key, disable_tls_check, cadata))
                     address_hash = md5(server_address)
                     self.finish(json.dumps({
                         'status': 'Provided server is running RStudio Connect',
                         'address_hash': address_hash,
-                        'server_address': canonical_address,
+                        'server_address': canonical_address.url,
                     }))
                 except RSConnectException:
                     raise web.HTTPError(401, u'Unable to verify the provided API key')
             return
 
         if action == 'app_search':
-            uri = urlparse(data['server_address'])
+            uri = data['server_address']
             api_key = data['api_key']
             title = data['notebook_title']
             app_id = data.get('app_id')
@@ -98,14 +100,26 @@ class EndpointHandler(APIHandler):
             cadata = data.get('cadata', None)
 
             try:
-                retval = app_search(uri, api_key, title, app_id, disable_tls_check, cadata)
+                server = RSConnectServer(
+                        uri,
+                        api_key,
+                        disable_tls_check,
+                        cadata
+                    )
+                with RSConnect(server) as client:
+                    retval = client.app_search(
+                        {
+                            "title": title,
+                            "app_id": app_id,
+                        }
+                    )
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
             self.finish(json.dumps(retval))
             return
 
         if action == 'deploy':
-            uri = urlparse(data['server_address'])
+            uri = data['server_address']
             app_id = data.get('app_id')
             nb_title = data['notebook_title']
             nb_name = data['notebook_name']
@@ -146,9 +160,10 @@ class EndpointHandler(APIHandler):
                 raise web.HTTPError(400, 'Invalid app_mode: %s, must be "static" or "jupyter-static"' % app_mode)
 
             try:
-                with RSConnect(uri, api_key, None, disable_tls_check, cadata) as api_client:
+                server = RSConnectServer(uri, api_key, disable_tls_check, cadata)
+                with RSConnect(server) as api_client:
                     retval = api_client.deploy(app_id, nb_name, nb_title, bundle)
-                    retval['cookies'] = api_client.cookies
+                    retval['cookies'] = api_client._cookies
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
 
@@ -156,14 +171,15 @@ class EndpointHandler(APIHandler):
             return
 
         if action == 'app_get':
-            uri = urlparse(data['server_address'])
+            uri = data['server_address']
             api_key = data['api_key']
             app_id = data['app_id']
             disable_tls_check = data['disable_tls_check']
             cadata = data.get('cadata', None)
 
             try:
-                with RSConnect(uri, api_key, None, disable_tls_check, cadata) as api_client:
+                server = RSConnectServer(uri, api_key, disable_tls_check, cadata)
+                with RSConnect(server) as api_client:
                     retval = api_client.app_get(app_id)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
@@ -171,7 +187,7 @@ class EndpointHandler(APIHandler):
             return
 
         if action == 'get_log':
-            uri = urlparse(data['server_address'])
+            uri = data['server_address']
             api_key = data['api_key']
             task_id = data['task_id']
             last_status = data['last_status']
@@ -180,7 +196,7 @@ class EndpointHandler(APIHandler):
             cadata = data.get('cadata', None)
 
             try:
-                with RSConnect(uri, api_key, cookies, disable_tls_check, cadata) as api_client:
+                with RSConnect(RSConnectServer(uri, api_key, disable_tls_check, cadata), cookies) as api_client:
                     retval = api_client.task_get(task_id, last_status)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
@@ -188,14 +204,15 @@ class EndpointHandler(APIHandler):
             return
 
         if action == 'app_config':
-            uri = urlparse(data['server_address'])
+            uri = data['server_address']
             api_key = data['api_key']
             app_id = data['app_id']
             disable_tls_check = data['disable_tls_check']
             cadata = data.get('cadata', None)
 
             try:
-                with RSConnect(uri, api_key, None, disable_tls_check, cadata) as api_client:
+                server = RSConnectServer(uri, api_key, disable_tls_check, cadata)
+                with RSConnect(server) as api_client:
                     retval = api_client.app_config(app_id)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
@@ -221,7 +238,6 @@ class EndpointHandler(APIHandler):
                 "rsconnect_jupyter_server_extension": rsconnect_jupyter_server_extension,
                 "rsconnect_python_version": rsconnect_python_version
             }))
-
 
 
 def load_jupyter_server_extension(nb_app):
