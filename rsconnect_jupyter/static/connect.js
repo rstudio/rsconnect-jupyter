@@ -473,6 +473,23 @@ define([
     return promise.promise();
   }
 
+  function notebookExecuteToPromise(cmd) {
+    var promise = $.Deferred();
+    var callbacks = {
+      iopub: {
+        output: function (res) {
+          if (res.message_type === 'error') {
+            promise.reject(res);
+          } else {
+            promise.resolve(res);
+          }
+        }
+      }
+    };
+    Jupyter.notebook.kernel.execute(cmd, callbacks);
+    return promise.promise();
+  }
+
   function getCertificateUpload(ctx) {
       return $(ctx).find('#rsc-ca-file')[0];
   }
@@ -767,8 +784,8 @@ define([
    * @param selectedDeployLocation {DeploymentLocation.Canceled|DeploymentLocation.New|String} whether this is a new
    * deployment, a canceled deployment, or has an app id
    * @param selectedAppMode {'jupyter-static'|'static'|null} App mode
-   * @param compatibilityMode {boolean} whether to force using `requirements.txt` even in a conda environment
-   * @param forceGenerate {boolean} whether to force generating `requirements.txt` even if one exists
+   * @param environmentOptions {null|"use-existing-conda"|"use-existing-pip"|"generate-new-pip"|"generate-new-conda"}
+   *        Selected environment option
    */
   function showSelectServerDialog(
     // serverId, fileList, and userEditedTitle are shuttled
@@ -782,8 +799,7 @@ define([
     // overwrite content
     selectedDeployLocation,
     selectedAppMode,
-    compatibilityMode,
-    forceGenerate
+    environmentOptions
   ) {
     var dialogResult = $.Deferred();
     var files = fileList || [];
@@ -813,8 +829,7 @@ define([
               null,
               null,
               null,
-              compatibilityMode,
-              forceGenerate
+              environmentOptions
           );
       }
       else {
@@ -824,8 +839,7 @@ define([
             null,
               null,
               null,
-              compatibilityMode,
-            forceGenerate
+            environmentOptions
         );
       }
     }
@@ -1058,6 +1072,9 @@ define([
         // than binding itself to the dialog scope.
         var that = this;
         var hasRequirementsTxt = false;
+        var hasEnvironmentYml = false;
+        var isCondaEnvironment = false;
+
         publishModal.find('#version-info').html(
             'rsconnect-jupyter server extension version: ' +
             rsconnectVersionInfo.rsconnect_jupyter_server_extension + '<br />' +
@@ -1109,15 +1126,35 @@ define([
           ev.preventDefault();
         });
 
-        ContentsManager.list_contents(notebookDirectory)
+        var condaDetector = 'import os\n' +
+            'print("CONDA_PREFIX\t"+str(os.environ.get("CONDA_PREFIX")))\n' +
+            'print("CONDA_DEFAULT_ENV\t"+str(os.environ.get("CONDA_DEFAULT_ENV")))\n';
+        // Detect if we're in a conda environment
+        notebookExecuteToPromise(condaDetector)
+            .then(function (response) {
+              var output = response.content.text;
+              var lines = output.split('\n');
+              var map = {};
+              lines.forEach(function (line) {
+                var token = line.split('\t');
+                map[token[0]] = token[1];
+                if(token[1] !== 'None' && token[0] !== '') {
+                  isCondaEnvironment = true;
+                }
+              });
+            })
+            .then(function() {
+              return ContentsManager.list_contents(notebookDirectory);
+            })
             .then(function (contents) {
               for(var index in contents.content) {
                 if (contents.content[index].name === 'requirements.txt') {
                   hasRequirementsTxt = true;
-                  break;
+                } else if (contents.content[index].name === 'environment.yml') {
+                  hasEnvironmentYml = true;
                 }
               }
-              preparePublishRequirementsTxtDialog(hasRequirementsTxt, forceGenerate);
+              preparePublishRequirementsTxtDialog(hasRequirementsTxt, hasEnvironmentYml, isCondaEnvironment, environmentOptions);
             });
 
         // generate server list
@@ -1173,29 +1210,83 @@ define([
          * Prepares the radio buttons for requirements.txt if it
          * exists, or the verbiage to place in the field otherwise.
          * @param hasRequirements {boolean} Whether or not we have requirements.txt already
-         * @param forceGenerateChecked {boolean} Whether we had previously selected to generate the `requirements.txt`
+         * @param hasEnvironment {boolean} Whether or not we have environment.yml already
+         * @param isConda {boolean} Whether or not we detected a running conda environment
+         * @param checked {null|"use-existing-conda"|"use-existing-pip"|"generate-new-pip"|"generate-new-conda"}
+         *        What the previously selected check was
          */
-        function preparePublishRequirementsTxtDialog(hasRequirements, forceGenerateChecked) {
+        function preparePublishRequirementsTxtDialog(hasRequirements, hasEnvironment, isConda, checked) {
           var requirementsTxtContainer = $('#requirements-txt-container');
-          var html = '<label for="requirements-txt" class="rsc-label">Environment Restore</label><br />' +
-              '<p><i class="fa fa-question-circle"></i> A <span class="code">requirements.txt</span> file was not found in the notebook ' +
-              'directory. One will be generated automatically from your current python environment.</p>';
-          if (hasRequirements) {
-            var useExistingText = forceGenerateChecked ? '' : 'checked';
-            var forceGenerateText = forceGenerateChecked ? 'checked' : '';
-            html = '<label for="requirements-txt" class="rsc-label">Environment Restore</label><br />' +
-                '<input type="radio" name="requirements-txt" id="use-existing" value="use-existing" ' +
-                useExistingText + ' />' +
-                '<label for="use-existing">' +
-                ' Use the existing <span class="code">requirements.txt</span> file in the notebook directory.' +
-                '</label><br />' +
-                '<input type="radio" name="requirements-txt" id="generate-new" value="generate-new" ' +
-                forceGenerateText + ' />' +
-                '<label for="generate-new">' +
-                '  Generate a <span class="code">requirements.txt</span> from the current python environment.' +
-                '</label>';
+          requirementsTxtContainer.empty();
+
+          requirementsTxtContainer.append(
+              '<label for="requirements-txt" class="rsc-label">Environment Restore</label><br />'
+          );
+          if (!hasRequirements && !hasEnvironment && !isConda) {
+            var message = '<p><i class="fa fa-question-circle"></i> ' +
+                'A <span class="code">requirements.txt</span> or <span class="code">environment.yml</span> file was ' +
+                'not found in the notebook directory.';
+
+            if (isConda) {
+              message += ' An environment file will be generated from your current conda environment.</p>';
+            } else {
+              message += ' An environment file will be generated from your current pip environment.</p>';
+            }
+            requirementsTxtContainer.append(message);
+          } else {
+            // Track whether we've assigned a default already.
+            if (hasEnvironment) {
+              if (!checked) {
+                checked = 'use-existing-conda';
+              }
+              requirementsTxtContainer.append(
+                  '<input ' +
+                  '  type="radio"' +
+                  '  name="requirements-txt"' +
+                  '  id="use-existing-conda" ' +
+                  '  value="use-existing-conda" ' +
+                  (checked === 'use-existing-conda' ? 'checked' : '') + ' />' +
+                  '<label for="use-existing-conda">' +
+                  ' Use the existing <span class="code">environment.yml</span> file in the notebook directory.' +
+                  '</label><br />'
+              );
+            }
+            if (hasRequirements) {
+              if (!checked) {
+                checked = 'use-existing-pip';
+              }
+              requirementsTxtContainer.append(
+                  '<input ' +
+                  '  type="radio"' +
+                  '  name="requirements-txt"' +
+                  '  id="use-existing-pip" ' +
+                  '  value="use-existing-pip" ' +
+                  (checked === 'use-existing-pip' ? 'checked' : '') + ' />' +
+                  '<label for="use-existing-pip">' +
+                  ' Use the existing <span class="code">requirements.txt</span> file in the notebook directory.' +
+                  '</label><br />'
+              );
+            }
+            if (isConda) {
+              if (!checked) {
+                checked = 'generate-new-conda';
+              }
+              requirementsTxtContainer.append(
+                  '<input type="radio" name="requirements-txt" id="generate-new-conda" value="generate-new" ' +
+                  (checked === 'generate-new-conda' ? 'checked' : '') + '/>' +
+                  '<label for="generate-new-conda">' +
+                  '  Generate an <span class="code">environment.yml</span> from the current conda environment.' +
+                  '</label><br />'
+              );
+            }
+            requirementsTxtContainer.append(
+                '<input type="radio" name="requirements-txt" id="generate-new-pip" value="generate-new" ' +
+                (checked === 'generate-new-pip' ? 'checked' : '') + ' />' +
+                '<label for="generate-new-pip">' +
+                '  Generate a <span class="code">requirements.txt</span> from the current pip environment.' +
+                '</label>'
+            );
           }
-          requirementsTxtContainer.append(html);
         }
 
         function bindCheckbox(id) {
@@ -1245,19 +1336,46 @@ define([
           $deploy_err.text('');
           $deploy_err.empty();
 
+          var generateNewPip = publishModal.find('#generate-new-pip');
+          var generateNewConda = publishModal.find('#generate-new-conda');
+          var useExistingPip = publishModal.find('#use-existing-pip');
+          var useExistingConda = publishModal.find('#use-existing-conda');
+          var compatibilityMode = false;
+          var forceGenerate = false;
+          if (generateNewPip && generateNewPip.is(':checked')) {
+            forceGenerate = true;
+            compatibilityMode = true;
+            environmentOptions = 'generate-new-pip';
+          }
+          if (generateNewConda && generateNewConda.is(':checked')) {
+            forceGenerate = true;
+            compatibilityMode = false;
+            environmentOptions = 'generate-new-conda';
+          }
+          if (useExistingPip && useExistingPip.is(':checked')) {
+            forceGenerate = false;
+            compatibilityMode = true;
+            environmentOptions = 'use-existing-pip';
+          }
+          if (useExistingConda && useExistingConda.is(':checked')) {
+            forceGenerate = false;
+            compatibilityMode = false;
+            environmentOptions = 'use-existing-conda';
+          }
+
           var validTitle = txtTitle.val().length >= 3;
 
           addValidationMarkup(
-            validTitle,
-            txtTitle,
-            'Title must be at least 3 characters.'
+              validTitle,
+              txtTitle,
+              'Title must be at least 3 characters.'
           );
 
           function togglePublishButton(enabled) {
             btnPublish
-              .toggleClass('disabled', !enabled)
-              .find('i.fa')
-              .toggleClass('hidden', enabled);
+                .toggleClass('disabled', !enabled)
+                .find('i.fa')
+                .toggleClass('hidden', enabled);
           }
 
           function handleFailure(xhr) {
@@ -1266,27 +1384,22 @@ define([
                 typeof xhr === 'string' &&
                 xhr.match(/No module named .*rsconnect.*/) !== null
             ) {
-                msg = 'The rsconnect-python package is not installed in your current notebook kernel.<br />' +
-                    'See the <a href="https://docs.rstudio.com/rsconnect-jupyter/#installation" target="_blank">' +
-                    'Installation Section of the rsconnect-jupyter documentation</a> for more information.';
+              msg = 'The rsconnect-python package is not installed in your current notebook kernel.<br />' +
+                  'See the <a href="https://docs.rstudio.com/rsconnect-jupyter/#installation" target="_blank">' +
+                  'Installation Section of the rsconnect-jupyter documentation</a> for more information.';
             } else if (typeof xhr === 'string') {
-              msg = 'An unexpected error occurred: '+ xhr;
-            }
-            else if (xhr.status === 500) {
-                msg = 'An internal error occurred.';
-            }
-            else if (xhr.responseJSON) {
-              if(xhr.responseJSON.message) {
+              msg = 'An unexpected error occurred: ' + xhr;
+            } else if (xhr.status === 500) {
+              msg = 'An internal error occurred.';
+            } else if (xhr.responseJSON) {
+              if (xhr.responseJSON.message) {
                 msg = 'Error: ' + xhr.responseJSON.message;
-              }
-              else {
+              } else {
                 msg = 'An unknown error occurred.';
               }
-            }
-            else if(xhr.responseText) {
+            } else if (xhr.responseText) {
               msg = 'Error: ' + xhr.responseText;
-            }
-            else {
+            } else {
               msg = 'An unknown error occurred.';
             }
             addValidationMarkup(false, $deploy_err, msg);
@@ -1294,9 +1407,6 @@ define([
           }
 
           function publish() {
-            if (hasRequirementsTxt && publishModal.find('#generate-new').is(':checked')) {
-              forceGenerate = true;
-            }
             // assume the user is re-deploying to the same location
             var appId = config.servers[selectedEntryId].appId;
 
@@ -1315,57 +1425,57 @@ define([
 
             var normalizedFiles = [];
             if (notebookDirectory.length !== 0) {
-                files.forEach(function (file) {
-                    normalizedFiles.push(
-                        file.slice(notebookDirectory.length + 1)
-                    );
-                });
+              files.forEach(function (file) {
+                normalizedFiles.push(
+                    file.slice(notebookDirectory.length + 1)
+                );
+              });
             } else {
-                normalizedFiles = files;
+              normalizedFiles = files;
             }
 
             config
-              .publishContent(
-                selectedEntryId,
-                appId,
-                txtTitle.val(),
-                appMode,
-                normalizedFiles,
-                compatibilityMode,
-                forceGenerate
-              )
-              .always(function() {
-                togglePublishButton(true);
-              })
-              .fail(handleFailure)
-              .then(function(result) {
-                notify.set_message(
-                  ' Successfully published content',
-                  // timeout in milliseconds after which the notification
-                  // should disappear
-                  15 * 1000,
-                  // click handler
-                  function() {
-                    // note: logs_url is included in result.config
-                    window.open(result.config.config_url, '');
-                  },
-                  // options
-                  {
-                    class: 'info',
-                    icon: 'fa fa-link',
-                    // tooltip
-                    title: 'Click to open published content on RStudio Connect'
-                  }
-                );
-                publishModal.modal('hide');
-              });
+                .publishContent(
+                    selectedEntryId,
+                    appId,
+                    txtTitle.val(),
+                    appMode,
+                    normalizedFiles,
+                    compatibilityMode,
+                    forceGenerate
+                )
+                .always(function () {
+                  togglePublishButton(true);
+                })
+                .fail(handleFailure)
+                .then(function (result) {
+                  notify.set_message(
+                      ' Successfully published content',
+                      // timeout in milliseconds after which the notification
+                      // should disappear
+                      15 * 1000,
+                      // click handler
+                      function () {
+                        // note: logs_url is included in result.config
+                        window.open(result.config.config_url, '');
+                      },
+                      // options
+                      {
+                        class: 'info',
+                        icon: 'fa fa-link',
+                        // tooltip
+                        title: 'Click to open published content on RStudio Connect'
+                      }
+                  );
+                  publishModal.modal('hide');
+                });
           }
 
           if (selectedEntryId !== null && validTitle) {
             togglePublishButton(false);
 
             var currentNotebookTitle =
-              config.servers[selectedEntryId].notebookTitle;
+                config.servers[selectedEntryId].notebookTitle;
             var currentAppId = config.servers[selectedEntryId].appId;
 
             // FIXME: Pull this out into a higher scope
@@ -1377,43 +1487,41 @@ define([
               } else {
                 // no selection, show content selection dialog
                 config
-                  .appSearch(
-                    selectedEntryId,
-                    txtTitle.val(),
-                    currentAppId
-                  )
-                  .fail(handleFailure)
-                  .then(function(searchResults) {
-                    if (searchResults.count === 0) {
-                      // no matching content so publish to new endpoint
-                      selectedDeployLocation = DeploymentLocation.New;
-                      publish();
-                    } else {
-                      // some search results so let user choose an option.
-                      // note: in case of single match we can't be 100% sure
-                      // that the user wants to overwrite the content
-                      publishModal.modal('hide');
-                      var forceGenerateSelected = publishModal.find('#generate-new').is(':checked');
-                      showSearchDialog(
-                        searchResults.applications,
+                    .appSearch(
                         selectedEntryId,
                         txtTitle.val(),
-                        currentAppId,
-                        appMode,
-                        that.fileListItemManager.fileList,
-                        compatibilityMode,
-                        forceGenerateSelected
-                      );
-                    }
-                  });
+                        currentAppId
+                    )
+                    .fail(handleFailure)
+                    .then(function (searchResults) {
+                      if (searchResults.count === 0) {
+                        // no matching content so publish to new endpoint
+                        selectedDeployLocation = DeploymentLocation.New;
+                        publish();
+                      } else {
+                        // some search results so let user choose an option.
+                        // note: in case of single match we can't be 100% sure
+                        // that the user wants to overwrite the content
+                        publishModal.modal('hide');
+                        showSearchDialog(
+                            searchResults,
+                            selectedEntryId,
+                            txtTitle.val(),
+                            currentAppId,
+                            appMode,
+                            that.fileListItemManager.fileList,
+                            environmentOptions
+                        );
+                      }
+                    });
               }
             }
 
             if (!currentNotebookTitle) {
               // never been published before (or would have notebook title)
               debug.info(
-                'publishing for the first time, user selected something: ',
-                !!selectedDeployLocation
+                  'publishing for the first time, user selected something: ',
+                  !!selectedDeployLocation
               );
 
               publishOrSearch();
@@ -1422,8 +1530,8 @@ define([
             } else if (currentNotebookTitle !== txtTitle.val()) {
               // published previously but title changed
               debug.info(
-                'title changed, user selected something: ',
-                !!selectedDeployLocation
+                  'title changed, user selected something: ',
+                  !!selectedDeployLocation
               );
 
               publishOrSearch();
@@ -1477,8 +1585,8 @@ define([
    * @param appId {Number} App ID
    * @param appMode {'static'|'jupyter-static'} App mode
    * @param files {Array<String>} list of file paths that will be included
-   * @param compatibilityMode {boolean} Whether to force `requirements.txt` usage despite conda support
-   * @param forceGenerate {boolean} Whether to force generating a `requirements.txt` even if it exists
+   * @param environmentOptions {null|"use-existing-conda"|"use-existing-pip"|"generate-new"}
+   *        What the selected environment options are
    */
   function showSearchDialog(
     searchResults,
@@ -1487,8 +1595,7 @@ define([
     appId,
     appMode,
     files,
-    compatibilityMode,
-    forceGenerate
+    environmentOptions
   ) {
     function getUserAppMode(mode) {
       if (mode === 'static' || mode === 4) {
@@ -1580,8 +1687,7 @@ define([
             title,
             location,
             selectedAppMode,
-            compatibilityMode,
-            forceGenerate
+            environmentOptions
           );
         }
 
@@ -1646,9 +1752,7 @@ define([
               null,
               null,
               null,
-              false,
-              false
-          );
+              null);
         }
       })
       .catch(function(err) {
@@ -1695,7 +1799,14 @@ define([
         '  <b>requirements.txt</b> lists the set of Python packages that Connect will',
         '  make available on the server during publishing. If you add imports of new',
         '  packages, you will need to update requirements.txt to include them,',
-        '  or remove the file and use the Create Manifest button to create it again.',
+        '  or select the option to regenerate it if it exists',
+        '</p>',
+        '<p id="write-manifest-environment-info-conda">',
+        '  <b>environment.yml</b> lists the set of Conda packages that Connect will',
+        '  make available on the server during publishing. If you add imports of new',
+        '  packages, you will need to update environment.yml to include them,',
+        '  or select the option to regenerate it if it exists. You cannot use both' +
+        '  requirements.txt and environment.yml - you must choose one.',
         '</p>',
         '<p id="write-manifest-manifest-info">',
         '  <b>manifest.json</b> specifies the version of python in use,',
@@ -1718,42 +1829,94 @@ define([
         var compatibilityMode = false;
         var forceGenerate = false;
         var hasRequirementsTxt = false;
-        function prepareManifestRequirementsTxtDialog(hasRequirements) {
+        var hasEnvironmentYml = false;
+        var isCondaEnvironment = false;
+        function prepareManifestRequirementsTxtDialog(hasRequirements, hasEnvironment, isConda) {
           var info = dialog.find('#write-manifest-overwrite-info');
-          if (!hasRequirements) {
-            info.html(
-               '<p><i class="fa fa-question-circle"></i> A <span class="code">requirements.txt</span> file was not found in the notebook ' +
-              'directory. One will be generated automatically from your current python environment.</p>'
-            );
-          } else {
-            info.html(
-                '<div id="requirements-txt-container">' +
-                '<input type="radio" name="requirements-txt" id="use-existing" value="use-existing" checked />' +
-                '<label for="use-existing">' +
-                ' Use the existing <span class="code">requirements.txt</span> file in the notebook directory.' +
+          if (!hasRequirements && !hasEnvironment) {
+            var html = '<p><i class="fa fa-question-circle"></i> Neither a <span class="code">requirements.txt</span> nor an' +
+                '<span class="code">requirements.txt</span> file was found in the notebook directory.</p>';
+            if (!isConda) {
+              html += '<p>One will be generated automatically from your current python environment.</p>';
+            } else {
+              html += '<div id="requirements-txt-container">' +
+                '<input type="radio" name="requirements-txt" id="generate-new-pip" value="generate-new-pip" />' +
+                '<label for="generate-new-pip">' +
+                '  Generate a <span class="code">requirements.txt</span> from the current python environment.' +
                 '</label><br />' +
-                '<input type="radio" name="requirements-txt" id="generate-new" value="generate-new" />' +
+                '<input type="radio" name="requirements-txt" id="generate-new-conda" value="generate-new-conda" checked' +
+                  ' />' +
+                '<label for="generate-new-conda">' +
+                '  Generate an <span class="code">environment.yml</span> from the current conda environment.' +
+                '</label></div>';
+            }
+            info.html(html);
+          } else {
+            var requirementsContainer = '<div id="requirements-txt-container">';
+            if (hasRequirements) {
+              requirementsContainer += '<input type="radio" name="requirements-txt" id="use-existing-pip" value="use-existing-pip" checked />' +
+                  '<label for="use-existing">' +
+                  ' Use the existing <span class="code">requirements.txt</span> file in the notebook directory.' +
+                  '</label><br />';
+            }
+            if (hasEnvironment) {
+              requirementsContainer += '<input type="radio" name="requirements-txt" id="use-existing-conda" value="use-existing-conda" />' +
+                  '<label for="use-existing">' +
+                  ' Use the existing <span class="code">environment.yml</span> file in the notebook directory.' +
+                  '</label><br />';
+            }
+            // Always present the option to generate requirements.txt
+            requirementsContainer += '<input type="radio" name="requirements-txt" id="generate-new-pip" value="generate-new" />' +
                 '<label for="generate-new">' +
                 '  Generate a <span class="code">requirements.txt</span> from the current python environment.' +
-                '</label></div>'
-            );
+                '</label><br />';
+            if (isConda) {
+              requirementsContainer += '<input type="radio" name="requirements-txt" id="generate-new-conda" value="generate-new" />' +
+                  '<label for="generate-new">' +
+                  '  Generate an <span class="code">environment.yml</span> from the current python environment.' +
+                  '</label>';
+            }
+            requirementsContainer += '</div>';
+            info.html(requirementsContainer);
           }
         }
+
         dialog.find('#version-info').html(
             'rsconnect-jupyter server extension version: ' +
             rsconnectVersionInfo.rsconnect_jupyter_server_extension + '<br />' +
             'rsconnect-jupyter nbextension version: ' + rsconnectVersionInfo.js_version + '<br />' +
             'rsconnect-python version:' + rsconnectVersionInfo.rsconnect_python_version
         );
-        ContentsManager.list_contents(notebookDirectory)
+
+        var condaDetector = 'import os\n' +
+            'print("CONDA_PREFIX\t"+str(os.environ.get("CONDA_PREFIX")))\n' +
+            'print("CONDA_DEFAULT_ENV\t"+str(os.environ.get("CONDA_DEFAULT_ENV")))\n';
+        // Detect if we're in a conda environment
+        notebookExecuteToPromise(condaDetector)
+            .then(function (response) {
+              var output = response.content.text;
+              var lines = output.split('\n');
+              var map = {};
+              lines.forEach(function (line) {
+                var token = line.split('\t');
+                map[token[0]] = token[1];
+                if(token[1] !== 'None' && token[0] !== '') {
+                  isCondaEnvironment = true;
+                }
+              });
+            })
+            .then(function() {
+              return ContentsManager.list_contents(notebookDirectory);
+            })
             .then(function (contents) {
               for(var index in contents.content) {
                 if (contents.content[index].name === 'requirements.txt') {
                   hasRequirementsTxt = true;
-                  break;
+                } else if (contents.content[index].name === 'environment.yml') {
+                  hasEnvironmentYml = true;
                 }
               }
-              prepareManifestRequirementsTxtDialog(hasRequirementsTxt);
+              prepareManifestRequirementsTxtDialog(hasRequirementsTxt, hasEnvironmentYml, isCondaEnvironment);
             });
 
         var btnCancel = $(
@@ -1770,8 +1933,27 @@ define([
           $status.empty();
           $status.append($('<div>Creating manifest...</div>'));
 
-          if (hasRequirementsTxt && dialog.find('#generate-new').is(':checked')) {
+          var generateNewPip = dialog.find('#generate-new-pip');
+          var generateNewConda = dialog.find('#generate-new-conda');
+          var useExistingPip = dialog.find('#use-existing-pip');
+          var useExistingConda = dialog.find('#use-existing-conda');
+
+          // The next four if blocks are made explicit for clarity.
+          if (generateNewPip && generateNewPip.is(':checked')) {
             forceGenerate = true;
+            compatibilityMode = true;
+          }
+          if (generateNewConda && generateNewConda.is(':checked')) {
+            forceGenerate = true;
+            compatibilityMode = false;
+          }
+          if (useExistingPip && useExistingPip.is(':checked')) {
+            forceGenerate = false;
+            compatibilityMode = true;
+          }
+          if (useExistingConda && useExistingConda.is(':checked')) {
+            forceGenerate = false;
+            compatibilityMode = false;
           }
 
           config.inspectEnvironment(compatibilityMode, forceGenerate).then(function(environment) {

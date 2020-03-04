@@ -12,7 +12,8 @@ from notebook.utils import url_path_join
 from tornado import web
 
 from rsconnect import VERSION
-from rsconnect.api import verify_api_key, RSConnect, RSConnectException, RSConnectServer
+from rsconnect.api import verify_api_key, RSConnect, RSConnectException, RSConnectServer, \
+    override_title_search
 from rsconnect.bundle import make_notebook_html_bundle, make_notebook_source_bundle, write_manifest
 
 from ssl import SSLError
@@ -106,13 +107,11 @@ class EndpointHandler(APIHandler):
                         disable_tls_check,
                         cadata
                     )
-                with RSConnect(server) as client:
-                    retval = client.app_search(
-                        {
-                            "title": title,
-                            "app_id": app_id,
-                        }
-                    )
+                retval = override_title_search(
+                    server,
+                    app_id,
+                    title
+                )
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
             self.finish(json.dumps(retval))
@@ -228,6 +227,22 @@ class EndpointHandler(APIHandler):
             nb_name = os.path.basename(os_path)
             created, skipped = write_manifest(relative_dir, nb_name, environment, output_dir)
             self.finish(json.dumps({"created": created, "skipped": skipped}))
+            return
+
+        if action == 'get_python_settings':
+            uri = data['server_address']
+            api_key = data['api_key']
+            disable_tls_check = data['disable_tls_check']
+            cadata = data.get('cadata', None)
+
+            try:
+                server = RSConnectServer(uri, api_key, disable_tls_check, cadata)
+                with RSConnect(server) as api_client:
+                    retval = api_client.python_settings()
+            except RSConnectException as exc:
+                raise web.HTTPError(400, exc.message)
+            self.finish(json.dumps(retval))
+            return
 
     @web.authenticated
     def get(self, action):

@@ -531,6 +531,12 @@ define([
                                 return version_info;
                             });
                     });
+            },
+
+            getPythonSettings: function() {
+                return Utils.ajax({
+                    url: Jupyter.notebook.base_url + 'rsconnect_jupyter/get_python_settings'
+                });
             }
         };
 
