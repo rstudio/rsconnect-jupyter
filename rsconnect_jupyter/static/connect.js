@@ -1139,7 +1139,8 @@ define([
                 var token = line.split('\t');
                 map[token[0]] = token[1];
                 if(token[1] !== 'None' && token[0] !== '') {
-                  isCondaEnvironment = true;
+                  // TODO: enable when ready
+                  // isCondaEnvironment = true;
                 }
               });
             })
@@ -1151,7 +1152,8 @@ define([
                 if (contents.content[index].name === 'requirements.txt') {
                   hasRequirementsTxt = true;
                 } else if (contents.content[index].name === 'environment.yml') {
-                  hasEnvironmentYml = true;
+                  // TODO: Enable when ready
+                  // hasEnvironmentYml = true;
                 }
               }
               preparePublishRequirementsTxtDialog(hasRequirementsTxt, hasEnvironmentYml, isCondaEnvironment, environmentOptions);
@@ -1901,7 +1903,8 @@ define([
                 var token = line.split('\t');
                 map[token[0]] = token[1];
                 if(token[1] !== 'None' && token[0] !== '') {
-                  isCondaEnvironment = true;
+                  // TODO: Enable when ready
+                  // isCondaEnvironment = true;
                 }
               });
             })
@@ -1913,7 +1916,8 @@ define([
                 if (contents.content[index].name === 'requirements.txt') {
                   hasRequirementsTxt = true;
                 } else if (contents.content[index].name === 'environment.yml') {
-                  hasEnvironmentYml = true;
+                  // TODO: Enable when ready
+                  // hasEnvironmentYml = true;
                 }
               }
               prepareManifestRequirementsTxtDialog(hasRequirementsTxt, hasEnvironmentYml, isCondaEnvironment);
