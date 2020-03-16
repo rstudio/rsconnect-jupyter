@@ -43,21 +43,23 @@ define([
               window.rsconnectVersionInfo = info;
               if (info.js_version !== info.rsconnect_jupyter_server_extension) {
                 console.error('Version Mismatch: rsconnect-jupyter has been installed incorrectly.');
-                Dialog.modal({
-                  title: 'Error',
-                  body: 'Plugin Version Mismatch: rsconnect-jupyter has been installed incorrectly. ' +
-                      'The javascript extension version reports ' + info.js_version + ' but the server ' +
-                      'extension reports ' + info.rsconnect_jupyter_server_extension + '.<br />' +
-                      '<ul>' +
-                      '<li>Refer to the <a href="https://docs.rstudio.com/rsconnect-jupyter/#installation">' +
-                      'installation instructions</a> for more information.</li>' +
-                      '<li>Try completely uninstalling every version of the plugin and reinstalling. ' +
-                      'Your server information will be saved.</li>' +
-                      '<li>Continuing to use the plugin as-is may lead to unexpected issues.</li>' +
-                      '</ul>',
-                  sanitize: false,
-                  buttons: { Ok: { class: 'btn-primary' } }
-                });
+                setTimeout(function () {
+                  Dialog.modal({
+                    title: 'Error',
+                    body: 'Plugin Version Mismatch: rsconnect-jupyter has been installed incorrectly. ' +
+                        'The javascript extension version reports ' + info.js_version + ' but the server ' +
+                        'extension reports ' + info.rsconnect_jupyter_server_extension + '.<br />' +
+                        '<ul>' +
+                        '<li>Refer to the <a href="https://docs.rstudio.com/rsconnect-jupyter/#installation">' +
+                        'installation instructions</a> for more information.</li>' +
+                        '<li>Try completely uninstalling every version of the plugin and reinstalling. ' +
+                        'Your server information will be saved.</li>' +
+                        '<li>Continuing to use the plugin as-is may lead to unexpected issues.</li>' +
+                        '</ul>',
+                    sanitize: false,
+                    buttons: {Ok: {class: 'btn-primary'}}
+                  });
+                }, 1000);
               }
             });
       }
