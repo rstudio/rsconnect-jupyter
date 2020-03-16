@@ -1367,6 +1367,11 @@ define([
             compatibilityMode = false;
             environmentOptions = 'use-existing-conda';
           }
+          if (!isCondaEnvironment) {
+            // TODO: This is needed to force `requirements.txt` to be generated
+            // TODO: until conda support is delivered
+            compatibilityMode = false;
+          }
 
           var validTitle = txtTitle.val().length >= 3;
 
