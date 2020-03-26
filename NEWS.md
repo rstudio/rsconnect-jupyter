@@ -1,6 +1,3 @@
-# v1.3.1
-- Bump version of `rsconnect-jupyter` used.
-
 # v1.3.0
 - Core functionality was moved to the `rsconnect-python` package, which includes a
   command-line interface for convenience. See https://github.com/rstudio/rsconnect-python
