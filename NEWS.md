@@ -1,5 +1,5 @@
 # v1.3.1
-- Bump version of `rsconnect-jupyter` used.
+- Bump version of `rsconnect-python` used.
 
 # v1.3.0
 - Core functionality was moved to the `rsconnect-python` package, which includes a
