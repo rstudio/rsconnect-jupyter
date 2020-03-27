@@ -517,7 +517,7 @@ define([
     this.$checkDisableTLSCertCheck = null;
     this.$btnAdd = null;
     this.$btnCancel = null;
-  } 
+  }
 
   AddServerDialog.prototype = {
     init: function() {
@@ -821,9 +821,9 @@ define([
 
     function reselectPreviousServer() {
       // Reopen publish dialog. Only keep the current server selected
-      // if it has an API key. This is needed because we previously 
+      // if it has an API key. This is needed because we previously
       // didn't save API keys, so there could be a saved server without one.
-      if (selectedEntryId && 
+      if (selectedEntryId &&
           !config.getApiKey(config.servers[selectedEntryId].server)) {
           showSelectServerDialog(
               null,
@@ -1186,7 +1186,7 @@ define([
         }
         txtTitle.on('input', updateDeployNextButton);
         maybeShowConfigUrl();
-        
+
         if (
           selectedDeployLocation &&
           selectedDeployLocation !== DeploymentLocation.Canceled
@@ -1372,7 +1372,7 @@ define([
           if (!isCondaEnvironment) {
             // TODO: This is needed to force `requirements.txt` to be generated
             // TODO: until conda support is delivered
-            compatibilityMode = false;
+            compatibilityMode = true;
           }
 
           var validTitle = txtTitle.val().length >= 3;
