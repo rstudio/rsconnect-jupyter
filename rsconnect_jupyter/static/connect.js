@@ -1347,7 +1347,7 @@ define([
           var generateNewConda = publishModal.find('#generate-new-conda');
           var useExistingPip = publishModal.find('#use-existing-pip');
           var useExistingConda = publishModal.find('#use-existing-conda');
-          var compatibilityMode = false;
+          var compatibilityMode = true;
           var forceGenerate = false;
           if (generateNewPip && generateNewPip.is(':checked')) {
             forceGenerate = true;
@@ -1838,7 +1838,7 @@ define([
 
     open: function() {
         // TODO: Use this in the conda support branch
-        var compatibilityMode = false;
+        var compatibilityMode = true;
         var forceGenerate = false;
         var hasRequirementsTxt = false;
         var hasEnvironmentYml = false;
