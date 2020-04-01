@@ -164,13 +164,13 @@ class EndpointHandler(APIHandler):
                 with RSConnect(server) as api_client:
                     retval = api_client.deploy(app_id, nb_name, nb_title, nb_title is not None, bundle)
                     retval['cookies'] = {
-                        'keys': server.cookie_jar._keys,
-                        'content': server.cookie_jar._content
+                        'keys': api_client._cookies._keys,
+                        'content': api_client._cookies._content
                     }
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
 
-            self.finish(retval)
+            self.finish(json.dumps(retval))
             return
 
         if action == 'app_get':
