@@ -15,6 +15,7 @@ from rsconnect import VERSION
 from rsconnect.api import verify_api_key, RSConnect, RSConnectException, RSConnectServer, \
     override_title_search
 from rsconnect.bundle import make_notebook_html_bundle, make_notebook_source_bundle, write_manifest
+from rsconnect.http_support import CookieJar
 
 from ssl import SSLError
 
@@ -162,7 +163,10 @@ class EndpointHandler(APIHandler):
                 server = RSConnectServer(uri, api_key, disable_tls_check, cadata)
                 with RSConnect(server) as api_client:
                     retval = api_client.deploy(app_id, nb_name, nb_title, nb_title is not None, bundle)
-                    retval['cookies'] = api_client._cookies
+                    retval['cookies'] = {
+                        'keys': server.cookie_jar._keys,
+                        'content': server.cookie_jar._content
+                    }
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
 
@@ -190,12 +194,16 @@ class EndpointHandler(APIHandler):
             api_key = data['api_key']
             task_id = data['task_id']
             last_status = data['last_status']
-            cookies = data.get('cookies', [])
+            cookie_source = data.get('cookies', {})
             disable_tls_check = data['disable_tls_check']
             cadata = data.get('cadata', None)
 
             try:
-                with RSConnect(RSConnectServer(uri, api_key, disable_tls_check, cadata), cookies) as api_client:
+                rs_connect_server = RSConnectServer(uri, api_key, disable_tls_check, cadata)
+                if len(cookie_source) > 0:
+                    rs_connect_server.cookie_jar._keys = cookie_source['keys']
+                    rs_connect_server.cookie_jar._content = cookie_source['content']
+                with RSConnect(rs_connect_server) as api_client:
                     retval = api_client.task_get(task_id, last_status)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
