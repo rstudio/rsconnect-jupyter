@@ -15,7 +15,6 @@ from rsconnect import VERSION
 from rsconnect.api import verify_api_key, RSConnect, RSConnectException, RSConnectServer, \
     override_title_search
 from rsconnect.bundle import make_notebook_html_bundle, make_notebook_source_bundle, write_manifest
-from rsconnect.http_support import CookieJar
 
 from ssl import SSLError
 
