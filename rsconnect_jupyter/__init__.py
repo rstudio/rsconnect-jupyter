@@ -162,11 +162,14 @@ class EndpointHandler(APIHandler):
                 server = RSConnectServer(uri, api_key, disable_tls_check, cadata)
                 with RSConnect(server) as api_client:
                     retval = api_client.deploy(app_id, nb_name, nb_title, nb_title is not None, bundle)
-                    retval['cookies'] = api_client._cookies
+                    retval['cookies'] = {
+                        'keys': api_client._cookies._keys,
+                        'content': api_client._cookies._content
+                    }
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
 
-            self.finish(retval)
+            self.finish(json.dumps(retval))
             return
 
         if action == 'app_get':
@@ -190,13 +193,18 @@ class EndpointHandler(APIHandler):
             api_key = data['api_key']
             task_id = data['task_id']
             last_status = data['last_status']
-            cookies = data.get('cookies', [])
+            cookie_source = data.get('cookies', {})
             disable_tls_check = data['disable_tls_check']
             cadata = data.get('cadata', None)
 
             try:
-                with RSConnect(RSConnectServer(uri, api_key, disable_tls_check, cadata), cookies) as api_client:
+                rs_connect_server = RSConnectServer(uri, api_key, disable_tls_check, cadata)
+                if len(cookie_source) > 0:
+                    rs_connect_server.cookie_jar._keys = cookie_source['keys']
+                    rs_connect_server.cookie_jar._content = cookie_source['content']
+                with RSConnect(rs_connect_server) as api_client:
                     retval = api_client.task_get(task_id, last_status)
+                rs_connect_server.handle_bad_response(retval)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
             self.finish(json.dumps(retval))
@@ -213,6 +221,7 @@ class EndpointHandler(APIHandler):
                 server = RSConnectServer(uri, api_key, disable_tls_check, cadata)
                 with RSConnect(server) as api_client:
                     retval = api_client.app_config(app_id)
+                server.handle_bad_response(retval)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
             self.finish(json.dumps(retval))
@@ -239,6 +248,7 @@ class EndpointHandler(APIHandler):
                 server = RSConnectServer(uri, api_key, disable_tls_check, cadata)
                 with RSConnect(server) as api_client:
                     retval = api_client.python_settings()
+                server.handle_bad_response(retval)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
             self.finish(json.dumps(retval))
