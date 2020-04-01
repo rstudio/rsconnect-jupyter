@@ -205,6 +205,7 @@ class EndpointHandler(APIHandler):
                     rs_connect_server.cookie_jar._content = cookie_source['content']
                 with RSConnect(rs_connect_server) as api_client:
                     retval = api_client.task_get(task_id, last_status)
+                rs_connect_server.handle_bad_response(retval)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
             self.finish(json.dumps(retval))
@@ -221,6 +222,7 @@ class EndpointHandler(APIHandler):
                 server = RSConnectServer(uri, api_key, disable_tls_check, cadata)
                 with RSConnect(server) as api_client:
                     retval = api_client.app_config(app_id)
+                server.handle_bad_response(retval)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
             self.finish(json.dumps(retval))
@@ -247,6 +249,7 @@ class EndpointHandler(APIHandler):
                 server = RSConnectServer(uri, api_key, disable_tls_check, cadata)
                 with RSConnect(server) as api_client:
                     retval = api_client.python_settings()
+                server.handle_bad_response(retval)
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
             self.finish(json.dumps(retval))
