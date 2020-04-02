@@ -1,3 +1,10 @@
+`rsconnect-jupyter` 1.3.3
+--------------------------------------------------------------------------------
+*   Bump version of `rsconnect-python` used.
+
+*   Manage cookies the right way.
+
+
 `rsconnect-jupyter` 1.3.2
 --------------------------------------------------------------------------------
 *   Bump version of `rsconnect-python` used.
