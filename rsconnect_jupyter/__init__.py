@@ -3,7 +3,6 @@ import json
 import os
 import sys
 
-from rsconnect.actions import test_server
 from six.moves.urllib.parse import unquote_plus
 from os.path import dirname, join
 
@@ -12,9 +11,11 @@ from notebook.utils import url_path_join
 from tornado import web
 
 from rsconnect import VERSION
+from rsconnect.actions import test_server
 from rsconnect.api import verify_api_key, RSConnect, RSConnectException, RSConnectServer, \
     override_title_search
 from rsconnect.bundle import make_notebook_html_bundle, make_notebook_source_bundle, write_manifest
+from rsconnect.http_support import CookieJar
 
 from ssl import SSLError
 
@@ -162,10 +163,7 @@ class EndpointHandler(APIHandler):
                 server = RSConnectServer(uri, api_key, disable_tls_check, cadata)
                 with RSConnect(server) as api_client:
                     retval = api_client.deploy(app_id, nb_name, nb_title, nb_title is not None, bundle)
-                    retval['cookies'] = {
-                        'keys': api_client._cookies._keys,
-                        'content': api_client._cookies._content
-                    }
+                    retval['cookies'] = server.cookie_jar.as_dict()
             except RSConnectException as exc:
                 raise web.HTTPError(400, exc.message)
 
@@ -199,9 +197,7 @@ class EndpointHandler(APIHandler):
 
             try:
                 rs_connect_server = RSConnectServer(uri, api_key, disable_tls_check, cadata)
-                if len(cookie_source) > 0:
-                    rs_connect_server.cookie_jar._keys = cookie_source['keys']
-                    rs_connect_server.cookie_jar._content = cookie_source['content']
+                rs_connect_server.cookie_jar = CookieJar.from_dict(cookie_source)
                 with RSConnect(rs_connect_server) as api_client:
                     retval = api_client.task_get(task_id, last_status)
                 rs_connect_server.handle_bad_response(retval)
