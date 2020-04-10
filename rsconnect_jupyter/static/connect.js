@@ -1347,7 +1347,7 @@ define([
           var generateNewConda = publishModal.find('#generate-new-conda');
           var useExistingPip = publishModal.find('#use-existing-pip');
           var useExistingConda = publishModal.find('#use-existing-conda');
-          var compatibilityMode = true;
+          var compatibilityMode = false;
           var forceGenerate = false;
           if (generateNewPip && generateNewPip.is(':checked')) {
             forceGenerate = true;
@@ -1368,11 +1368,6 @@ define([
             forceGenerate = false;
             compatibilityMode = false;
             environmentOptions = 'use-existing-conda';
-          }
-          if (!isCondaEnvironment) {
-            // TODO: This is needed to force `requirements.txt` to be generated
-            // TODO: until conda support is delivered
-            compatibilityMode = true;
           }
 
           var validTitle = txtTitle.val().length >= 3;
@@ -1837,8 +1832,7 @@ define([
       sanitize: false,
 
     open: function() {
-        // TODO: Use this in the conda support branch
-        var compatibilityMode = true;
+        var compatibilityMode = false;
         var forceGenerate = false;
         var hasRequirementsTxt = false;
         var hasEnvironmentYml = false;
@@ -1913,8 +1907,7 @@ define([
                 var token = line.split('\t');
                 map[token[0]] = token[1];
                 if(token[1] !== 'None' && token[0] !== '') {
-                  // TODO: Enable when ready
-                  // isCondaEnvironment = true;
+                  isCondaEnvironment = true;
                 }
               });
             })
@@ -1926,8 +1919,7 @@ define([
                 if (contents.content[index].name === 'requirements.txt') {
                   hasRequirementsTxt = true;
                 } else if (contents.content[index].name === 'environment.yml') {
-                  // TODO: Enable when ready
-                  // hasEnvironmentYml = true;
+                  hasEnvironmentYml = true;
                 }
               }
               prepareManifestRequirementsTxtDialog(hasRequirementsTxt, hasEnvironmentYml, isCondaEnvironment);
