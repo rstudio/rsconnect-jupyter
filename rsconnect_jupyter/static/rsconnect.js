@@ -265,12 +265,12 @@ define([
               return result;
             },
 
-            inspectEnvironment: function (compatibilityMode, forceGenerate) {
+            inspectEnvironment: function (condaMode, forceGenerate) {
               return this.getRunningPythonPath().then(function(pythonPath) {
                 try {
                     var flags = '';
-                    if (compatibilityMode || forceGenerate) {
-                        flags = '-' + (compatibilityMode ? 'c' : '') + (forceGenerate ? 'f' : '');
+                    if (condaMode || forceGenerate) {
+                        flags = '-' + (condaMode ? 'c' : '') + (forceGenerate ? 'f' : '');
                     }
                     var cmd = [
                         '!"',

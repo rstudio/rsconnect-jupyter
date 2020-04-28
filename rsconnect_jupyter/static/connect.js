@@ -1342,26 +1342,26 @@ define([
           var generateNewConda = publishModal.find('#generate-new-conda');
           var useExistingPip = publishModal.find('#use-existing-pip');
           var useExistingConda = publishModal.find('#use-existing-conda');
-          var compatibilityMode = false;
+          var condaMode = false;
           var forceGenerate = false;
           if (generateNewPip && generateNewPip.is(':checked')) {
             forceGenerate = true;
-            compatibilityMode = true;
+            condaMode = false;
             environmentOptions = 'generate-new-pip';
           }
           if (generateNewConda && generateNewConda.is(':checked')) {
             forceGenerate = true;
-            compatibilityMode = false;
+            condaMode = true;
             environmentOptions = 'generate-new-conda';
           }
           if (useExistingPip && useExistingPip.is(':checked')) {
             forceGenerate = false;
-            compatibilityMode = true;
+            condaMode = false;
             environmentOptions = 'use-existing-pip';
           }
           if (useExistingConda && useExistingConda.is(':checked')) {
             forceGenerate = false;
-            compatibilityMode = false;
+            condaMode = true;
             environmentOptions = 'use-existing-conda';
           }
 
@@ -1443,7 +1443,7 @@ define([
                     txtTitle.val(),
                     appMode,
                     normalizedFiles,
-                    compatibilityMode,
+                    condaMode,
                     forceGenerate
                 )
                 .always(function () {
@@ -1827,7 +1827,7 @@ define([
       sanitize: false,
 
     open: function() {
-        var compatibilityMode = false;
+        var condaMode = false;
         var forceGenerate = false;
         var hasRequirementsTxt = false;
         var hasEnvironmentYml = false;
@@ -1942,22 +1942,22 @@ define([
           // The next four if blocks are made explicit for clarity.
           if (generateNewPip && generateNewPip.is(':checked')) {
             forceGenerate = true;
-            compatibilityMode = true;
+            condaMode = false;
           }
           if (generateNewConda && generateNewConda.is(':checked')) {
             forceGenerate = true;
-            compatibilityMode = false;
+            condaMode = true;
           }
           if (useExistingPip && useExistingPip.is(':checked')) {
             forceGenerate = false;
-            compatibilityMode = true;
+            condaMode = false;
           }
           if (useExistingConda && useExistingConda.is(':checked')) {
             forceGenerate = false;
-            compatibilityMode = false;
+            condaMode = true;
           }
 
-          config.inspectEnvironment(compatibilityMode, forceGenerate).then(function(environment) {
+          config.inspectEnvironment(condaMode, forceGenerate).then(function(environment) {
             return config.writeManifest(Jupyter.notebook.get_notebook_name(), environment).then(function(response) {
               var createdLinks = response.created.map(makeEditLink);
               $status.empty();
