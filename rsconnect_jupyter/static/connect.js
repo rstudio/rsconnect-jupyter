@@ -1141,8 +1141,7 @@ define([
                 var token = line.split('\t');
                 map[token[0]] = token[1];
                 if(token[1] !== 'None' && token[0] !== '') {
-                  // TODO: enable when ready
-                  // isCondaEnvironment = true;
+                  isCondaEnvironment = true;
                 }
               });
             })
@@ -1154,8 +1153,7 @@ define([
                 if (contents.content[index].name === 'requirements.txt') {
                   hasRequirementsTxt = true;
                 } else if (contents.content[index].name === 'environment.yml') {
-                  // TODO: Enable when ready
-                  // hasEnvironmentYml = true;
+                  hasEnvironmentYml = true;
                 }
               }
               preparePublishRequirementsTxtDialog(hasRequirementsTxt, hasEnvironmentYml, isCondaEnvironment, environmentOptions);
@@ -1228,11 +1226,8 @@ define([
           );
           if (!hasRequirements && !hasEnvironment && !isConda) {
             var message = '<p><i class="fa fa-question-circle"></i> ' +
-                'A <span class="code">requirements.txt</span> file was ' +
+                'A <span class="code">requirements.txt</span> or <span class="code">environment.yml</span> file was ' +
                 'not found in the notebook directory.';
-            // var message = '<p><i class="fa fa-question-circle"></i> ' +
-            //     'A <span class="code">requirements.txt</span> or <span class="code">environment.yml</span> file was ' +
-            //     'not found in the notebook directory.';
 
             if (isConda) {
               message += ' An environment file will be generated from your current conda environment.</p>';
@@ -1808,13 +1803,13 @@ define([
         '  packages, you will need to update requirements.txt to include them,',
         '  or select the option to regenerate it if it exists',
         '</p>',
-        // '<p id="write-manifest-environment-info-conda">',
-        // '  <b>environment.yml</b> lists the set of Conda packages that Connect will',
-        // '  make available on the server during publishing. If you add imports of new',
-        // '  packages, you will need to update environment.yml to include them,',
-        // '  or select the option to regenerate it if it exists. You cannot use both' +
-        // '  requirements.txt and environment.yml - you must choose one.',
-        // '</p>',
+        '<p id="write-manifest-environment-info-conda">',
+        '  <b>environment.yml</b> lists the set of Conda packages that Connect will',
+        '  make available on the server during publishing. If you add imports of new',
+        '  packages, you will need to update environment.yml to include them,',
+        '  or select the option to regenerate it if it exists. You cannot use both' +
+        '  requirements.txt and environment.yml - you must choose one.',
+        '</p>',
         '<p id="write-manifest-manifest-info">',
         '  <b>manifest.json</b> specifies the version of python in use,',
         '  along with other settings needed during deployment. Update',
