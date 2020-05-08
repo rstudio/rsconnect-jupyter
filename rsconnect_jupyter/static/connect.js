@@ -1412,7 +1412,7 @@ define([
             } else if (xhr.responseText) {
               msg = 'Error: ' + xhr.responseText;
             } else {
-              msg = 'An unknown error occurred.';
+              msg = 'An unknown error occurred.' + JSON.stringify(xhr);
             }
             addValidationMarkup(false, $deploy_err, msg);
             togglePublishButton(true);
