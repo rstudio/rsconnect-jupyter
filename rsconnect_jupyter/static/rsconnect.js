@@ -296,7 +296,13 @@ define([
                     if (count('{', content) === count('}', content)) {
                         try {
                             debug.info('environment:', content);
-                            result.resolve(JSON.parse(content));
+                            var parsedContent = JSON.parse(content);
+                            if (parsedContent.error) {
+                                debug.error('environment error:', parsedContent);
+                                result.reject(parsedContent);
+                            } else {
+                                result.resolve(parsedContent);
+                            }
                         } catch (err) {
                             debug.info('environment error:', err);
                             result.reject(content);
