@@ -4,8 +4,14 @@ NB_UID=$(shell id -u)
 NB_GID=$(shell id -g)
 
 IMAGE=rstudio/rsconnect-jupyter-py
-VERSION = $(shell pipenv run python setup.py --version)
+VERSION := $(shell pipenv run python setup.py --version)
+BDIST_WHEEL := dist/rsconnect_jupyter-$(VERSION)-py2.py3-none-any.whl
+S3_PREFIX := s3://rstudio-connect-downloads/connect/rsconnect-jupyter
 PORT = $(shell printenv PORT || echo 9999)
+
+# NOTE: See the `dist` target for why this exists.
+SOURCE_DATE_EPOCH := $(shell date +%s)
+export SOURCE_DATE_EPOCH
 
 clean:
 	rm -rf build/ dist/ rsconnect_jupyter.egg-info/
@@ -53,11 +59,15 @@ test-selenium:
 	$(MAKE) -C selenium test-env-down || true ; \
 	exit $$EXITCODE
 
+# NOTE: Wheels won't get built if _any_ file it tries to touch has a timestamp
+# before 1980 (system files) so the $(SOURCE_DATE_EPOCH) current timestamp is
+# exported as a point of reference instead.
 dist: version-frontend
-# wheels don't get built if _any_ file it tries to touch has a timestamp < 1980
-# (system files) so use the current timestamp as a point of reference instead
-	SOURCE_DATE_EPOCH="$(shell date +%s)"; pipenv run python setup.py sdist bdist_wheel
-	@echo
+	pipenv run python setup.py bdist_wheel
+	pipenv run twine check $(BDIST_WHEEL)
+	rm -vf dist/*.egg
+	@echo "::set-output name=whl::$(BDIST_WHEEL)"
+	@echo "::set-output name=whl_basename::$(notdir $(BDIST_WHEEL))"
 
 package:
 	make DOCKER_IMAGE=$(IMAGE)3 PY_VERSION=3 TARGET=dist launch
@@ -164,3 +174,9 @@ dist/rsconnect-jupyter-${VERSION}.pdf: docs/README.md docs/*.gif
 
 version-frontend:
 	printf '{"version":"%s"}\n' $(VERSION) >rsconnect_jupyter/static/version.json
+
+.PHONY: sync-latest-to-s3
+sync-latest-to-s3:
+	aws s3 cp --acl bucket-owner-full-control \
+		$(BDIST_WHEEL) \
+		$(S3_PREFIX)/latest/rsconnect_jupyter-latest-py2.py3-none-any.whl
