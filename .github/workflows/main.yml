@@ -52,9 +52,9 @@ jobs:
     - run: make install
     - run: make lint
     - run: make test
-    - run: make image${{ matrix.python-version }}
-    - run: make -C selenium build
-    - run: make test-selenium
+    # - run: make image${{ matrix.python-version }}
+    # - run: make -C selenium build
+    # - run: make test-selenium
   distributions:
     needs: test
     runs-on: ubuntu-latest
