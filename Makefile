@@ -57,6 +57,7 @@ dist: version-frontend
 # wheels don't get built if _any_ file it tries to touch has a timestamp < 1980
 # (system files) so use the current timestamp as a point of reference instead
 	SOURCE_DATE_EPOCH="$(shell date +%s)"; pipenv run python setup.py sdist bdist_wheel
+	@echo
 
 package:
 	make DOCKER_IMAGE=$(IMAGE)3 PY_VERSION=3 TARGET=dist launch

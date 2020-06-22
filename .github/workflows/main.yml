@@ -1,0 +1,129 @@
+name: main
+on:
+  push:
+    branches: [master]
+    tags: ['*']
+  pull_request:
+    branches: [master]
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ['2.7', '3.5', '3.6', '3.7', '3.8']
+        include:
+        - os: macos-latest
+          python-version: '3.8'
+    runs-on: ${{ matrix.os }}
+    name: test (py${{ matrix.python-version }} ${{ matrix.os }})
+    steps:
+    - uses: actions/checkout@v2
+    - run: git fetch --prune --unshallow
+    - uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - if: ${{ matrix.os != 'macos-latest' }}
+      uses: actions/cache@v1
+      with:
+        path: ~/.cache/pip
+        key: pip-${{ matrix.os }}-py${{ matrix.python-version }}-${{ hashFiles('Pipfile.lock') }}
+        restore-keys: |
+          pip-${{ matrix.os }}-py${{ matrix.python-version }}-${{ hashFiles('Pipfile.lock') }}
+          pip-${{ matrix.os }}-py${{ matrix.python-version }}-
+    - if: ${{ matrix.os == 'macos-latest' }}
+      uses: actions/cache@v1
+      with:
+        path: ~/Library/Caches/pip
+        key: pip-${{ matrix.os }}-py${{ matrix.python-version }}-${{ hashFiles('Pipfile.lock') }}
+        restore-keys: |
+          pip-${{ matrix.os }}-py${{ matrix.python-version }}-${{ hashFiles('Pipfile.lock') }}
+          pip-${{ matrix.os }}-py${{ matrix.python-version }}-
+    - uses: actions/cache@v1
+      with:
+        path: ~/.local/share/virtualenvs
+        key: virtualenvs-${{ matrix.os }}-py${{ matrix.python-version }}-${{ hashFiles('Pipfile.lock') }}
+        restore-keys: |
+          virtualenvs-${{ matrix.os }}-py${{ matrix.python-version }}-${{ hashFiles('Pipfile.lock') }}
+          virtualenvs-${{ matrix.os }}-py${{ matrix.python-version }}-
+    - run: pipenv install --dev
+    - run: pipenv run pip freeze
+    - run: pipenv run python setup.py --version
+    - run: pipenv run python -Wi setup.py test
+  distributions:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - run: git fetch --prune --unshallow
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.8.x
+    - uses: actions/cache@v1
+      with:
+        path: ~/.cache/pip
+        key: pip-ubuntu-latest-py3.8-${{ hashFiles('Pipfile.lock') }}
+        restore-keys: |
+          pip-ubuntu-latest-py3.8-${{ hashFiles('Pipfile.lock') }}
+          pip-ubuntu-latest-py3.8-
+    - uses: actions/cache@v1
+      with:
+        path: ~/.local/share/virtualenvs
+        key: virtualenvs-ubuntu-latest-py3.8-${{ hashFiles('Pipfile.lock') }}
+        restore-keys: |
+          virtualenvs-ubuntu-latest-py3.8-${{ hashFiles('Pipfile.lock') }}
+          virtualenvs-ubuntu-latest-py3.8-
+    - run: pip install -U pipenv pip
+    - run: pipenv install --dev
+    - run: pipenv run pip install -U 'SecretStorage>=3'
+    - run: make dist
+      id: create_dist
+    # - uses: actions/upload-artifact@v2
+    #   with:
+    #     name: distributions
+    #     path: dist/
+    # - run: pipenv run pip install -vvv ${{ steps.create_dist.outputs.whl }}
+    # - run: pipenv run rsconnect version
+    # - run: pipenv run rsconnect --help
+    # - if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+    #   id: create_release
+    #   uses: actions/create-release@v1
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   with:
+    #     tag_name: ${{ github.ref }}
+    #     release_name: Release ${{ github.ref }}
+    #     draft: false
+    #     prerelease: false
+    # - if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+    #   uses: actions/upload-release-asset@v1
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   with:
+    #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+    #     asset_path: ${{ steps.create_dist.outputs.whl }}
+    #     asset_name: ${{ steps.create_dist.outputs.whl_basename }}
+    #     asset_content_type: application/x-wheel+zip
+    # - uses: aws-actions/configure-aws-credentials@v1
+    #   with:
+    #     aws-access-key-id: ${{ secrets.AWS_ID }}
+    #     aws-secret-access-key: ${{ secrets.AWS_SECRET }}
+    #     aws-region: us-east-1
+    # - if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    #   run: make sync-latest-to-s3
+    # - if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+    #   run: make sync-to-s3
+    # - if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+    #   uses: pypa/gh-action-pypi-publish@master
+    #   with:
+    #     user: __token__
+    #     password: ${{ secrets.PYPI_TOKEN }}
+# docs:
+    # needs: test
+    # runs-on: ubuntu-latest
+    # steps:
+    # - uses: actions/checkout@v2
+    # - run: make docs-build
+    # - uses: actions/upload-artifact@v2
+    #   with:
+    #     name: docs
+    #     path: docs/site/
