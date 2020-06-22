@@ -49,8 +49,7 @@ all-tests: test2.7 test3.5 test3.6 test3.7 test3.8
 
 .PHONY: test
 test: version-frontend
-	pipenv run python -V
-	pipenv run python -Wi setup.py test
+	pipenv run pytest -vv --cov=rsconnect_jupyter tests/
 
 test%: version-frontend
 	make DOCKER_IMAGE=rstudio/rsconnect-jupyter-py$* PY_VERSION=$* TARGET=test launch
@@ -80,6 +79,7 @@ run: install
 .PHONY: install
 install:
 	pipenv install --dev
+	pipenv run pip install -e .
 	pipenv run jupyter-nbextension install --symlink --user --py rsconnect_jupyter
 	pipenv run jupyter-nbextension enable --py rsconnect_jupyter
 	pipenv run jupyter-serverextension enable --py rsconnect_jupyter
@@ -102,11 +102,20 @@ yarn:
 	yarn install
 
 .PHONY: lint
-lint: lint-js
+lint: lint-js lint-py
 
 .PHONY: lint-js
 lint-js:
 	npm run lint
+
+.PHONY: lint-py
+lint-py:
+	pipenv run black --check --diff .
+	pipenv run flake8 .
+
+.PHONY: fmt
+fmt:
+	pipenv run black .
 
 ## Specify that Docker runs with the calling user's uid/gid to avoid file
 ## permission issues on Linux dev hosts.
@@ -146,3 +155,21 @@ sync-latest-to-s3:
 	aws s3 cp --acl bucket-owner-full-control \
 		$(BDIST_WHEEL) \
 		$(S3_PREFIX)/latest/rsconnect_jupyter-latest-py2.py3-none-any.whl
+
+.PHONY: sync-latest-docs-to-s3
+sync-latest-docs-to-s3:
+	aws s3 cp --acl bucket-owner-full-control \
+		docs/out/rsconnect_jupyter-$(VERSION).html \
+		$(S3_PREFIX)/latest/rsconnect_jupyter-latest.html
+	aws s3 cp --acl bucket-owner-full-control \
+		docs/out/rsconnect_jupyter-$(VERSION).pdf \
+		$(S3_PREFIX)/latest/rsconnect_jupyter-latest.pdf
+
+.PHONY: promote-docs-in-s3
+promote-docs-in-s3:
+	aws s3 cp --acl bucket-owner-full-control \
+		docs/out/rsconnect_jupyter-$(VERSION).html \
+		s3://docs.rstudio.com/rsconnect-jupyter/rsconnect_jupyter-$(VERSION).html
+	aws s3 cp --acl bucket-owner-full-control \
+		docs/out/rsconnect_jupyter-$(VERSION).html \
+		s3://docs.rstudio.com/rsconnect-jupyter/index.html

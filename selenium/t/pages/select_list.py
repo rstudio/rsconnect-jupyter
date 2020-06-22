@@ -3,14 +3,13 @@ from selene.support.conditions import have
 
 class SelectList(object):
     def __init__(self, element):
-        # type: (SeleneElement) -> None
         self._element = element
 
     def open(self):
         self._element.click()
 
     def _options(self):
-        return self._element.all('option')
+        return self._element.all("option")
 
     def select_by_value(self, value):
         self._options().element_by(have.value(value)).click()

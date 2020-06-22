@@ -50,7 +50,8 @@ DOCKER_RUN_COMMAND=docker run --rm --init \
 	    --workdir=${RSCONNECT_DIR}/selenium \
 	    ${TRE_IMAGE}
 
-TEST_RUNNER_COMMAND=pytest \
+TEST_RUNNER_COMMAND = \
+	pytest \
 	    --junitxml=${RESULT_XML} \
 	    --driver=Remote \
 	    --host=${GRID_HOST} \
@@ -60,10 +61,10 @@ TEST_RUNNER_COMMAND=pytest \
 	    --connect-url='${CONNECT_SCHEME}://${CONNECT_HOST}:${CONNECT_PORT}' \
 	    --data-dir=${RSCONNECT_DIR}/selenium/data \
 	    --notebooks-dir=${NOTEBOOKS_DIR} \
-	    --verbose \
+	    -vv \
 	    --tb=short \
 	    --reruns=${RERUN_FAILURES} \
-	    -m "not (fail or systemstat)" \
+	    -m rsconnect_jupyter \
 	    ${PYTESTOPTS}
 
 ifdef DEBUG

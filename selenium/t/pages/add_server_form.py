@@ -2,10 +2,10 @@ from selene.api import s, by
 
 from .form_base import FormBase
 
-class AddServerForm(FormBase):
 
+class AddServerForm(FormBase):
     def __init__(self):
-        self._fields = ['address', 'api_key', 'name']
+        self._fields = ["address", "api_key", "name"]
 
     @property
     def close(self):

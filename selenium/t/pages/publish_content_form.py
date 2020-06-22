@@ -2,10 +2,10 @@ from selene.api import s, by
 
 from .form_base import FormBase
 
-class PublishContentForm(FormBase):
 
+class PublishContentForm(FormBase):
     def __init__(self):
-        self._fields = ['address', 'name']
+        self._fields = ["address", "name"]
 
     @property
     def close(self):
@@ -33,12 +33,12 @@ class PublishContentForm(FormBase):
 
     @property
     def title(self):
-        return s(by.css('#rsc-content-title'))
+        return s(by.css("#rsc-content-title"))
 
     @property
     def title_error(self):
-        return s(by.css('#rsc-deploy-error'))
+        return s(by.css("#rsc-deploy-error"))
 
     @property
     def version_info(self):
-        return s(by.css('#version-info'))
+        return s(by.css("#version-info"))
