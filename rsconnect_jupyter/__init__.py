@@ -19,8 +19,10 @@ from rsconnect.http_support import CookieJar
 
 from ssl import SSLError
 
-with open(join(dirname(__file__), 'version.txt')) as f:
-    __version__ = f.read().strip()
+try:
+    from rsconnect_jupyter.version import version as __version__  # noqa
+except ImportError:
+    __version__ = "NOTSET"  # noqa
 
 
 def _jupyter_server_extension_paths():

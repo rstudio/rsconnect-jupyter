@@ -1,0 +1,27 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+black = "*"
+coverage = "*"
+flake8 = "*"
+importlib-metadata = "*"
+ipython = "*"
+pytest = "*"
+pytest-cov = "*"
+setuptools_scm = "*"
+toml = "*"
+twine = "*"
+wheel = "*"
+
+[packages]
+nbconvert = ">=5.0"
+nbformat = "*"
+notebook = "*"
+rsconnect-python = "1.5.0b1"
+six = "*"
+
+[pipenv]
+allow_prereleases = true

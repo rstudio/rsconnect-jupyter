@@ -4,8 +4,7 @@ NB_UID=$(shell id -u)
 NB_GID=$(shell id -g)
 
 IMAGE=rstudio/rsconnect-jupyter-py
-VERSION=$(shell cat rsconnect_jupyter/version.txt)
-VERSION_BUILD=${VERSION}.$(shell printenv BUILD_NUMBER || echo 9999)
+VERSION = $(shell pipenv run python setup.py --version)
 PORT = $(shell printenv PORT || echo 9999)
 
 clean:
@@ -30,7 +29,6 @@ launch:
 		-e NB_UID=$(NB_UID) \
 		-e NB_GID=$(NB_GID) \
 		-e PY_VERSION=$(PY_VERSION) \
-		-e BUILD_NUMBER=$(BUILD_NUMBER) \
 		-p :$(PORT):9999 \
 		$(DOCKER_IMAGE) \
 		/rsconnect_jupyter/run.sh $(TARGET)
@@ -58,22 +56,22 @@ test-selenium:
 dist: version-frontend
 # wheels don't get built if _any_ file it tries to touch has a timestamp < 1980
 # (system files) so use the current timestamp as a point of reference instead
-	SOURCE_DATE_EPOCH="$(shell date +%s)"; python setup.py sdist bdist_wheel
+	SOURCE_DATE_EPOCH="$(shell date +%s)"; pipenv run python setup.py sdist bdist_wheel
 
 package:
 	make DOCKER_IMAGE=$(IMAGE)3 PY_VERSION=3 TARGET=dist launch
 
 run:
 # link python package
-	python setup.py develop
+	pipenv install --dev
 # install rsconnect_jupyter as a jupyter extension
-	jupyter-nbextension install --symlink --user --py rsconnect_jupyter
+	pipenv run jupyter-nbextension install --symlink --user --py rsconnect_jupyter
 # enable js extension
-	jupyter-nbextension enable --py rsconnect_jupyter
+	pipenv run jupyter-nbextension enable --py rsconnect_jupyter
 # enable python extension
-	jupyter-serverextension enable --py rsconnect_jupyter
+	pipenv run jupyter-serverextension enable --py rsconnect_jupyter
 # start notebook
-	jupyter-notebook -y --notebook-dir=/notebooks --ip='0.0.0.0' --port=9999 --no-browser --NotebookApp.token=''
+	pipenv run jupyter-notebook -y --notebook-dir=/notebooks --ip='0.0.0.0' --port=9999 --no-browser --NotebookApp.token=''
 
 shell:
 	bash
@@ -85,31 +83,31 @@ dist-run%:
 	make DOCKER_IMAGE=$(IMAGE)$* PY_VERSION=$* TARGET=dist-run launch
 
 dist-run: dist
-	pip install dist/rsconnect_jupyter-$(VERSION_BUILD)-py2.py3-none-any.whl
-	jupyter-nbextension install --symlink --user --py rsconnect_jupyter
-	jupyter-nbextension enable --py rsconnect_jupyter
-	jupyter-serverextension enable --py rsconnect_jupyter
-	jupyter-notebook -y --notebook-dir=/notebooks --ip='0.0.0.0' --port=9999 --no-browser --NotebookApp.token=''
+	pipenv run pip install dist/rsconnect_jupyter-$(VERSION)-py2.py3-none-any.whl
+	pipenv run jupyter-nbextension install --symlink --user --py rsconnect_jupyter
+	pipenv run jupyter-nbextension enable --py rsconnect_jupyter
+	pipenv run jupyter-serverextension enable --py rsconnect_jupyter
+	pipenv run jupyter-notebook -y --notebook-dir=/notebooks --ip='0.0.0.0' --port=9999 --no-browser --NotebookApp.token=''
 
 pypi-run%:
 	make DOCKER_IMAGE=$(IMAGE)$* PY_VERSION=$* TARGET=pypi-run launch
 
 pypi-run:
-	pip install rsconnect_jupyter==$(VERSION_BUILD)
-	jupyter-nbextension install --symlink --user --py rsconnect_jupyter
-	jupyter-nbextension enable --py rsconnect_jupyter
-	jupyter-serverextension enable --py rsconnect_jupyter
-	jupyter-notebook -y --notebook-dir=/notebooks --ip='0.0.0.0' --port=9999 --no-browser --NotebookApp.token=''
+	pipenv run pip install rsconnect_jupyter==$(VERSION)
+	pipenv run jupyter-nbextension install --symlink --user --py rsconnect_jupyter
+	pipenv run jupyter-nbextension enable --py rsconnect_jupyter
+	pipenv run jupyter-serverextension enable --py rsconnect_jupyter
+	pipenv run jupyter-notebook -y --notebook-dir=/notebooks --ip='0.0.0.0' --port=9999 --no-browser --NotebookApp.token=''
 
 pypi-test-run%:
 	make DOCKER_IMAGE=$(IMAGE)$* PY_VERSION=$* TARGET=pypi-test-run launch
 
 pypi-test-run:
-	pip install --index-url https://test.pypi.org/simple/ rsconnect_jupyter==$(VERSION_BUILD)
-	jupyter-nbextension install --symlink --user --py rsconnect_jupyter
-	jupyter-nbextension enable --py rsconnect_jupyter
-	jupyter-serverextension enable --py rsconnect_jupyter
-	jupyter-notebook -y --notebook-dir=/notebooks --ip='0.0.0.0' --port=9999 --no-browser --NotebookApp.token=''
+	pipenv run pip install --index-url https://test.pypi.org/simple/ rsconnect_jupyter==$(VERSION)
+	pipenv run jupyter-nbextension install --symlink --user --py rsconnect_jupyter
+	pipenv run jupyter-nbextension enable --py rsconnect_jupyter
+	pipenv run jupyter-serverextension enable --py rsconnect_jupyter
+	pipenv run jupyter-notebook -y --notebook-dir=/notebooks --ip='0.0.0.0' --port=9999 --no-browser --NotebookApp.token=''
 
 build/mock-connect/bin/flask:
 	bash -c '\
@@ -143,10 +141,10 @@ endif
 ## Inside Jenkins (when JOB_NAME is defined), we are in the right type of
 ## Docker container. Otherwise, launch pandoc inside a
 ## rstudio/connect:docs container.
-BUILD_DOC=env VERSION=${VERSION_BUILD} ./docs/build-doc.sh
+BUILD_DOC=env VERSION=${VERSION} ./docs/build-doc.sh
 ifeq (${JOB_NAME},)
 	BUILD_DOC=docker run --rm=true ${DOCKER_RUN_AS} \
-		-e VERSION=${VERSION_BUILD} \
+		-e VERSION=${VERSION} \
 		${DOCKER_ARGS} \
 		-v $(CURDIR):/rsconnect_jupyter \
 		-w /rsconnect_jupyter \
@@ -160,8 +158,8 @@ docs-build:
 	${BUILD_DOC}
 
 
-dist/rsconnect-jupyter-${VERSION_BUILD}.pdf: docs/README.md docs/*.gif
+dist/rsconnect-jupyter-${VERSION}.pdf: docs/README.md docs/*.gif
 	${BUILD_DOC}
 
 version-frontend:
-	echo '{ "version": "${VERSION}"}' > rsconnect_jupyter/static/version.json
+	printf '{"version":"%s"}\n' $(VERSION) >rsconnect_jupyter/static/version.json
