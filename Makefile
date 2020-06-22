@@ -77,7 +77,7 @@ run: install
 	pipenv run jupyter-notebook -y --notebook-dir=/notebooks --ip='0.0.0.0' --port=9999 --no-browser --NotebookApp.token=''
 
 .PHONY: install
-install:
+install: yarn
 	pipenv install --dev
 	pipenv run pip install -e .
 	pipenv run jupyter-nbextension install --symlink --user --py rsconnect_jupyter
