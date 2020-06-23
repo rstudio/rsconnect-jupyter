@@ -39,6 +39,7 @@ jobs:
           pip-${{ matrix.os }}-py${{ matrix.python-version }}-${{ hashFiles('Pipfile.lock') }}
           pip-${{ matrix.os }}-py${{ matrix.python-version }}-
     - run: pip install -U pip pipenv
+    - run: pip uninstall -y rsconnect-python
     - run: pipenv clean
     - run: pipenv install --dev
     - run: make assert-clean
@@ -72,6 +73,7 @@ jobs:
           pip-ubuntu-latest-py3.8-${{ hashFiles('Pipfile.lock') }}
           pip-ubuntu-latest-py3.8-
     - run: pip install -U pip pipenv
+    - run: pip uninstall -y rsconnect-python
     - run: pipenv clean
     - run: pipenv install --dev
     - run: make assert-clean
