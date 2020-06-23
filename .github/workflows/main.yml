@@ -38,14 +38,8 @@ jobs:
         restore-keys: |
           pip-${{ matrix.os }}-py${{ matrix.python-version }}-${{ hashFiles('Pipfile.lock') }}
           pip-${{ matrix.os }}-py${{ matrix.python-version }}-
-    - uses: actions/cache@v1
-      with:
-        path: ~/.local/share/virtualenvs
-        key: virtualenvs-${{ matrix.os }}-py${{ matrix.python-version }}-${{ hashFiles('Pipfile.lock') }}
-        restore-keys: |
-          virtualenvs-${{ matrix.os }}-py${{ matrix.python-version }}-${{ hashFiles('Pipfile.lock') }}
-          virtualenvs-${{ matrix.os }}-py${{ matrix.python-version }}-
     - run: pip install -U pip pipenv
+    - run: pipenv clean
     - run: pipenv update --dev
     - run: make assert-clean
     - run: pipenv run pip freeze
@@ -77,14 +71,8 @@ jobs:
         restore-keys: |
           pip-ubuntu-latest-py3.8-${{ hashFiles('Pipfile.lock') }}
           pip-ubuntu-latest-py3.8-
-    - uses: actions/cache@v1
-      with:
-        path: ~/.local/share/virtualenvs
-        key: virtualenvs-ubuntu-latest-py3.8-${{ hashFiles('Pipfile.lock') }}
-        restore-keys: |
-          virtualenvs-ubuntu-latest-py3.8-${{ hashFiles('Pipfile.lock') }}
-          virtualenvs-ubuntu-latest-py3.8-
     - run: pip install -U pip pipenv
+    - run: pipenv clean
     - run: pipenv update --dev
     - run: make assert-clean
     - run: pipenv run pip install -U 'SecretStorage>=3'
