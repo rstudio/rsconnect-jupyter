@@ -22,18 +22,47 @@ jobs:
     - uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
+    - if: ${{ matrix.os != 'macos-latest' }}
+      uses: actions/cache@v1
+      with:
+        path: ~/.cache/pip
+        key: pip-${{ matrix.os }}-py${{ matrix.python-version }}-${{ hashFiles('Pipfile.lock') }}
+        restore-keys: |
+          pip-${{ matrix.os }}-py${{ matrix.python-version }}-${{ hashFiles('Pipfile.lock') }}
+          pip-${{ matrix.os }}-py${{ matrix.python-version }}-
+    - if: ${{ matrix.os == 'macos-latest' }}
+      uses: actions/cache@v1
+      with:
+        path: ~/Library/Caches/pip
+        key: pip-${{ matrix.os }}-py${{ matrix.python-version }}-${{ hashFiles('Pipfile.lock') }}
+        restore-keys: |
+          pip-${{ matrix.os }}-py${{ matrix.python-version }}-${{ hashFiles('Pipfile.lock') }}
+          pip-${{ matrix.os }}-py${{ matrix.python-version }}-
+    - uses: actions/cache@v1
+      with:
+        path: ~/.local/share/virtualenvs
+        key: virtualenvs-${{ matrix.os }}-py${{ matrix.python-version }}-${{ hashFiles('Pipfile.lock') }}
+        restore-keys: |
+          virtualenvs-${{ matrix.os }}-py${{ matrix.python-version }}-${{ hashFiles('Pipfile.lock') }}
+          virtualenvs-${{ matrix.os }}-py${{ matrix.python-version }}-
     - run: echo '::set-env name=PYTHONPATH::'${GITHUB_WORKSPACE}
     - run: make prereqs
     - run: make version
     - run: make install
     - run: make lint
     - run: make test
-    - run: make image${{ matrix.python-version }}
-    - run: make -C selenium build
-    - run: make -C selenium clean
-    - run: make -C selenium test-env-up
-    - run: make -C selenium jupyter-up
-    - run: make -C selenium test
+    - if: ${{ matrix.os != 'macos-latest' }}
+      run: make image${{ matrix.python-version }}
+    - if: ${{ matrix.os != 'macos-latest' }}
+      run: make -C selenium build
+    - if: ${{ matrix.os != 'macos-latest' }}
+      run: make -C selenium clean
+    - if: ${{ matrix.os != 'macos-latest' }}
+      run: make -C selenium test-env-up
+    - if: ${{ matrix.os != 'macos-latest' }}
+      run: make -C selenium jupyter-up
+    - if: ${{ matrix.os != 'macos-latest' }}
+      run: make -C selenium test
   distributions:
     needs: test
     runs-on: ubuntu-latest
@@ -43,6 +72,20 @@ jobs:
     - uses: actions/setup-python@v2
       with:
         python-version: 3.8.x
+    - uses: actions/cache@v1
+      with:
+        path: ~/.cache/pip
+        key: pip-ubuntu-latest-py3.8-${{ hashFiles('Pipfile.lock') }}
+        restore-keys: |
+          pip-ubuntu-latest-py3.8-${{ hashFiles('Pipfile.lock') }}
+          pip-ubuntu-latest-py3.8-
+    - uses: actions/cache@v1
+      with:
+        path: ~/.local/share/virtualenvs
+        key: virtualenvs-ubuntu-latest-py3.8-${{ hashFiles('Pipfile.lock') }}
+        restore-keys: |
+          virtualenvs-ubuntu-latest-py3.8-${{ hashFiles('Pipfile.lock') }}
+          virtualenvs-ubuntu-latest-py3.8-
     - run: echo '::set-env name=PYTHONPATH::'${GITHUB_WORKSPACE}
     - run: make prereqs
     - run: pipenv clean
