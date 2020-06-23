@@ -1,11 +1,9 @@
 import datetime
 import logging
-import sys
 import time
 
 
 class SystemStat(object):
-
     def __init__(self, sleep=1.0, wait=120, **kwargs):
 
         # instrumentation for testing
@@ -18,7 +16,6 @@ class SystemStat(object):
         self.logger.info("initialization options")
         self.logger.info("sleep: {}".format(sleep))
         self.logger.info("wait: {}".format(wait))
-
 
     def wait_until_ready(self):
         """Poll and wait for system to be up
@@ -33,8 +30,8 @@ class SystemStat(object):
             startTime = nowTime
             endTime = nowTime + datetime.timedelta(seconds=self._wait)
 
-            self.logger.info('starting at {}'.format(startTime))
-            self.logger.info('ending at {}'.format(endTime))
+            self.logger.info("starting at {}".format(startTime))
+            self.logger.info("ending at {}".format(endTime))
 
             while nowTime < endTime:
 
@@ -44,19 +41,17 @@ class SystemStat(object):
                     return True
                 else:
                     # wait before polling again
-                    self.logger.debug(
-                        'sleeing for {} seconds'.format(self._sleep))
+                    self.logger.debug("sleeing for {} seconds".format(self._sleep))
                     time.sleep(self._sleep)
                     nowTime = datetime.datetime.now()
 
             # timed out waiting for system to come up.
-            self.logger.info('timed out waiting for system to come up')
+            self.logger.info("timed out waiting for system to come up")
             return False
 
         except Exception as e:
             self.logger.exception(e)
             raise
-
 
     def is_ready(self):
         """Check if the system is up.

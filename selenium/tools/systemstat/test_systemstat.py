@@ -3,22 +3,17 @@ import pytest
 from systemstattool import SystemStatTool
 
 pytestmark = [
-               pytest.mark.systemstat,
-             ]
+    pytest.mark.systemstat,
+]
 
 
 # default arguments from SystemStatTool
 systemStatToolArgs = Namespace(
-    sleep=1.0,
-    wait=2.0,
-    logfile='systemstat.log',
-    logformat='%(asctime)s %(message)s',
-    verbose=3,
-    stdout=False)
+    sleep=1.0, wait=2.0, logfile="systemstat.log", logformat="%(asctime)s %(message)s", verbose=3, stdout=False
+)
 
 
 class TestSystemStatTool(object):
-
     def test_default_command_fxn(self):
         """with default is_ready() method, wait_until_ready() still works."""
 
@@ -38,15 +33,13 @@ class TestSystemStatTool(object):
         assert system_ready is True
         assert tool._iterations == 1
 
-
     def test_system_up_no_waiting(self):
         """if is_ready() returns True, wait_until_ready() doesn't wait.
         """
 
         class MySystemStatTool(SystemStatTool):
-
             def __init__(self):
-                super(MySystemStatTool,self).__init__()
+                super(MySystemStatTool, self).__init__()
 
                 # parse command line and config file options
                 self.parse_options()
@@ -54,11 +47,9 @@ class TestSystemStatTool(object):
                 # start logging
                 self.start_logging()
 
-
             def is_ready(self):
 
                 return True
-
 
         # create a test tool based off the MySystemStatTool class
         tool = MySystemStatTool()
@@ -70,15 +61,13 @@ class TestSystemStatTool(object):
         assert system_ready is True
         assert tool._iterations == 1
 
-
     def test_delay_systemup(self):
         """wait_until_ready() waits and polls while system is down.
         """
 
         class MySystemStatTool(SystemStatTool):
-
             def __init__(self):
-                super(MySystemStatTool,self).__init__()
+                super(MySystemStatTool, self).__init__()
 
                 # parse command line and config file options
                 self.parse_options()
@@ -88,7 +77,6 @@ class TestSystemStatTool(object):
 
                 # track the number of entries
                 self.counter = 0
-
 
             def is_ready(self):
 
@@ -100,7 +88,6 @@ class TestSystemStatTool(object):
                 else:
                     return False
 
-
         # create a test tool based off the MySystemStatTool class
         tool = MySystemStatTool()
 
@@ -111,18 +98,16 @@ class TestSystemStatTool(object):
         assert system_ready is True
         assert tool._iterations == 4
 
-
     def test_wait_timeout(self):
         """if wait_until_ready never returns True, then timeout."""
 
         class MySystemStatTool(SystemStatTool):
-
             def __init__(self):
-                super(MySystemStatTool,self).__init__()
+                super(MySystemStatTool, self).__init__()
 
                 # parse command line and config file options
                 # set the wait time to 4 seconds
-                self.parse_options(['--wait', '4'], systemStatToolArgs)
+                self.parse_options(["--wait", "4"], systemStatToolArgs)
 
                 # start logging
                 self.start_logging()
@@ -130,12 +115,10 @@ class TestSystemStatTool(object):
                 # track the number of entries
                 self.counter = 0
 
-
             def is_ready(self):
 
                 # keep returning False until we timeout
                 return False
-
 
         # create a test tool based off the MySystemStatTool class
         tool = MySystemStatTool()
@@ -148,19 +131,16 @@ class TestSystemStatTool(object):
         assert system_ready is False
         assert tool._iterations == 4
 
-
     def test_sleep_affects_iterations(self):
         """sleeping longer means fewer iterations."""
 
         class MySystemStatTool(SystemStatTool):
-
             def __init__(self):
-                super(MySystemStatTool,self).__init__()
+                super(MySystemStatTool, self).__init__()
 
                 # parse command line and config file options
                 # set the wait time to 4 seconds
-                self.parse_options(['--wait', '4', '--sleep', '2'],
-                    systemStatToolArgs)
+                self.parse_options(["--wait", "4", "--sleep", "2"], systemStatToolArgs)
 
                 # start logging
                 self.start_logging()
@@ -168,12 +148,10 @@ class TestSystemStatTool(object):
                 # track the number of entries
                 self.counter = 0
 
-
             def is_ready(self):
 
                 # keep returning False until we timeout
                 return False
-
 
         # create a test tool based off the MySystemStatTool class
         tool = MySystemStatTool()

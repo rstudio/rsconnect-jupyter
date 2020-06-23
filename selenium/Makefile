@@ -23,7 +23,7 @@ NB_GID=$(shell id -g)
 NETWORK=${PROJECT}_default
 NOTEBOOKS_DIR=/notebooks
 PROJECT=rscjnet
-PY_VERSION=2
+PY_VERSION=3.8
 PYTESTLOG?=selenium_tests.log
 PYTESTOPTS?=
 RERUN_FAILURES?=0
@@ -34,7 +34,7 @@ SCALE_FIREFOX=${SCALE}
 SCALE_CHROME=${SCALE}
 SELENIUM_VERSION=3.8.1-dubnium
 TMP_PIPE=tmp.pipe
-TRE_IMAGE?=rstudio/checkrs-tew:0.1.0
+TRE_IMAGE?=rstudio/checkrs-tew:0.3.2
 
 # Allocate a tty and keep stdin open when running locally
 # Jenkins nodes don't have input tty, so we set this to ""
@@ -46,11 +46,12 @@ DOCKER_RUN_COMMAND=docker run --rm --init \
 	    --network=$(NETWORK) \
 	    --volume=$(CURDIR)/..:${RSCONNECT_DIR} \
 	    --volume=$(CURDIR)/../notebooks$(PY_VERSION):${NOTEBOOKS_DIR} \
-	    --user=`id -u`:`id -g` \
+			--user=$(NB_UID):$(NB_GID) \
 	    --workdir=${RSCONNECT_DIR}/selenium \
 	    ${TRE_IMAGE}
 
-TEST_RUNNER_COMMAND=pytest \
+TEST_RUNNER_COMMAND = \
+	pytest \
 	    --junitxml=${RESULT_XML} \
 	    --driver=Remote \
 	    --host=${GRID_HOST} \
@@ -60,10 +61,10 @@ TEST_RUNNER_COMMAND=pytest \
 	    --connect-url='${CONNECT_SCHEME}://${CONNECT_HOST}:${CONNECT_PORT}' \
 	    --data-dir=${RSCONNECT_DIR}/selenium/data \
 	    --notebooks-dir=${NOTEBOOKS_DIR} \
-	    --verbose \
+	    -vv \
 	    --tb=short \
 	    --reruns=${RERUN_FAILURES} \
-	    -m "not (fail or systemstat)" \
+	    -m rsconnect_jupyter \
 	    ${PYTESTOPTS}
 
 ifdef DEBUG
@@ -81,8 +82,8 @@ build-mock-connect:
 	docker build -t ${CONNECT_IMAGE} ${CONNECT_DOCKERFILE_DIR}
 
 clean:
-	rm -f *.png *.log *.xml ${TMP_PIPE};
-	rm -rf .pytest_cache;
+	rm -f *.png *.log *.xml ${TMP_PIPE}
+	rm -rf .pytest_cache
 
 distclean: clean
 
@@ -122,7 +123,7 @@ wait-for-systems-up:
 	    --name=systemstat \
 	    --network=$(NETWORK) \
 	    --volume=${CURDIR}/..:${RSCONNECT_DIR} \
-	    --user=`id -u`:`id -g` \
+			--user=$(NB_UID):$(NB_GID) \
 	    --workdir=${RSCONNECT_DIR}/selenium \
 	    ${TRE_IMAGE} \
 	    ./wait_for_systems_up.sh \
@@ -155,7 +156,7 @@ network-up:
 	@if [ "${NETWORK_EXISTS}" = "1" ] ; then \
 	    echo "Creating network: ${NETWORK}"; \
 	    docker network create --driver bridge ${NETWORK} ; \
-	fi;
+	fi
 
 network-down: connect-down grid-down
 	$(eval NETWORK_EXISTS=$(shell docker network inspect ${NETWORK} > /dev/null 2>&1 && echo 0 || echo 1))
@@ -166,13 +167,10 @@ network-down: connect-down grid-down
 	    done; \
 	    echo "Removing network: ${NETWORK}"; \
 	    docker network rm ${NETWORK}; \
-	fi;
-
-# I think we need TINI_SUBREAPER set because we are using --init, but run.sh
-# calls a make command which launches another command.
+	fi
 
 jupyter-up:
-	@echo -n "Creating ${JUPYTER_HOST} ..."
+	@echo "Creating ${JUPYTER_HOST} ..."
 	@docker run --rm -d --init \
 	    ${DOCKER_TTY_FLAGS} \
 	    --name=${JUPYTER_HOST} \
@@ -186,7 +184,7 @@ jupyter-up:
 	    --publish=:${JUPYTER_PORT}:${JUPYTER_PORT} \
 	    --workdir=${RSCONNECT_DIR} \
 	    $(JUPYTER_IMAGE) \
-	    ${RSCONNECT_DIR}/run.sh run \
+	    make -C ${RSCONNECT_DIR} run \
 	    1>/dev/null
 	@docker logs -f ${JUPYTER_HOST} > ${JUPYTER_LOG} &
 	@echo " done"
@@ -194,13 +192,13 @@ jupyter-up:
 jupyter-down:
 	$(eval JUPYTER_EXISTS=$(shell docker container inspect ${JUPYTER_HOST} > /dev/null 2>&1 && echo 0 || echo 1))
 	@if [ "${JUPYTER_EXISTS}" = "0" ] ; then \
-	    echo -n "Stopping ${JUPYTER_HOST} ..."; \
+	    echo "Stopping ${JUPYTER_HOST} ..."; \
 	    docker stop ${JUPYTER_HOST} 1>/dev/null; \
 	    echo " done"; \
-	fi;
+	fi
 
 connect-up:
-	@echo -n "Creating ${CONNECT_HOST} ..."
+	@echo "Creating ${CONNECT_HOST} ..."
 	@docker run --rm -d --init \
 	    ${DOCKER_TTY_FLAGS} \
 	    --name=${CONNECT_HOST} \
@@ -218,10 +216,10 @@ connect-up:
 connect-down:
 	$(eval CONNECT_EXISTS=$(shell docker container inspect ${CONNECT_HOST} > /dev/null 2>&1 && echo 0 || echo 1))
 	@if [ "${CONNECT_EXISTS}" = "0" ] ; then \
-	    echo -n "Stopping ${CONNECT_HOST} ..."; \
+	    echo "Stopping ${CONNECT_HOST} ..."; \
 	    docker stop ${CONNECT_HOST} 1>/dev/null; \
 	    echo " done"; \
-	fi;
+	fi
 
 
 .PHONY: all

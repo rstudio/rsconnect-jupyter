@@ -59,7 +59,7 @@ trap shutdown SIGINT SIGTERM
 
 # setup reasonable defaults for command line options
 connect_url="http://mock-connect:5000"
-jupyter_url="http://jupyter-py2:9999"
+jupyter_url="http://jupyter-py3.8:9999"
 grid_url="http://selenium-hub:4444"
 logdir="./"
 grid_nodes="2"

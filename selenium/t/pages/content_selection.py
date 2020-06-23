@@ -1,9 +1,7 @@
 from selene.api import s, by
 
-from .form_base import FormBase
 
 class ContentSelectionDialog:
-
     @property
     def title(self):
         return s(by.css(".modal-title"))

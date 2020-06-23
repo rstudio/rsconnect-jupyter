@@ -1,58 +1,41 @@
-.PHONY: clean all-images image% launch notebook% package dist run test all-tests test% shell shell% dist-run dist-run% pypi-run pypi-run% mock-server docs-build docs-image version-frontend
+NB_UID := $(shell id -u)
+NB_GID := $(shell id -g)
 
-NB_UID=$(shell id -u)
-NB_GID=$(shell id -g)
-
-IMAGE=rstudio/rsconnect-jupyter-py
+IMAGE := rstudio/rsconnect-jupyter-py
 VERSION := $(shell pipenv run python setup.py --version)
 BDIST_WHEEL := dist/rsconnect_jupyter-$(VERSION)-py2.py3-none-any.whl
 S3_PREFIX := s3://rstudio-connect-downloads/connect/rsconnect-jupyter
-PORT = $(shell printenv PORT || echo 9999)
+PORT := $(shell printenv PORT || echo 9999)
 
 # NOTE: See the `dist` target for why this exists.
 SOURCE_DATE_EPOCH := $(shell date +%s)
 export SOURCE_DATE_EPOCH
 
+.PHONY: clean
 clean:
-	rm -rf build/ dist/ rsconnect_jupyter.egg-info/
+	rm -rf build/ dist/ docs/out/ rsconnect_jupyter.egg-info/
 
-all-images: image2 image3.5 image3.6 image3.7
+.PHONY: all-images
+all-images: image2.7 image3.5 image3.6 image3.7 image3.8
 
 image%:
 	docker build \
 		--tag $(IMAGE)$* \
 		--file Dockerfile \
-		--build-arg BASE_IMAGE=continuumio/miniconda:4.4.10 \
+		--build-arg BASE_IMAGE=python:$*-slim \
 		--build-arg NB_UID=$(NB_UID) \
 		--build-arg NB_GID=$(NB_GID) \
 		--build-arg PY_VERSION=$* \
 		.
 
-launch:
-	docker run --rm -i -t \
-		-v $(CURDIR)/notebooks$(PY_VERSION):/notebooks \
-		-v $(CURDIR):/rsconnect_jupyter \
-		-e NB_UID=$(NB_UID) \
-		-e NB_GID=$(NB_GID) \
-		-e PY_VERSION=$(PY_VERSION) \
-		-p :$(PORT):9999 \
-		$(DOCKER_IMAGE) \
-		/rsconnect_jupyter/run.sh $(TARGET)
+.PHONY: all-tests
+all-tests: test2.7 test3.5 test3.6 test3.7 test3.8
 
-
-notebook%:
-	make DOCKER_IMAGE=$(IMAGE)$* PY_VERSION=$* TARGET=run launch
-
-all-tests: test2 test3.5 test3.6 test3.7
-
+.PHONY: test
 test: version-frontend
-	pip install --extra-index-url=https://test.pypi.org/simple rsconnect-python
-	python -V
-	python -Wi setup.py test
+	pipenv run pytest -vv --cov=rsconnect_jupyter tests/
 
-test%: version-frontend
-	make DOCKER_IMAGE=rstudio/rsconnect-jupyter-py$* PY_VERSION=$* TARGET=test launch
-
+.PHONY: test-selenium
 test-selenium:
 	$(MAKE) -C selenium clean test-env-up jupyter-up test || EXITCODE=$$? ; \
 	$(MAKE) -C selenium jupyter-down || true ; \
@@ -62,6 +45,7 @@ test-selenium:
 # NOTE: Wheels won't get built if _any_ file it tries to touch has a timestamp
 # before 1980 (system files) so the $(SOURCE_DATE_EPOCH) current timestamp is
 # exported as a point of reference instead.
+.PHONY: dist
 dist: version-frontend
 	pipenv run python setup.py bdist_wheel
 	pipenv run twine check $(BDIST_WHEEL)
@@ -69,56 +53,18 @@ dist: version-frontend
 	@echo "::set-output name=whl::$(BDIST_WHEEL)"
 	@echo "::set-output name=whl_basename::$(notdir $(BDIST_WHEEL))"
 
-package:
-	make DOCKER_IMAGE=$(IMAGE)3 PY_VERSION=3 TARGET=dist launch
+.PHONY: run
+run: install
+	pipenv run jupyter-notebook -y --notebook-dir=/notebooks --ip='0.0.0.0' --port=9999 --no-browser --NotebookApp.token=''
 
-run:
-# link python package
+.PHONY: install
+install: yarn
 	pipenv install --dev
-# install rsconnect_jupyter as a jupyter extension
-	pipenv run jupyter-nbextension install --symlink --user --py rsconnect_jupyter
-# enable js extension
-	pipenv run jupyter-nbextension enable --py rsconnect_jupyter
-# enable python extension
-	pipenv run jupyter-serverextension enable --py rsconnect_jupyter
-# start notebook
-	pipenv run jupyter-notebook -y --notebook-dir=/notebooks --ip='0.0.0.0' --port=9999 --no-browser --NotebookApp.token=''
-
-shell:
-	bash
-
-shell%:
-	make DOCKER_IMAGE=$(IMAGE)$* PY_VERSION=$* TARGET=shell launch
-
-dist-run%:
-	make DOCKER_IMAGE=$(IMAGE)$* PY_VERSION=$* TARGET=dist-run launch
-
-dist-run: dist
-	pipenv run pip install dist/rsconnect_jupyter-$(VERSION)-py2.py3-none-any.whl
+	$(MAKE) version-frontend
+	pipenv run pip install -e .
 	pipenv run jupyter-nbextension install --symlink --user --py rsconnect_jupyter
 	pipenv run jupyter-nbextension enable --py rsconnect_jupyter
 	pipenv run jupyter-serverextension enable --py rsconnect_jupyter
-	pipenv run jupyter-notebook -y --notebook-dir=/notebooks --ip='0.0.0.0' --port=9999 --no-browser --NotebookApp.token=''
-
-pypi-run%:
-	make DOCKER_IMAGE=$(IMAGE)$* PY_VERSION=$* TARGET=pypi-run launch
-
-pypi-run:
-	pipenv run pip install rsconnect_jupyter==$(VERSION)
-	pipenv run jupyter-nbextension install --symlink --user --py rsconnect_jupyter
-	pipenv run jupyter-nbextension enable --py rsconnect_jupyter
-	pipenv run jupyter-serverextension enable --py rsconnect_jupyter
-	pipenv run jupyter-notebook -y --notebook-dir=/notebooks --ip='0.0.0.0' --port=9999 --no-browser --NotebookApp.token=''
-
-pypi-test-run%:
-	make DOCKER_IMAGE=$(IMAGE)$* PY_VERSION=$* TARGET=pypi-test-run launch
-
-pypi-test-run:
-	pipenv run pip install --index-url https://test.pypi.org/simple/ rsconnect_jupyter==$(VERSION)
-	pipenv run jupyter-nbextension install --symlink --user --py rsconnect_jupyter
-	pipenv run jupyter-nbextension enable --py rsconnect_jupyter
-	pipenv run jupyter-serverextension enable --py rsconnect_jupyter
-	pipenv run jupyter-notebook -y --notebook-dir=/notebooks --ip='0.0.0.0' --port=9999 --no-browser --NotebookApp.token=''
 
 build/mock-connect/bin/flask:
 	bash -c '\
@@ -127,51 +73,57 @@ build/mock-connect/bin/flask:
 		. build/mock-connect/bin/activate && \
 		pip install flask'
 
+.PHONY: mock-server
 mock-server: build/mock-connect/bin/flask
 	bash -c '\
 		. build/mock-connect/bin/activate && \
 		FLASK_APP=mock_connect.py flask run --host=0.0.0.0'
 
-## Code quality tools
-
+.PHONY: yarn
 yarn:
 	yarn install
 
-lint: lint-js
+.PHONY: lint
+lint: lint-js lint-py
 
+.PHONY: lint-js
 lint-js:
 	npm run lint
 
+.PHONY: lint-py
+lint-py:
+	pipenv run black --check --diff .
+	pipenv run flake8 .
+
+.PHONY: fmt
+fmt:
+	pipenv run black .
+
 ## Specify that Docker runs with the calling user's uid/gid to avoid file
 ## permission issues on Linux dev hosts.
-DOCKER_RUN_AS=
+DOCKER_RUN_AS =
 ifeq (Linux,$(shell uname))
-	DOCKER_RUN_AS=-u $(shell id -u):$(shell id -g)
+	DOCKER_RUN_AS = -u $(shell id -u):$(shell id -g)
 endif
 
-## Inside Jenkins (when JOB_NAME is defined), we are in the right type of
-## Docker container. Otherwise, launch pandoc inside a
-## rstudio/connect:docs container.
-BUILD_DOC=env VERSION=${VERSION} ./docs/build-doc.sh
-ifeq (${JOB_NAME},)
-	BUILD_DOC=docker run --rm=true ${DOCKER_RUN_AS} \
-		-e VERSION=${VERSION} \
-		${DOCKER_ARGS} \
-		-v $(CURDIR):/rsconnect_jupyter \
-		-w /rsconnect_jupyter \
-		rsconnect-jupyter-docs docs/build-doc.sh
-endif
+BUILD_DOC := docker run --rm=true $(DOCKER_RUN_AS) \
+	-e VERSION=$(VERSION) \
+	$(DOCKER_ARGS) \
+	-v $(CURDIR):/rsconnect_jupyter \
+	-w /rsconnect_jupyter \
+	pandoc/latex:2.9 docs/build-doc.sh
 
-docs-image:
-	docker build -t rsconnect-jupyter-docs ./docs
+.PHONY: docs-build
+docs-build: docs/out
+	$(BUILD_DOC)
 
-docs-build:
-	${BUILD_DOC}
+docs/out:
+	mkdir -p $@
 
+dist/rsconnect-jupyter-$(VERSION).pdf: docs/README.md docs/*.gif docs/out
+	$(BUILD_DOC)
 
-dist/rsconnect-jupyter-${VERSION}.pdf: docs/README.md docs/*.gif
-	${BUILD_DOC}
-
+.PHONY: version-frontend
 version-frontend:
 	printf '{"version":"%s"}\n' $(VERSION) >rsconnect_jupyter/static/version.json
 
@@ -180,3 +132,21 @@ sync-latest-to-s3:
 	aws s3 cp --acl bucket-owner-full-control \
 		$(BDIST_WHEEL) \
 		$(S3_PREFIX)/latest/rsconnect_jupyter-latest-py2.py3-none-any.whl
+
+.PHONY: sync-latest-docs-to-s3
+sync-latest-docs-to-s3:
+	aws s3 cp --acl bucket-owner-full-control \
+		docs/out/rsconnect_jupyter-$(VERSION).html \
+		$(S3_PREFIX)/latest/rsconnect_jupyter-latest.html
+	aws s3 cp --acl bucket-owner-full-control \
+		docs/out/rsconnect_jupyter-$(VERSION).pdf \
+		$(S3_PREFIX)/latest/rsconnect_jupyter-latest.pdf
+
+.PHONY: promote-docs-in-s3
+promote-docs-in-s3:
+	aws s3 cp --acl bucket-owner-full-control \
+		docs/out/rsconnect_jupyter-$(VERSION).html \
+		s3://docs.rstudio.com/rsconnect-jupyter/rsconnect_jupyter-$(VERSION).html
+	aws s3 cp --acl bucket-owner-full-control \
+		docs/out/rsconnect_jupyter-$(VERSION).html \
+		s3://docs.rstudio.com/rsconnect-jupyter/index.html

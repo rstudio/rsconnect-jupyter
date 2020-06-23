@@ -49,7 +49,18 @@ jobs:
     - run: pipenv install --dev
     - run: pipenv run pip freeze
     - run: pipenv run python setup.py --version
-    - run: pipenv run python -Wi setup.py test
+    - run: make install
+    - run: make lint
+    - run: make test
+    - if: false
+      name: currently busted selenium test stuff
+      run: >
+        make image${{ matrix.python-version }}
+        make -C selenium build
+        make -C selenium clean
+        make -C selenium test-env-up
+        make -C selenium jupyter-up
+        make -C selenium test
   distributions:
     needs: test
     runs-on: ubuntu-latest
@@ -115,13 +126,28 @@ jobs:
       with:
         user: __token__
         password: ${{ secrets.PYPI_TOKEN }}
-# docs:
-    # needs: test
-    # runs-on: ubuntu-latest
-    # steps:
-    # - uses: actions/checkout@v2
-    # - run: make docs-build
-    # - uses: actions/upload-artifact@v2
-    #   with:
-    #     name: docs
-    #     path: docs/site/
+  docs:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - run: make docs-build
+    - uses: actions/upload-artifact@v2
+      with:
+        name: docs
+        path: docs/out/
+    - uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET }}
+        aws-region: us-east-1
+    - if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+      run: make sync-latest-docs-to-s3
+    - if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.DOCS_AWS_ID }}
+        aws-secret-access-key: ${{ secrets.DOCS_AWS_SECRET }}
+        aws-region: us-east-1
+    - if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+      run: make promote-docs-in-s3

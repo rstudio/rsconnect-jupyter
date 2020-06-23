@@ -1,8 +1,2 @@
-build/
-dist/
-notebooks*/
-*/node_modules/
-*.egg-info/
-.eggs/
-*.pyc
-.git/
+*
+!Pipfile*

@@ -4,13 +4,11 @@ import sutstat
 import logging
 import sys
 import systemstattool
-import os
 
 
 class SutStatTool(sutstat.SutStat, systemstattool.SystemStatTool):
-
-    def __init__(self, logfile='sutstat.log', **kwargs):
-        super(SutStatTool,self).__init__(logfile=logfile)
+    def __init__(self, logfile="sutstat.log", **kwargs):
+        super(SutStatTool, self).__init__(logfile=logfile)
 
         self.logger = logging.getLogger(__name__)
 
@@ -20,7 +18,8 @@ class SutStatTool(sutstat.SutStat, systemstattool.SystemStatTool):
             action="store",
             dest="url",
             default="http://localhost:6969",
-            type=str)
+            type=str,
+        )
 
         # parse command line and config file options
         self.parse_options()
@@ -32,11 +31,11 @@ class SutStatTool(sutstat.SutStat, systemstattool.SystemStatTool):
         self.start_logging()
 
 
-if __name__ == '__main__' :
+if __name__ == "__main__":
 
     tool = SutStatTool()
 
-    tool.logger.info('checking status of {}'.format(tool.options.url))
+    tool.logger.info("checking status of {}".format(tool.options.url))
 
     system_ready = tool.wait_until_ready()
 
@@ -45,6 +44,6 @@ if __name__ == '__main__' :
     else:
         status = 1
 
-    tool.logger.debug('exiting')
+    tool.logger.debug("exiting")
 
     sys.exit(status)

@@ -1,5 +1,4 @@
 import argparse
-import logging
 import os
 import pytest
 import secrets
@@ -8,8 +7,6 @@ import selene.browser
 import selene.config
 import shutil
 import string
-
-from selene.api import be
 
 
 # set the default selene reports folder
@@ -49,40 +46,31 @@ def pytest_addoption(parser):
     """Define and parse command line options"""
 
     parser.addoption(
-        "--selene-reports",
-        action=ReportsAction,
-        help="parent directory for storing selene test reports")
+        "--selene-reports", action=ReportsAction, help="parent directory for storing selene test reports",
+    )
 
     parser.addoption(
-        "--selene-timeout",
-        action=TimeoutAction,
-        default=4,
-        type=int,
-        help="set the default timeout in selene")
+        "--selene-timeout", action=TimeoutAction, default=4, type=int, help="set the default timeout in selene",
+    )
 
     parser.addoption(
-        "--jupyter-url",
-        action="store",
-        default="http://jupyter-py2/",
-        help="URI of the Jupyter system under test")
+        "--jupyter-url", action="store", default="http://jupyter-py2/", help="URI of the Jupyter system under test",
+    )
 
     parser.addoption(
         "--connect-url",
         action="store",
         default="http://mock-connect/",
-        help="URI of the Connect server where content is deployed")
+        help="URI of the Connect server where content is deployed",
+    )
 
     parser.addoption(
-        "--data-dir",
-        action="store",
-        default="/selenium/data",
-        help="Directory where data files are stored")
+        "--data-dir", action="store", default="/selenium/data", help="Directory where data files are stored",
+    )
 
     parser.addoption(
-        "--notebooks-dir",
-        action="store",
-        default="/notebooks",
-        help="Directory where Jupyter Notebooks are stored")
+        "--notebooks-dir", action="store", default="/notebooks", help="Directory where Jupyter Notebooks are stored",
+    )
 
 
 def log_web_error(msg):
@@ -93,8 +81,10 @@ def log_web_error(msg):
     """
 
     screenshot = selene.helpers.take_screenshot(selene.browser.driver(),)
-    msg = '''{original_msg}
-        screenshot: file://{screenshot}'''.format(original_msg=msg, screenshot=screenshot)
+    msg = """{original_msg}
+        screenshot: file://{screenshot}""".format(
+        original_msg=msg, screenshot=screenshot
+    )
     return msg
 
 
@@ -147,16 +137,18 @@ def browser_config(driver):
 
 @pytest.fixture(autouse=True)
 def skip_by_browser(request, session_capabilities):
-    if request.node.get_marker('skip_browser'):
-        if request.node.get_marker('skip_browser').args[0] == session_capabilities['browserName']:
-            pytest.skip('skipped on this browser: {}'.format(session_capabilities['browserName']))
+    if request.node.get_marker("skip_browser"):
+        if request.node.get_marker("skip_browser").args[0] == session_capabilities["browserName"]:
+            pytest.skip("skipped on this browser: {}".format(session_capabilities["browserName"]))
 
 
-def generate_random_string(length=8, charset="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()"):
+def generate_random_string(
+    length=8, charset="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()",
+):
     """Randomly pick chars from an alphabet
     """
 
-    return ''.join(secrets.choice(charset) for i in range(length))
+    return "".join(secrets.choice(charset) for i in range(length))
 
 
 def generate_content_name():
@@ -166,10 +158,9 @@ def generate_content_name():
     # start with a letter for safety
 
     alphabet1 = string.ascii_letters
-    alphabet2 = string.ascii_letters + string.digits + '-_'
+    alphabet2 = string.ascii_letters + string.digits + "-_"
 
-    name = generate_random_string(1,alphabet1) \
-            + generate_random_string(10,alphabet2)
+    name = generate_random_string(1, alphabet1) + generate_random_string(10, alphabet2)
 
     return name
 
@@ -180,10 +171,10 @@ def notebook(data_dir, notebooks_dir):
     """
 
     # file that will be used to generate the new notebook
-    template_path = os.path.join(data_dir,'spiro.ipynb')
+    template_path = os.path.join(data_dir, "spiro.ipynb")
 
     # name of the new notebook
-    notebook_fname = generate_content_name() + '.ipynb'
+    notebook_fname = generate_content_name() + ".ipynb"
     notebook_path = os.path.join(notebooks_dir, notebook_fname)
 
     # copy the template to create the new notebook
