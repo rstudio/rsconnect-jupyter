@@ -158,3 +158,8 @@ promote-docs-in-s3:
 	aws s3 cp --acl bucket-owner-full-control \
 		docs/out/rsconnect_jupyter-$(VERSION).html \
 		s3://docs.rstudio.com/rsconnect-jupyter/index.html
+
+.PHONY: assert-clean
+assert-clean:
+	git diff --exit-code
+	git diff --staged --exit-code

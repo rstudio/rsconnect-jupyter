@@ -46,7 +46,8 @@ jobs:
           virtualenvs-${{ matrix.os }}-py${{ matrix.python-version }}-${{ hashFiles('Pipfile.lock') }}
           virtualenvs-${{ matrix.os }}-py${{ matrix.python-version }}-
     - run: pip install -U pip pipenv
-    - run: pipenv install --dev --clear
+    - run: pipenv update --dev
+    - run: make assert-clean
     - run: pipenv run pip freeze
     - run: pipenv run python setup.py --version
     - run: make install
@@ -84,7 +85,8 @@ jobs:
           virtualenvs-ubuntu-latest-py3.8-${{ hashFiles('Pipfile.lock') }}
           virtualenvs-ubuntu-latest-py3.8-
     - run: pip install -U pip pipenv
-    - run: pipenv install --dev --clear
+    - run: pipenv update --dev
+    - run: make assert-clean
     - run: pipenv run pip install -U 'SecretStorage>=3'
     - run: make dist
       id: create_dist
