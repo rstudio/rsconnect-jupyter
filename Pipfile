@@ -20,8 +20,8 @@ wheel = "*"
 nbconvert = ">=5.0"
 nbformat = "*"
 notebook = "*"
+rsconnect-python = ">=1.5.0b2"
 six = "*"
-rsconnect-python = "*"
 
 [pipenv]
 allow_prereleases = true

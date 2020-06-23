@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "e8dc83b9472c1011db2c0aaba162dffc0a48d4d179eaf80ec2a6349621bb7a1e"
+            "sha256": "0b9236cea48b99a20931611a83db6372214c5623ec0288a5e28d10ad12402377"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -334,11 +334,10 @@
         },
         "rsconnect-python": {
             "hashes": [
-                "sha256:c2305e6658265f90fb25c41c159f4cd8963de61d2fc58702e55003122f550388",
-                "sha256:e81fd84acbe5dc5e053827428c0b412106d36a70a1ab07306ecbef8a14159159"
+                "sha256:590863f7015eb9d43b665574911636419eb52734c6157454af69f028274af76a"
             ],
             "index": "pypi",
-            "version": "==1.4.4.1"
+            "version": "==1.5.0b2"
         },
         "send2trash": {
             "hashes": [
