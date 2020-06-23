@@ -22,7 +22,6 @@ LOGS_DIR=${RSCONNECT_DIR}/selenium
 NB_UID=$(shell id -u)
 NB_GID=$(shell id -g)
 NETWORK=${PROJECT}_default
-NOTEBOOKS_DIR=/notebooks
 PROJECT=rscjnet
 PY_VERSION=3.8
 PYTESTLOG?=selenium_tests.log
@@ -37,16 +36,20 @@ SELENIUM_VERSION=3.8.1-dubnium
 TMP_PIPE=tmp.pipe
 TRE_IMAGE?=rstudio/checkrs-tew:0.4.0
 
+NOTEBOOKS_DIR_MOUNT := /notebooks
+NOTEBOOKS_DIR := $(CURDIR)/../notebooks$(PY_VERSION)
+
 # Allocate a tty and keep stdin open when running locally
 # Jenkins nodes don't have input tty, so we set this to ""
 DOCKER_TTY_FLAGS?=-it
 
-DOCKER_RUN_COMMAND=docker run --rm --init \
+DOCKER_RUN_COMMAND = \
+	docker run --rm --init \
 	    ${DOCKER_TTY_FLAGS} \
 	    --name=tre-${HOURMINSEC} \
 	    --network=$(NETWORK) \
 	    --volume=$(CURDIR)/..:${RSCONNECT_DIR} \
-	    --volume=$(CURDIR)/../notebooks$(PY_VERSION):${NOTEBOOKS_DIR} \
+	    --volume=$(NOTEBOOKS_DIR):$(NOTEBOOKS_DIR_MOUNT) \
 			--user=$(NB_UID):$(NB_GID) \
 	    --workdir=${RSCONNECT_DIR}/selenium \
 	    ${TRE_IMAGE}
@@ -61,7 +64,7 @@ TEST_RUNNER_COMMAND = \
 	    --jupyter-url='${JUPYTER_SCHEME}://${JUPYTER_HOST}:${JUPYTER_PORT}' \
 	    --connect-url='${CONNECT_SCHEME}://${CONNECT_HOST}:${CONNECT_PORT}' \
 	    --data-dir=${RSCONNECT_DIR}/selenium/data \
-	    --notebooks-dir=${NOTEBOOKS_DIR} \
+	    --notebooks-dir=$(NOTEBOOKS_DIR_MOUNT) \
 	    -vv \
 	    --tb=short \
 	    --reruns=${RERUN_FAILURES} \
@@ -88,6 +91,10 @@ clean:
 
 distclean: clean
 
+$(NOTEBOOKS_DIR):
+	mkdir -p $@
+	chmod -v 0777 $@
+
 # The test target launches a Docker container to run the test cases.
 # Prior to launching the Docker container, we check that the prerequisite
 # systems (selenium grid, system under test) are up and accepting requests.
@@ -96,8 +103,8 @@ distclean: clean
 # we remove the named pipe, which also ends the pytest output from being
 # printed to stdout through the tee command.
 
-test: wait-for-systems-up prepare-logging
-	${DOCKER_RUN_COMMAND} ${TEST_RUNNER_COMMAND} > ${TMP_PIPE} || EXITCODE=$$?; \
+test: wait-for-systems-up prepare-logging $(NOTEBOOKS_DIR)
+	${DOCKER_RUN_COMMAND} ${TEST_RUNNER_COMMAND} >${TMP_PIPE} || EXITCODE=$$?; \
 	rm -f ${TMP_PIPE}; \
 	exit $$EXITCODE
 
@@ -112,7 +119,7 @@ prepare-logging:
 	mkfifo ${TMP_PIPE}
 	tee ${PYTESTLOG} < ${TMP_PIPE} &
 
-run:
+run: $(NOTEBOOKS_DIR)
 	@${DOCKER_RUN_COMMAND} ${COMMAND}
 
 test-env-up: grid-up connect-up
@@ -176,7 +183,7 @@ jupyter-up:
 	    ${DOCKER_TTY_FLAGS} \
 	    --name=${JUPYTER_HOST} \
 	    --network=${NETWORK} \
-	    --volume=$(CURDIR)/../notebooks$(PY_VERSION):${NOTEBOOKS_DIR} \
+	    --volume=$(NOTEBOOKS_DIR):$(NOTEBOOKS_DIR_MOUNT) \
 	    --volume=$(CURDIR)/..:${RSCONNECT_DIR} \
 	    --env=NB_UID=$(NB_UID) \
 	    --env=NB_GID=$(NB_GID) \
