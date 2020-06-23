@@ -79,6 +79,7 @@ run: install
 .PHONY: install
 install: yarn
 	pipenv install --dev
+	$(MAKE) install-latest-rsconnect-python
 	$(MAKE) version-frontend
 	pipenv run jupyter nbextension install --symlink --user --py rsconnect_jupyter
 	pipenv run jupyter nbextension enable --py rsconnect_jupyter
@@ -140,6 +141,10 @@ docs/out:
 
 dist/rsconnect-jupyter-$(VERSION).pdf: docs/README.md docs/*.gif docs/out
 	$(BUILD_DOC)
+
+.PHONY: version
+version:
+	@echo $(VERSION)
 
 .PHONY: version-frontend
 version-frontend:

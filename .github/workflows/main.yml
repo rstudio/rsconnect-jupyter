@@ -24,22 +24,16 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - run: echo '::set-env name=PYTHONPATH::'${GITHUB_WORKSPACE}
     - run: make prereqs
-    - run: pipenv clean
-    - run: pipenv install --skip-lock --dev
-    - run: make install-latest-rsconnect-python
-    - run: pipenv run pip freeze
-    - run: pipenv run python setup.py --version
+    - run: make version
     - run: make install
     - run: make lint
     - run: make test
-    - name: currently semi-busted selenium test stuff
-      run: >
-        make image${{ matrix.python-version }}
-        make -C selenium build
-        make -C selenium clean
-        make -C selenium test-env-up
-        make -C selenium jupyter-up
-        make -C selenium test
+    - run: make image${{ matrix.python-version }}
+    - run: make -C selenium build
+    - run: make -C selenium clean
+    - run: make -C selenium test-env-up
+    - run: make -C selenium jupyter-up
+    - run: make -C selenium test
   distributions:
     needs: test
     runs-on: ubuntu-latest
