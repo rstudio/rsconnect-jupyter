@@ -17,6 +17,10 @@ export SOURCE_DATE_EPOCH
 prereqs:
 	pip install -U pip
 	pip install -U pipenv
+
+
+.PHONY: install-latest-rsconnect-python
+install-latest-rsconnect-python:
 	pipenv run pip install -U https://cdn.rstudio.com/connect/rsconnect-python/latest/rsconnect_python-latest-py2.py3-none-any.whl
 
 .PHONY: clean

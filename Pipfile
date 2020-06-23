@@ -21,7 +21,7 @@ nbconvert = ">=5.0"
 nbformat = "*"
 notebook = "*"
 six = "*"
-rsconnect-python = {file = "https://cdn.rstudio.com/connect/rsconnect-python/latest/rsconnect_python-latest-py2.py3-none-any.whl"}
+rsconnect-python = "*"
 
 [pipenv]
 allow_prereleases = true

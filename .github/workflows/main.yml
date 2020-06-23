@@ -24,7 +24,8 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - run: make prereqs
     - run: pipenv clean
-    - run: pipenv install --dev
+    - run: pipenv install --skip-lock --dev
+    - run: make install-latest-rsconnect-python
     - run: pipenv run pip freeze
     - run: pipenv run python setup.py --version
     - run: make install
@@ -49,7 +50,7 @@ jobs:
         python-version: 3.8.x
     - run: make prereqs
     - run: pipenv clean
-    - run: pipenv install --dev
+    - run: pipenv install --skip-lock --dev
     - run: pipenv run pip install -U 'SecretStorage>=3'
     - run: make dist
       id: create_dist

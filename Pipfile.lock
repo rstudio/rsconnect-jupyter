@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "165d62c73ad27b7d7879c39f42edb1ba153f43efce3af21bae09a234a95c7251"
+            "sha256": "e8dc83b9472c1011db2c0aaba162dffc0a48d4d179eaf80ec2a6349621bb7a1e"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -333,12 +333,12 @@
             "version": "==19.0.1"
         },
         "rsconnect-python": {
-            "file": "https://cdn.rstudio.com/connect/rsconnect-python/latest/rsconnect_python-latest-py2.py3-none-any.whl",
             "hashes": [
-                "sha256:4be866a385d4c905405deba516d59ab0bcc22c8c571e96aca8977f4252269d9f"
+                "sha256:c2305e6658265f90fb25c41c159f4cd8963de61d2fc58702e55003122f550388",
+                "sha256:e81fd84acbe5dc5e053827428c0b412106d36a70a1ab07306ecbef8a14159159"
             ],
             "index": "pypi",
-            "version": "==latest"
+            "version": "==1.4.4.1"
         },
         "send2trash": {
             "hashes": [
