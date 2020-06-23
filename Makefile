@@ -13,6 +13,10 @@ JUPYTER_LOG_LEVEL ?= INFO
 SOURCE_DATE_EPOCH := $(shell date +%s)
 export SOURCE_DATE_EPOCH
 
+PYTHONPATH ?= $(CURDIR)
+export PYTHONPATH
+
+
 .PHONY: prereqs
 prereqs:
 	pip install -U pip
