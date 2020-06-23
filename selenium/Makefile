@@ -86,8 +86,9 @@ build-mock-connect:
 	docker build -t ${CONNECT_IMAGE} ${CONNECT_DOCKERFILE_DIR}
 
 clean:
-	rm -f *.png *.log *.xml ${TMP_PIPE}
-	rm -rf .pytest_cache
+	$(RM) *.png *.log *.xml ${TMP_PIPE}
+	$(RM) -r .pytest_cache
+	$(RM) -r $(NOTEBOOKS_DIR)
 
 distclean: clean
 
@@ -103,7 +104,7 @@ $(NOTEBOOKS_DIR):
 # we remove the named pipe, which also ends the pytest output from being
 # printed to stdout through the tee command.
 
-test: wait-for-systems-up prepare-logging $(NOTEBOOKS_DIR)
+test: $(NOTEBOOKS_DIR) wait-for-systems-up prepare-logging
 	${DOCKER_RUN_COMMAND} ${TEST_RUNNER_COMMAND} >${TMP_PIPE} || EXITCODE=$$?; \
 	rm -f ${TMP_PIPE}; \
 	exit $$EXITCODE
@@ -177,7 +178,7 @@ network-down: connect-down grid-down
 	    docker network rm ${NETWORK}; \
 	fi
 
-jupyter-up:
+jupyter-up: $(NOTEBOOKS_DIR)
 	@echo "Creating ${JUPYTER_HOST} ..."
 	@docker run --rm -d --init \
 	    ${DOCKER_TTY_FLAGS} \
@@ -192,6 +193,7 @@ jupyter-up:
 			--env=PYTHONPATH=${RSCONNECT_DIR} \
 	    --publish=:${JUPYTER_PORT}:${JUPYTER_PORT} \
 	    --workdir=${RSCONNECT_DIR} \
+			--user=$(NB_UID):$(NB_GID) \
 	    $(JUPYTER_IMAGE) \
 	    make -C ${RSCONNECT_DIR} run JUPYTER_LOG_LEVEL=$(JUPYTER_LOG_LEVEL) \
 	    1>/dev/null
@@ -216,6 +218,7 @@ connect-up:
 	    --env=FLASK_APP=mock_connect.py \
 	    --publish=:${CONNECT_PORT}:${CONNECT_PORT} \
 	    --workdir=${RSCONNECT_DIR} \
+			--user=$(NB_UID):$(NB_GID) \
 	    $(CONNECT_IMAGE) \
 	    flask run --host=0.0.0.0 --port=${CONNECT_PORT} \
 	    1>/dev/null
