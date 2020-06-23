@@ -5,6 +5,8 @@ on:
     tags: ['*']
   pull_request:
     branches: [master]
+env:
+  PYTHONPATH: $GITHUB_WORKSPACE
 jobs:
   test:
     strategy:
