@@ -5,8 +5,6 @@ on:
     tags: ['*']
   pull_request:
     branches: [master]
-env:
-  PYTHONPATH: $GITHUB_WORKSPACE
 jobs:
   test:
     strategy:
@@ -24,6 +22,7 @@ jobs:
     - uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
+    - run: echo '::set-env name=PYTHONPATH::'${GITHUB_WORKSPACE}
     - run: make prereqs
     - run: pipenv clean
     - run: pipenv install --skip-lock --dev
@@ -50,6 +49,7 @@ jobs:
     - uses: actions/setup-python@v2
       with:
         python-version: 3.8.x
+    - run: echo '::set-env name=PYTHONPATH::'${GITHUB_WORKSPACE}
     - run: make prereqs
     - run: pipenv clean
     - run: pipenv install --skip-lock --dev
