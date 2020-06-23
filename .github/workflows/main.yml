@@ -5,6 +5,8 @@ on:
     tags: ['*']
   pull_request:
     branches: [master]
+env:
+  DOCKER_TTY_FLAGS: ''
 jobs:
   test:
     strategy:
