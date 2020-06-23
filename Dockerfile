@@ -26,7 +26,8 @@ WORKDIR /rsconnect_jupyter
 ENV WORKON_HOME=/home/builder \
     PIPENV_DONT_LOAD_ENV=1 \
     PIPENV_SHELL=/bin/bash \
-    PATH=/home/builder/.local/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    PATH=/home/builder/.local/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+    PYTHONPATH=/rsconnect_jupyter
 COPY Pipfile Pipfile
 COPY Pipfile.lock Pipfile.lock
 RUN python -m pip install -I -U pip pipenv && \

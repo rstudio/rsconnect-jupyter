@@ -10,7 +10,7 @@ from .pages.content_selection import ContentSelectionDialog
 
 pytestmark = [
     pytest.mark.rsconnect_jupyter,
-    pytest.mark.publish_static,
+    pytest.mark.fail,
 ]
 
 

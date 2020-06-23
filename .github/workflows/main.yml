@@ -52,8 +52,7 @@ jobs:
     - run: make install
     - run: make lint
     - run: make test
-    - if: false
-      name: currently busted selenium test stuff
+    - name: currently semi-busted selenium test stuff
       run: >
         make image${{ matrix.python-version }}
         make -C selenium build

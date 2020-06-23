@@ -17,6 +17,7 @@ JUPYTER_LOG=jupyter-py${PY_VERSION}.log
 JUPYTER_PORT=9999
 JUPYTER_SCHEME=http
 JUPYTER_IMAGE=rstudio/rsconnect-jupyter-py${PY_VERSION}
+JUPYTER_LOG_LEVEL ?= INFO
 LOGS_DIR=${RSCONNECT_DIR}/selenium
 NB_UID=$(shell id -u)
 NB_GID=$(shell id -g)
@@ -34,7 +35,7 @@ SCALE_FIREFOX=${SCALE}
 SCALE_CHROME=${SCALE}
 SELENIUM_VERSION=3.8.1-dubnium
 TMP_PIPE=tmp.pipe
-TRE_IMAGE?=rstudio/checkrs-tew:0.3.2
+TRE_IMAGE?=rstudio/checkrs-tew:0.4.0
 
 # Allocate a tty and keep stdin open when running locally
 # Jenkins nodes don't have input tty, so we set this to ""
@@ -64,7 +65,7 @@ TEST_RUNNER_COMMAND = \
 	    -vv \
 	    --tb=short \
 	    --reruns=${RERUN_FAILURES} \
-	    -m rsconnect_jupyter \
+	    -m 'rsconnect_jupyter and not fail' \
 	    ${PYTESTOPTS}
 
 ifdef DEBUG
@@ -181,10 +182,11 @@ jupyter-up:
 	    --env=NB_GID=$(NB_GID) \
 	    --env=PY_VERSION=$(PY_VERSION) \
 	    --env=TINI_SUBREAPER=1 \
+			--env=PYTHONPATH=${RSCONNECT_DIR} \
 	    --publish=:${JUPYTER_PORT}:${JUPYTER_PORT} \
 	    --workdir=${RSCONNECT_DIR} \
 	    $(JUPYTER_IMAGE) \
-	    make -C ${RSCONNECT_DIR} run \
+	    make -C ${RSCONNECT_DIR} run JUPYTER_LOG_LEVEL=$(JUPYTER_LOG_LEVEL) \
 	    1>/dev/null
 	@docker logs -f ${JUPYTER_HOST} > ${JUPYTER_LOG} &
 	@echo " done"

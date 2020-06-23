@@ -7,6 +7,8 @@ BDIST_WHEEL := dist/rsconnect_jupyter-$(VERSION)-py2.py3-none-any.whl
 S3_PREFIX := s3://rstudio-connect-downloads/connect/rsconnect-jupyter
 PORT := $(shell printenv PORT || echo 9999)
 
+JUPYTER_LOG_LEVEL ?= INFO
+
 # NOTE: See the `dist` target for why this exists.
 SOURCE_DATE_EPOCH := $(shell date +%s)
 export SOURCE_DATE_EPOCH
@@ -55,16 +57,22 @@ dist: version-frontend
 
 .PHONY: run
 run: install
-	pipenv run jupyter-notebook -y --notebook-dir=/notebooks --ip='0.0.0.0' --port=9999 --no-browser --NotebookApp.token=''
+	pipenv run jupyter notebook \
+		-y \
+		--log-level=$(JUPYTER_LOG_LEVEL) \
+		--notebook-dir=/notebooks \
+		--ip='0.0.0.0' \
+		--port=9999 \
+		--no-browser \
+		--NotebookApp.token=''
 
 .PHONY: install
 install: yarn
 	pipenv install --dev
 	$(MAKE) version-frontend
-	pipenv run pip install -e .
-	pipenv run jupyter-nbextension install --symlink --user --py rsconnect_jupyter
-	pipenv run jupyter-nbextension enable --py rsconnect_jupyter
-	pipenv run jupyter-serverextension enable --py rsconnect_jupyter
+	pipenv run jupyter nbextension install --symlink --user --py rsconnect_jupyter
+	pipenv run jupyter nbextension enable --py rsconnect_jupyter
+	pipenv run jupyter serverextension enable --py rsconnect_jupyter
 
 build/mock-connect/bin/flask:
 	bash -c '\

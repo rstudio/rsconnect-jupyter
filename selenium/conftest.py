@@ -135,13 +135,6 @@ def browser_config(driver):
     selene.browser.set_driver(driver)
 
 
-@pytest.fixture(autouse=True)
-def skip_by_browser(request, session_capabilities):
-    if request.node.get_marker("skip_browser"):
-        if request.node.get_marker("skip_browser").args[0] == session_capabilities["browserName"]:
-            pytest.skip("skipped on this browser: {}".format(session_capabilities["browserName"]))
-
-
 def generate_random_string(
     length=8, charset="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()",
 ):

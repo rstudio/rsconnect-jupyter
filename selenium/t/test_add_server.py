@@ -13,7 +13,6 @@ from conftest import generate_random_string
 
 pytestmark = [
     pytest.mark.rsconnect_jupyter,
-    pytest.mark.add_server,
 ]
 
 
