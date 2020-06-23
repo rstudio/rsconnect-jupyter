@@ -52,9 +52,15 @@ jobs:
     - run: make install
     - run: make lint
     - run: make test
-    # - run: make image${{ matrix.python-version }}
-    # - run: make -C selenium build
-    # - run: make test-selenium
+    - if: false
+      name: currently busted selenium test stuff
+      run: >
+        make image${{ matrix.python-version }}
+        make -C selenium build
+        make -C selenium clean
+        make -C selenium test-env-up
+        make -C selenium jupyter-up
+        make -C selenium test
   distributions:
     needs: test
     runs-on: ubuntu-latest

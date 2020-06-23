@@ -22,27 +22,11 @@ image%:
 	docker build \
 		--tag $(IMAGE)$* \
 		--file Dockerfile \
-		--build-arg BASE_IMAGE=continuumio/miniconda:4.4.10 \
+		--build-arg BASE_IMAGE=python:$*-slim \
 		--build-arg NB_UID=$(NB_UID) \
 		--build-arg NB_GID=$(NB_GID) \
 		--build-arg PY_VERSION=$* \
 		.
-
-.PHONY: launch
-launch:
-	docker run --rm -i -t \
-		-v $(CURDIR)/notebooks$(PY_VERSION):/notebooks \
-		-v $(CURDIR):/rsconnect_jupyter \
-		-e NB_UID=$(NB_UID) \
-		-e NB_GID=$(NB_GID) \
-		-e PY_VERSION=$(PY_VERSION) \
-		-p :$(PORT):9999 \
-		$(DOCKER_IMAGE) \
-		/rsconnect_jupyter/run.sh $(TARGET)
-
-
-notebook%:
-	make DOCKER_IMAGE=$(IMAGE)$* PY_VERSION=$* TARGET=run launch
 
 .PHONY: all-tests
 all-tests: test2.7 test3.5 test3.6 test3.7 test3.8
@@ -50,9 +34,6 @@ all-tests: test2.7 test3.5 test3.6 test3.7 test3.8
 .PHONY: test
 test: version-frontend
 	pipenv run pytest -vv --cov=rsconnect_jupyter tests/
-
-test%: version-frontend
-	make DOCKER_IMAGE=rstudio/rsconnect-jupyter-py$* PY_VERSION=$* TARGET=test launch
 
 .PHONY: test-selenium
 test-selenium:
@@ -79,6 +60,7 @@ run: install
 .PHONY: install
 install: yarn
 	pipenv install --dev
+	$(MAKE) version-frontend
 	pipenv run pip install -e .
 	pipenv run jupyter-nbextension install --symlink --user --py rsconnect_jupyter
 	pipenv run jupyter-nbextension enable --py rsconnect_jupyter

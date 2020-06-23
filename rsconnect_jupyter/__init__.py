@@ -74,6 +74,15 @@ class EndpointHandler(APIHandler):
             disable_tls_check = data["disable_tls_check"]
             cadata = data.get("cadata", None)
 
+            self.log.warning(
+                "server_address=%r api_key=%r disable_tls_check=%r cadata=%r",
+                server_address,
+                api_key,
+                disable_tls_check,
+                cadata,
+            )
+            canonical_address = None
+            result = None
             try:
                 canonical_address, result = test_server(
                     RSConnectServer(server_address, api_key, disable_tls_check, cadata)
@@ -96,6 +105,8 @@ class EndpointHandler(APIHandler):
                     + u'  upload it using "Upload TLS Certificate Bundle" below.',
                 )
             except Exception as err:
+                self.log.exception("Unable to verify that the provided server is running RStudio Connect")
+                self.log.warning("canonical_address=%r result=%r", canonical_address, result)
                 raise web.HTTPError(
                     400, u"Unable to verify that the provided server is running RStudio Connect: %s" % err,
                 )

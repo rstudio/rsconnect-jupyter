@@ -17,7 +17,16 @@ from functools import wraps
 from pprint import pprint
 
 # noinspection PyPackageRequirements
-from flask import Flask, Blueprint, abort, after_this_request, g, request, url_for, jsonify
+from flask import (
+    Flask,
+    Blueprint,
+    abort,
+    after_this_request,
+    g,
+    request,
+    url_for,
+    jsonify,
+)
 
 
 def error(code, reason):
@@ -307,8 +316,7 @@ def get_task(task):
 @api.route("server_settings")
 @json
 def server_settings():
-    # for our purposes, any non-error response will do
-    return {}
+    return {"not_empty": True}
 
 
 # noinspection PyUnresolvedReferences
