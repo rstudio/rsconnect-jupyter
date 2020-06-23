@@ -2,7 +2,7 @@ NB_UID := $(shell id -u)
 NB_GID := $(shell id -g)
 
 IMAGE := rstudio/rsconnect-jupyter-py
-VERSION := $(shell pipenv run python setup.py --version)
+VERSION := $(shell pipenv run python setup.py --version 2>/dev/null || echo 'NOTSET')
 BDIST_WHEEL := dist/rsconnect_jupyter-$(VERSION)-py2.py3-none-any.whl
 S3_PREFIX := s3://rstudio-connect-downloads/connect/rsconnect-jupyter
 PORT := $(shell printenv PORT || echo 9999)
@@ -12,6 +12,12 @@ JUPYTER_LOG_LEVEL ?= INFO
 # NOTE: See the `dist` target for why this exists.
 SOURCE_DATE_EPOCH := $(shell date +%s)
 export SOURCE_DATE_EPOCH
+
+.PHONY: prereqs
+prereqs:
+	pip install -U pip
+	pip install -U pipenv
+	pip install -U https://cdn.rstudio.com/connect/rsconnect-python/latest/rsconnect_python-latest-py2.py3-none-any.whl
 
 .PHONY: clean
 clean:
@@ -158,8 +164,3 @@ promote-docs-in-s3:
 	aws s3 cp --acl bucket-owner-full-control \
 		docs/out/rsconnect_jupyter-$(VERSION).html \
 		s3://docs.rstudio.com/rsconnect-jupyter/index.html
-
-.PHONY: assert-clean
-assert-clean:
-	git diff --exit-code
-	git diff --staged --exit-code

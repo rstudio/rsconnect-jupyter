@@ -22,10 +22,9 @@ jobs:
     - uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - run: pip install -U pip pipenv
+    - run: make prereqs
     - run: pipenv clean
     - run: pipenv install --dev
-    - run: make assert-clean
     - run: pipenv run pip freeze
     - run: pipenv run python setup.py --version
     - run: make install
@@ -48,10 +47,9 @@ jobs:
     - uses: actions/setup-python@v2
       with:
         python-version: 3.8.x
-    - run: pip install -U pip pipenv
+    - run: make prereqs
     - run: pipenv clean
     - run: pipenv install --dev
-    - run: make assert-clean
     - run: pipenv run pip install -U 'SecretStorage>=3'
     - run: make dist
       id: create_dist
