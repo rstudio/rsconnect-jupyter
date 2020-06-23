@@ -131,7 +131,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - run: make docs-image
     - run: make docs-build
     - uses: actions/upload-artifact@v2
       with:

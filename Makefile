@@ -106,17 +106,12 @@ ifeq (Linux,$(shell uname))
 	DOCKER_RUN_AS = -u $(shell id -u):$(shell id -g)
 endif
 
-DOCS_IMAGE := rsconnect-jupyter-docs:local
 BUILD_DOC := docker run --rm=true $(DOCKER_RUN_AS) \
 	-e VERSION=$(VERSION) \
 	$(DOCKER_ARGS) \
 	-v $(CURDIR):/rsconnect_jupyter \
 	-w /rsconnect_jupyter \
-	$(DOCS_IMAGE) docs/build-doc.sh
-
-.PHONY: docs-image
-docs-image:
-	docker build -t $(DOCS_IMAGE) ./docs
+	pandoc/latex:2.9 docs/build-doc.sh
 
 .PHONY: docs-build
 docs-build: docs/out
