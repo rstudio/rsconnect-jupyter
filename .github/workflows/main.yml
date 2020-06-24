@@ -53,35 +53,16 @@ jobs:
     - run: make install
     - run: make lint
     - run: make test
-  selenium:
+  cypress:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - run: git fetch --prune --unshallow
-    - uses: actions/setup-python@v2
-      with:
-        python-version: 3.8.x
-    - uses: actions/cache@v1
-      with:
-        path: ~/.cache/pip
-        key: pip-ubuntu-latest-py3.8-${{ hashFiles('Pipfile.lock') }}
-        restore-keys: |
-          pip-ubuntu-latest-py3.8-${{ hashFiles('Pipfile.lock') }}
-          pip-ubuntu-latest-py3.8-
-    - uses: actions/cache@v1
-      with:
-        path: ~/.local/share/virtualenvs
-        key: virtualenvs-ubuntu-latest-py3.8-${{ hashFiles('Pipfile.lock') }}
-        restore-keys: |
-          virtualenvs-ubuntu-latest-py3.8-${{ hashFiles('Pipfile.lock') }}
-          virtualenvs-ubuntu-latest-py3.8-
-    - run: echo '::set-env name=PYTHONPATH::'${GITHUB_WORKSPACE}
     - run: make image3.8
-    - run: make -C selenium build
-    - run: make -C selenium clean
-    - run: make -C selenium test-env-up
-    - run: make -C selenium jupyter-up
-    - run: make -C selenium test
+    - run: make build-mock-connect
+    - run: make test-env-up
+    - run: make jupyter-up
+    - run: make cypress-specs
   distributions:
     needs: test
     runs-on: ubuntu-latest

@@ -16,3 +16,5 @@
 /notebooks*/
 /rsconnect_jupyter/static/version.json
 /rsconnect_jupyter/version.py
+/cypress/screenshots/*
+/cypress/videos/*

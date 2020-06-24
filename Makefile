@@ -1,12 +1,22 @@
-NB_UID := $(shell id -u)
+CONNECT_DOCKERFILE_DIR := mock-connect
+CONNECT_HOST := mock-connect
+CONNECT_IMAGE := rstudio/rsconnect-mock-connect
+CONNECT_PORT := 6958
+IMAGE_PREFIX := rstudio/rsconnect-jupyter-py
+JUPYTER_HOST := jupyter
+JUPYTER_IMAGE := rstudio/rsconnect-jupyter-py3.8
+JUPYTER_PORT := 9483
 NB_GID := $(shell id -g)
-
-IMAGE := rstudio/rsconnect-jupyter-py
-VERSION := $(shell pipenv run python setup.py --version 2>/dev/null || echo 'NOTSET')
-BDIST_WHEEL := dist/rsconnect_jupyter-$(VERSION)-py2.py3-none-any.whl
+NB_UID := $(shell id -u)
+NOTEBOOKS_DIR := $(CURDIR)/notebooks3.8
+NOTEBOOKS_DIR_MOUNT := /notebooks
+PROJECT := rscjnet
+RSCONNECT_DIR := /rsconnect_jupyter
 S3_PREFIX := s3://rstudio-connect-downloads/connect/rsconnect-jupyter
-PORT := $(shell printenv PORT || echo 9999)
+VERSION := $(shell pipenv run python setup.py --version 2>/dev/null || echo 'NOTSET')
 
+BDIST_WHEEL := dist/rsconnect_jupyter-$(VERSION)-py2.py3-none-any.whl
+NETWORK := $(PROJECT)_default
 JUPYTER_LOG_LEVEL ?= INFO
 
 # NOTE: See the `dist` target for why this exists.
@@ -16,12 +26,10 @@ export SOURCE_DATE_EPOCH
 PYTHONPATH ?= $(CURDIR)
 export PYTHONPATH
 
-
 .PHONY: prereqs
 prereqs:
 	pip install -U pip
 	pip install -U pipenv
-
 
 .PHONY: install-latest-rsconnect-python
 install-latest-rsconnect-python:
@@ -36,7 +44,7 @@ all-images: image2.7 image3.5 image3.6 image3.7 image3.8
 
 image%:
 	docker build \
-		--tag $(IMAGE)$* \
+		--tag $(IMAGE_PREFIX)$* \
 		--file Dockerfile \
 		--build-arg BASE_IMAGE=python:$*-slim \
 		--build-arg NB_UID=$(NB_UID) \
@@ -76,9 +84,10 @@ run: install
 		--log-level=$(JUPYTER_LOG_LEVEL) \
 		--notebook-dir=/notebooks \
 		--ip='0.0.0.0' \
-		--port=9999 \
+		--port=$(JUPYTER_PORT) \
 		--no-browser \
-		--NotebookApp.token=''
+		--NotebookApp.token='' \
+		--NotebookApp.disable_check_xsrf=True
 
 .PHONY: install
 install: yarn
@@ -88,6 +97,9 @@ install: yarn
 	pipenv run jupyter nbextension install --symlink --user --py rsconnect_jupyter
 	pipenv run jupyter nbextension enable --py rsconnect_jupyter
 	pipenv run jupyter serverextension enable --py rsconnect_jupyter
+
+build-mock-connect:
+	docker build -t $(CONNECT_IMAGE) $(CONNECT_DOCKERFILE_DIR)
 
 build/mock-connect/bin/flask:
 	bash -c '\
@@ -105,6 +117,73 @@ mock-server: build/mock-connect/bin/flask
 .PHONY: yarn
 yarn:
 	yarn install
+
+.PHONY: cypress-specs
+cypress-specs:
+	docker run --rm -it \
+		--network=$(NETWORK) \
+		-e MOCK_CONNECT=http://$(CONNECT_HOST):$(CONNECT_PORT) \
+		-e JUPYTER=http://$(JUPYTER_HOST):$(JUPYTER_PORT) \
+		-v $(CURDIR):/e2e \
+		-w /e2e \
+		cypress/included:4.9.0
+
+.PHONY: jupyter-up
+jupyter-up:
+	docker run --rm -d --init \
+	    $(DOCKER_TTY_FLAGS) \
+	    --name=$(JUPYTER_HOST) \
+	    --network=$(NETWORK) \
+	    -v $(NOTEBOOKS_DIR):$(NOTEBOOKS_DIR_MOUNT) \
+	    -v $(CURDIR):$(RSCONNECT_DIR) \
+	    -e NB_UID=$(NB_UID) \
+	    -e NB_GID=$(NB_GID) \
+	    -e PY_VERSION=$(PY_VERSION) \
+	    -e TINI_SUBREAPER=1 \
+			-e PYTHONPATH=$(RSCONNECT_DIR) \
+	    -p :$(JUPYTER_PORT):$(JUPYTER_PORT) \
+	    -w $(RSCONNECT_DIR) \
+			-u $(NB_UID):$(NB_GID) \
+	    $(JUPYTER_IMAGE) \
+	    make -C $(RSCONNECT_DIR) run JUPYTER_LOG_LEVEL=$(JUPYTER_LOG_LEVEL)
+
+.PHONY: jupyter-down
+jupyter-down:
+	docker rm -f $(JUPYTER_HOST) || true
+
+.PHONY: test-env-up
+test-env-up: network-up connect-up
+
+.PHONY: test-env-down
+test-env-down: connect-down network-down
+
+.PHONY: network-up
+network-up:
+	if ! docker network inspect $(NETWORK) &>/dev/null; then \
+		docker network create --driver bridge $(NETWORK); \
+	fi
+
+.PHONY: network-down
+network-down:
+	docker network rm $(NETWORK) || true
+
+.PHONY: connect-up
+connect-up:
+	docker run --rm -d --init \
+	    $(DOCKER_TTY_FLAGS) \
+	    --name=$(CONNECT_HOST) \
+	    --network=$(NETWORK) \
+	    --volume=$(CURDIR):$(RSCONNECT_DIR) \
+	    --env=FLASK_APP=mock_connect.py \
+	    --publish=:$(CONNECT_PORT):$(CONNECT_PORT) \
+	    --workdir=$(RSCONNECT_DIR) \
+			--user=$(NB_UID):$(NB_GID) \
+	    $(CONNECT_IMAGE) \
+	    flask run --host=0.0.0.0 --port=$(CONNECT_PORT)
+
+.PHONY: connect-down
+connect-down:
+	docker rm -f $(CONNECT_HOST) || true
 
 .PHONY: lint
 lint: lint-js lint-py
@@ -132,8 +211,8 @@ endif
 BUILD_DOC := docker run --rm=true $(DOCKER_RUN_AS) \
 	-e VERSION=$(VERSION) \
 	$(DOCKER_ARGS) \
-	-v $(CURDIR):/rsconnect_jupyter \
-	-w /rsconnect_jupyter \
+	-v $(CURDIR):$(RSCONNECT_DIR) \
+	-w $(RSCONNECT_DIR) \
 	pandoc/latex:2.9 docs/build-doc.sh
 
 .PHONY: docs-build
