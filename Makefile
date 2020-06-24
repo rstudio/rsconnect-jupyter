@@ -1,13 +1,13 @@
 NB_UID := $(shell id -u)
 NB_GID := $(shell id -g)
 
-BDIST_WHEEL := dist/rsconnect_jupyter-$(VERSION)-py2.py3-none-any.whl
 IMAGE := rstudio/rsconnect-jupyter-py
 NOTEBOOKS_DIR := /notebooks
 PORT := $(shell printenv PORT || echo 9999)
 S3_PREFIX := s3://rstudio-connect-downloads/connect/rsconnect-jupyter
 VERSION := $(shell pipenv run python setup.py --version 2>/dev/null || echo 'NOTSET')
 
+BDIST_WHEEL := dist/rsconnect_jupyter-$(VERSION)-py2.py3-none-any.whl
 JUPYTER_LOG_LEVEL ?= INFO
 
 # NOTE: See the `dist` target for why this exists.
