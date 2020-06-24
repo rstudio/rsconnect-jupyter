@@ -2,11 +2,12 @@ NB_UID := $(shell id -u)
 NB_GID := $(shell id -g)
 
 IMAGE := rstudio/rsconnect-jupyter-py
-VERSION := $(shell pipenv run python setup.py --version 2>/dev/null || echo 'NOTSET')
-BDIST_WHEEL := dist/rsconnect_jupyter-$(VERSION)-py2.py3-none-any.whl
-S3_PREFIX := s3://rstudio-connect-downloads/connect/rsconnect-jupyter
+NOTEBOOKS_DIR := /notebooks
 PORT := $(shell printenv PORT || echo 9999)
+S3_PREFIX := s3://rstudio-connect-downloads/connect/rsconnect-jupyter
+VERSION := $(shell pipenv run python setup.py --version 2>/dev/null || echo 'NOTSET')
 
+BDIST_WHEEL := dist/rsconnect_jupyter-$(VERSION)-py2.py3-none-any.whl
 JUPYTER_LOG_LEVEL ?= INFO
 
 # NOTE: See the `dist` target for why this exists.
@@ -71,14 +72,19 @@ dist: version-frontend
 
 .PHONY: run
 run: install
+	mkdir -p $(NOTEBOOKS_DIR)
 	pipenv run jupyter notebook \
 		-y \
 		--log-level=$(JUPYTER_LOG_LEVEL) \
-		--notebook-dir=/notebooks \
+		--notebook-dir=$(NOTEBOOKS_DIR) \
 		--ip='0.0.0.0' \
 		--port=9999 \
 		--no-browser \
 		--NotebookApp.token=''
+
+.PHONY: run-local
+run-local: NOTEBOOKS_DIR := $(CURDIR)/notebooks3.8
+run-local: run
 
 .PHONY: install
 install: yarn
