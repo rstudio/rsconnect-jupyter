@@ -5,6 +5,8 @@ on:
     tags: ['*']
   pull_request:
     branches: [master]
+  repository_dispatch:
+    types: [rsconnect_python_latest]
 env:
   DOCKER_TTY_FLAGS: ''
 jobs:
