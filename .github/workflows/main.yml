@@ -5,6 +5,8 @@ on:
     tags: ['*']
   pull_request:
     branches: [master]
+env:
+  DOCKER_TTY_FLAGS: ''
 jobs:
   test:
     strategy:
@@ -45,22 +47,41 @@ jobs:
         restore-keys: |
           virtualenvs-${{ matrix.os }}-py${{ matrix.python-version }}-${{ hashFiles('Pipfile.lock') }}
           virtualenvs-${{ matrix.os }}-py${{ matrix.python-version }}-
-    - run: pip install -U -I pip pipenv
-    - run: pipenv install --dev
-    - run: pipenv run pip freeze
-    - run: pipenv run python setup.py --version
+    - run: echo '::set-env name=PYTHONPATH::'${GITHUB_WORKSPACE}
+    - run: make prereqs
+    - run: make version
     - run: make install
     - run: make lint
     - run: make test
-    - if: false
-      name: currently busted selenium test stuff
-      run: >
-        make image${{ matrix.python-version }}
-        make -C selenium build
-        make -C selenium clean
-        make -C selenium test-env-up
-        make -C selenium jupyter-up
-        make -C selenium test
+  selenium:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - run: git fetch --prune --unshallow
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.8.x
+    - uses: actions/cache@v1
+      with:
+        path: ~/.cache/pip
+        key: pip-ubuntu-latest-py3.8-${{ hashFiles('Pipfile.lock') }}
+        restore-keys: |
+          pip-ubuntu-latest-py3.8-${{ hashFiles('Pipfile.lock') }}
+          pip-ubuntu-latest-py3.8-
+    - uses: actions/cache@v1
+      with:
+        path: ~/.local/share/virtualenvs
+        key: virtualenvs-ubuntu-latest-py3.8-${{ hashFiles('Pipfile.lock') }}
+        restore-keys: |
+          virtualenvs-ubuntu-latest-py3.8-${{ hashFiles('Pipfile.lock') }}
+          virtualenvs-ubuntu-latest-py3.8-
+    - run: echo '::set-env name=PYTHONPATH::'${GITHUB_WORKSPACE}
+    - run: make image3.8
+    - run: make -C selenium build
+    - run: make -C selenium clean
+    - run: make -C selenium test-env-up
+    - run: make -C selenium jupyter-up
+    - run: make -C selenium test
   distributions:
     needs: test
     runs-on: ubuntu-latest
@@ -84,8 +105,10 @@ jobs:
         restore-keys: |
           virtualenvs-ubuntu-latest-py3.8-${{ hashFiles('Pipfile.lock') }}
           virtualenvs-ubuntu-latest-py3.8-
-    - run: pip install -U -I pip pipenv
-    - run: pipenv install --dev
+    - run: echo '::set-env name=PYTHONPATH::'${GITHUB_WORKSPACE}
+    - run: make prereqs
+    - run: pipenv clean
+    - run: pipenv install --skip-lock --dev
     - run: pipenv run pip install -U 'SecretStorage>=3'
     - run: make dist
       id: create_dist

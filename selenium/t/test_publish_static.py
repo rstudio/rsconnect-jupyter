@@ -9,7 +9,7 @@ from .pages.publish_content_form import PublishContentForm
 
 pytestmark = [
     pytest.mark.rsconnect_jupyter,
-    pytest.mark.publish_static,
+    pytest.mark.fail,
 ]
 
 

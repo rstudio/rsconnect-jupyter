@@ -2,14 +2,30 @@ NB_UID := $(shell id -u)
 NB_GID := $(shell id -g)
 
 IMAGE := rstudio/rsconnect-jupyter-py
-VERSION := $(shell pipenv run python setup.py --version)
+VERSION := $(shell pipenv run python setup.py --version 2>/dev/null || echo 'NOTSET')
 BDIST_WHEEL := dist/rsconnect_jupyter-$(VERSION)-py2.py3-none-any.whl
 S3_PREFIX := s3://rstudio-connect-downloads/connect/rsconnect-jupyter
 PORT := $(shell printenv PORT || echo 9999)
 
+JUPYTER_LOG_LEVEL ?= INFO
+
 # NOTE: See the `dist` target for why this exists.
 SOURCE_DATE_EPOCH := $(shell date +%s)
 export SOURCE_DATE_EPOCH
+
+PYTHONPATH ?= $(CURDIR)
+export PYTHONPATH
+
+
+.PHONY: prereqs
+prereqs:
+	pip install -U pip
+	pip install -U pipenv
+
+
+.PHONY: install-latest-rsconnect-python
+install-latest-rsconnect-python:
+	pipenv run pip install -U https://cdn.rstudio.com/connect/rsconnect-python/latest/rsconnect_python-latest-py2.py3-none-any.whl
 
 .PHONY: clean
 clean:
@@ -55,16 +71,23 @@ dist: version-frontend
 
 .PHONY: run
 run: install
-	pipenv run jupyter-notebook -y --notebook-dir=/notebooks --ip='0.0.0.0' --port=9999 --no-browser --NotebookApp.token=''
+	pipenv run jupyter notebook \
+		-y \
+		--log-level=$(JUPYTER_LOG_LEVEL) \
+		--notebook-dir=/notebooks \
+		--ip='0.0.0.0' \
+		--port=9999 \
+		--no-browser \
+		--NotebookApp.token=''
 
 .PHONY: install
 install: yarn
 	pipenv install --dev
+	$(MAKE) install-latest-rsconnect-python
 	$(MAKE) version-frontend
-	pipenv run pip install -e .
-	pipenv run jupyter-nbextension install --symlink --user --py rsconnect_jupyter
-	pipenv run jupyter-nbextension enable --py rsconnect_jupyter
-	pipenv run jupyter-serverextension enable --py rsconnect_jupyter
+	pipenv run jupyter nbextension install --symlink --user --py rsconnect_jupyter
+	pipenv run jupyter nbextension enable --py rsconnect_jupyter
+	pipenv run jupyter serverextension enable --py rsconnect_jupyter
 
 build/mock-connect/bin/flask:
 	bash -c '\
@@ -122,6 +145,10 @@ docs/out:
 
 dist/rsconnect-jupyter-$(VERSION).pdf: docs/README.md docs/*.gif docs/out
 	$(BUILD_DOC)
+
+.PHONY: version
+version:
+	@echo $(VERSION)
 
 .PHONY: version-frontend
 version-frontend:

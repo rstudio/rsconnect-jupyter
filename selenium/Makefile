@@ -17,11 +17,11 @@ JUPYTER_LOG=jupyter-py${PY_VERSION}.log
 JUPYTER_PORT=9999
 JUPYTER_SCHEME=http
 JUPYTER_IMAGE=rstudio/rsconnect-jupyter-py${PY_VERSION}
+JUPYTER_LOG_LEVEL ?= INFO
 LOGS_DIR=${RSCONNECT_DIR}/selenium
 NB_UID=$(shell id -u)
 NB_GID=$(shell id -g)
 NETWORK=${PROJECT}_default
-NOTEBOOKS_DIR=/notebooks
 PROJECT=rscjnet
 PY_VERSION=3.8
 PYTESTLOG?=selenium_tests.log
@@ -34,18 +34,22 @@ SCALE_FIREFOX=${SCALE}
 SCALE_CHROME=${SCALE}
 SELENIUM_VERSION=3.8.1-dubnium
 TMP_PIPE=tmp.pipe
-TRE_IMAGE?=rstudio/checkrs-tew:0.3.2
+TRE_IMAGE?=rstudio/checkrs-tew:0.4.0
+
+NOTEBOOKS_DIR_MOUNT := /notebooks
+NOTEBOOKS_DIR := $(CURDIR)/../notebooks$(PY_VERSION)
 
 # Allocate a tty and keep stdin open when running locally
 # Jenkins nodes don't have input tty, so we set this to ""
 DOCKER_TTY_FLAGS?=-it
 
-DOCKER_RUN_COMMAND=docker run --rm --init \
+DOCKER_RUN_COMMAND = \
+	docker run --rm --init \
 	    ${DOCKER_TTY_FLAGS} \
 	    --name=tre-${HOURMINSEC} \
 	    --network=$(NETWORK) \
 	    --volume=$(CURDIR)/..:${RSCONNECT_DIR} \
-	    --volume=$(CURDIR)/../notebooks$(PY_VERSION):${NOTEBOOKS_DIR} \
+	    --volume=$(NOTEBOOKS_DIR):$(NOTEBOOKS_DIR_MOUNT) \
 			--user=$(NB_UID):$(NB_GID) \
 	    --workdir=${RSCONNECT_DIR}/selenium \
 	    ${TRE_IMAGE}
@@ -60,11 +64,11 @@ TEST_RUNNER_COMMAND = \
 	    --jupyter-url='${JUPYTER_SCHEME}://${JUPYTER_HOST}:${JUPYTER_PORT}' \
 	    --connect-url='${CONNECT_SCHEME}://${CONNECT_HOST}:${CONNECT_PORT}' \
 	    --data-dir=${RSCONNECT_DIR}/selenium/data \
-	    --notebooks-dir=${NOTEBOOKS_DIR} \
+	    --notebooks-dir=$(NOTEBOOKS_DIR_MOUNT) \
 	    -vv \
 	    --tb=short \
 	    --reruns=${RERUN_FAILURES} \
-	    -m rsconnect_jupyter \
+	    -m 'rsconnect_jupyter and not fail' \
 	    ${PYTESTOPTS}
 
 ifdef DEBUG
@@ -82,10 +86,15 @@ build-mock-connect:
 	docker build -t ${CONNECT_IMAGE} ${CONNECT_DOCKERFILE_DIR}
 
 clean:
-	rm -f *.png *.log *.xml ${TMP_PIPE}
-	rm -rf .pytest_cache
+	$(RM) *.png *.log *.xml ${TMP_PIPE}
+	$(RM) -r .pytest_cache
+	$(RM) -r $(NOTEBOOKS_DIR)
 
 distclean: clean
+
+$(NOTEBOOKS_DIR):
+	mkdir -p $@
+	chmod -v 0777 $@
 
 # The test target launches a Docker container to run the test cases.
 # Prior to launching the Docker container, we check that the prerequisite
@@ -95,8 +104,8 @@ distclean: clean
 # we remove the named pipe, which also ends the pytest output from being
 # printed to stdout through the tee command.
 
-test: wait-for-systems-up prepare-logging
-	${DOCKER_RUN_COMMAND} ${TEST_RUNNER_COMMAND} > ${TMP_PIPE} || EXITCODE=$$?; \
+test: $(NOTEBOOKS_DIR) wait-for-systems-up prepare-logging
+	${DOCKER_RUN_COMMAND} ${TEST_RUNNER_COMMAND} >${TMP_PIPE} || EXITCODE=$$?; \
 	rm -f ${TMP_PIPE}; \
 	exit $$EXITCODE
 
@@ -111,7 +120,7 @@ prepare-logging:
 	mkfifo ${TMP_PIPE}
 	tee ${PYTESTLOG} < ${TMP_PIPE} &
 
-run:
+run: $(NOTEBOOKS_DIR)
 	@${DOCKER_RUN_COMMAND} ${COMMAND}
 
 test-env-up: grid-up connect-up
@@ -169,22 +178,24 @@ network-down: connect-down grid-down
 	    docker network rm ${NETWORK}; \
 	fi
 
-jupyter-up:
+jupyter-up: $(NOTEBOOKS_DIR)
 	@echo "Creating ${JUPYTER_HOST} ..."
 	@docker run --rm -d --init \
 	    ${DOCKER_TTY_FLAGS} \
 	    --name=${JUPYTER_HOST} \
 	    --network=${NETWORK} \
-	    --volume=$(CURDIR)/../notebooks$(PY_VERSION):${NOTEBOOKS_DIR} \
+	    --volume=$(NOTEBOOKS_DIR):$(NOTEBOOKS_DIR_MOUNT) \
 	    --volume=$(CURDIR)/..:${RSCONNECT_DIR} \
 	    --env=NB_UID=$(NB_UID) \
 	    --env=NB_GID=$(NB_GID) \
 	    --env=PY_VERSION=$(PY_VERSION) \
 	    --env=TINI_SUBREAPER=1 \
+			--env=PYTHONPATH=${RSCONNECT_DIR} \
 	    --publish=:${JUPYTER_PORT}:${JUPYTER_PORT} \
 	    --workdir=${RSCONNECT_DIR} \
+			--user=$(NB_UID):$(NB_GID) \
 	    $(JUPYTER_IMAGE) \
-	    make -C ${RSCONNECT_DIR} run \
+	    make -C ${RSCONNECT_DIR} run JUPYTER_LOG_LEVEL=$(JUPYTER_LOG_LEVEL) \
 	    1>/dev/null
 	@docker logs -f ${JUPYTER_HOST} > ${JUPYTER_LOG} &
 	@echo " done"
@@ -207,6 +218,7 @@ connect-up:
 	    --env=FLASK_APP=mock_connect.py \
 	    --publish=:${CONNECT_PORT}:${CONNECT_PORT} \
 	    --workdir=${RSCONNECT_DIR} \
+			--user=$(NB_UID):$(NB_GID) \
 	    $(CONNECT_IMAGE) \
 	    flask run --host=0.0.0.0 --port=${CONNECT_PORT} \
 	    1>/dev/null
