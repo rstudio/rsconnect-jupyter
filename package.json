@@ -11,5 +11,8 @@
   "license": "GPL-2.0",
   "devDependencies": {
     "eslint": "^6.4.0"
+  },
+  "dependencies": {
+    "cypress": "^4.9.0"
   }
 }
