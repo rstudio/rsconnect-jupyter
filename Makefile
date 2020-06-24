@@ -120,7 +120,8 @@ yarn:
 
 .PHONY: cypress-specs
 cypress-specs:
-	docker run --rm -it \
+	docker run --rm \
+		$(DOCKER_TTY_FLAGS) \
 		--network=$(NETWORK) \
 		-e MOCK_CONNECT=http://$(CONNECT_HOST):$(CONNECT_PORT) \
 		-e JUPYTER=http://$(JUPYTER_HOST):$(JUPYTER_PORT) \
