@@ -1,6 +1,6 @@
-const JUPYTER = process.env.JUPYTER || 'http://127.0.0.1:9483'
-const MOCK_CONNECT = process.env.MOCK_CONNECT || 'http://mock-connect:6958'
-const API_KEY = process.env.API_KEY || '0123456789abcdef0123456789abcdef'
+const JUPYTER = Cypress.env('JUPYTER')
+const MOCK_CONNECT = Cypress.env('MOCK_CONNECT')
+const API_KEY = Cypress.env('API_KEY')
 
 describe('Add server', () => {
   it('Visits the front page', () => {

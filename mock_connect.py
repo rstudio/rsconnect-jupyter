@@ -1,16 +1,8 @@
-# Installation:
-# virtualenv flask
-# source flask/bin/activate
-# pip install flask
-
-# To run:
-# FLASK_APP=mock_connect.py flask run --host=0.0.0.0
-
-# Use the API key below (0123456789abcdef0123456789abcdef) in rsconnect-jupyter
-
 import io
+import os
 import tarfile
 import uuid
+
 from datetime import datetime
 from json import dumps, loads
 from functools import wraps
@@ -54,7 +46,7 @@ app = Flask(__name__)
 apps, app_id_generator = {}, IdGenerator()
 bundles, bundle_id_generator = {}, IdGenerator()
 tasks, task_id_generator = {}, IdGenerator()
-api_keys = {"0123456789abcdef0123456789abcdef": "admin"}
+api_keys = {os.environ.get("CONNECT_API_KEY", "0123456789abcdef0123456789abcdef"): "admin"}
 
 # noinspection SpellCheckingInspection
 users = {

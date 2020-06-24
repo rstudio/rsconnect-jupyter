@@ -2,6 +2,7 @@ CONNECT_DOCKERFILE_DIR := mock-connect
 CONNECT_HOST := mock-connect
 CONNECT_IMAGE := rstudio/rsconnect-mock-connect
 CONNECT_PORT := 6958
+CONNECT_API_KEY ?= 0123456789abcdef0123456789abcdef
 IMAGE_PREFIX := rstudio/rsconnect-jupyter-py
 JUPYTER_HOST := jupyter
 JUPYTER_IMAGE := rstudio/rsconnect-jupyter-py3.8
@@ -123,8 +124,9 @@ cypress-specs:
 	docker run --rm \
 		$(DOCKER_TTY_FLAGS) \
 		--network=$(NETWORK) \
-		-e MOCK_CONNECT=http://$(CONNECT_HOST):$(CONNECT_PORT) \
-		-e JUPYTER=http://$(JUPYTER_HOST):$(JUPYTER_PORT) \
+		-e CYPRESS_MOCK_CONNECT=http://$(CONNECT_HOST):$(CONNECT_PORT) \
+		-e CYPRESS_JUPYTER=http://$(JUPYTER_HOST):$(JUPYTER_PORT) \
+		-e CYPRESS_API_KEY=$(CONNECT_API_KEY) \
 		-v $(CURDIR):/e2e \
 		-w /e2e \
 		cypress/included:4.9.0
@@ -175,7 +177,8 @@ connect-up:
 	    --name=$(CONNECT_HOST) \
 	    --network=$(NETWORK) \
 	    --volume=$(CURDIR):$(RSCONNECT_DIR) \
-	    --env=FLASK_APP=mock_connect.py \
+	    -e FLASK_APP=mock_connect.py \
+			-e CONNECT_API_KEY=$(CONNECT_API_KEY) \
 	    --publish=:$(CONNECT_PORT):$(CONNECT_PORT) \
 	    --workdir=$(RSCONNECT_DIR) \
 			--user=$(NB_UID):$(NB_GID) \
