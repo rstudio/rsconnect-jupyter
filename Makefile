@@ -38,7 +38,12 @@ install-latest-rsconnect-python:
 
 .PHONY: clean
 clean:
-	rm -rf build/ dist/ docs/out/ rsconnect_jupyter.egg-info/
+	$(RM) -r \
+		build/ \
+		dist/ \
+		docs/out/ \
+		rsconnect_jupyter.egg-info/ \
+		notebooks*/*
 
 .PHONY: all-images
 all-images: image2.7 image3.5 image3.6 image3.7 image3.8
@@ -91,7 +96,7 @@ run: install
 		--NotebookApp.disable_check_xsrf=True
 
 .PHONY: install
-install: yarn
+install:
 	pipenv install --dev
 	$(MAKE) install-latest-rsconnect-python
 	$(MAKE) version-frontend
@@ -131,24 +136,31 @@ cypress-specs:
 		-w /e2e \
 		cypress/included:4.9.0
 
+.PHONY: cypress-open-local
+cypress-open-local:
+	CYPRESS_MOCK_CONNECT=http://$(CONNECT_HOST):$(CONNECT_PORT) \
+	CYPRESS_JUPYTER=http://127.0.0.1:$(JUPYTER_PORT) \
+	CYPRESS_API_KEY=$(CONNECT_API_KEY) \
+		npx cypress open
+
 .PHONY: jupyter-up
 jupyter-up:
 	docker run --rm -d --init \
-	    $(DOCKER_TTY_FLAGS) \
-	    --name=$(JUPYTER_HOST) \
-	    --network=$(NETWORK) \
-	    -v $(NOTEBOOKS_DIR):$(NOTEBOOKS_DIR_MOUNT) \
-	    -v $(CURDIR):$(RSCONNECT_DIR) \
-	    -e NB_UID=$(NB_UID) \
-	    -e NB_GID=$(NB_GID) \
-	    -e PY_VERSION=$(PY_VERSION) \
-	    -e TINI_SUBREAPER=1 \
-			-e PYTHONPATH=$(RSCONNECT_DIR) \
-	    -p :$(JUPYTER_PORT):$(JUPYTER_PORT) \
-	    -w $(RSCONNECT_DIR) \
-			-u $(NB_UID):$(NB_GID) \
-	    $(JUPYTER_IMAGE) \
-	    make -C $(RSCONNECT_DIR) run JUPYTER_LOG_LEVEL=$(JUPYTER_LOG_LEVEL)
+		$(DOCKER_TTY_FLAGS) \
+		--name=$(JUPYTER_HOST) \
+		--network=$(NETWORK) \
+		-v $(NOTEBOOKS_DIR):$(NOTEBOOKS_DIR_MOUNT) \
+		-v $(CURDIR):$(RSCONNECT_DIR) \
+		-e NB_UID=$(NB_UID) \
+		-e NB_GID=$(NB_GID) \
+		-e PY_VERSION=$(PY_VERSION) \
+		-e TINI_SUBREAPER=1 \
+		-e PYTHONPATH=$(RSCONNECT_DIR) \
+		-p :$(JUPYTER_PORT):$(JUPYTER_PORT) \
+		-w $(RSCONNECT_DIR) \
+		-u $(NB_UID):$(NB_GID) \
+		$(JUPYTER_IMAGE) \
+		make -C $(RSCONNECT_DIR) run JUPYTER_LOG_LEVEL=$(JUPYTER_LOG_LEVEL)
 
 .PHONY: jupyter-down
 jupyter-down:
@@ -173,17 +185,17 @@ network-down:
 .PHONY: connect-up
 connect-up:
 	docker run --rm -d --init \
-	    $(DOCKER_TTY_FLAGS) \
-	    --name=$(CONNECT_HOST) \
-	    --network=$(NETWORK) \
-	    --volume=$(CURDIR):$(RSCONNECT_DIR) \
-	    -e FLASK_APP=mock_connect.py \
-			-e CONNECT_API_KEY=$(CONNECT_API_KEY) \
-	    --publish=:$(CONNECT_PORT):$(CONNECT_PORT) \
-	    --workdir=$(RSCONNECT_DIR) \
-			--user=$(NB_UID):$(NB_GID) \
-	    $(CONNECT_IMAGE) \
-	    flask run --host=0.0.0.0 --port=$(CONNECT_PORT)
+		$(DOCKER_TTY_FLAGS) \
+		--name=$(CONNECT_HOST) \
+		--network=$(NETWORK) \
+		--volume=$(CURDIR):$(RSCONNECT_DIR) \
+		-e FLASK_APP=mock_connect.py \
+		-e CONNECT_API_KEY=$(CONNECT_API_KEY) \
+		--publish=:$(CONNECT_PORT):$(CONNECT_PORT) \
+		--workdir=$(RSCONNECT_DIR) \
+		--user=$(NB_UID):$(NB_GID) \
+		$(CONNECT_IMAGE) \
+		flask run --host=0.0.0.0 --port=$(CONNECT_PORT)
 
 .PHONY: connect-down
 connect-down:
@@ -193,7 +205,7 @@ connect-down:
 lint: lint-js lint-py
 
 .PHONY: lint-js
-lint-js:
+lint-js: yarn
 	npm run lint
 
 .PHONY: lint-py

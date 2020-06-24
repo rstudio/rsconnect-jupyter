@@ -10,6 +10,7 @@ describe('Add server', () => {
   it('Creates a new notebook', () => {
     cy.contains('New').click()
     cy.contains('Python 3').click()
+    cy.get('#refresh_notebook_list').click()
   })
 
   it('Navigates to the new notebook', () => {
@@ -31,7 +32,9 @@ describe('Add server', () => {
       if ($body.find('#rsc-select-server').length) {
         cy.get('#rsc-select-server button').click()
       }
-      cy.get('#rsc-add-server').click()
+      if ($body.find('#rsc-add-server').length) {
+        cy.get('#rsc-add-server').click()
+      }
     })
     cy.wait(500);
     cy.get('#rsc-servername', { timeout: 5000 }).type('mock-connect', typeOptions)
