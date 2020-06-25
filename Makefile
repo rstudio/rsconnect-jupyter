@@ -169,9 +169,11 @@ sync-latest-to-s3:
 .PHONY: sync-latest-docs-to-s3
 sync-latest-docs-to-s3:
 	aws s3 cp --acl bucket-owner-full-control \
+		--cache-control max-age=0 \
 		docs/out/rsconnect_jupyter-$(VERSION).html \
 		$(S3_PREFIX)/latest/rsconnect_jupyter-latest.html
 	aws s3 cp --acl bucket-owner-full-control \
+		--cache-control max-age=0 \
 		docs/out/rsconnect_jupyter-$(VERSION).pdf \
 		$(S3_PREFIX)/latest/rsconnect_jupyter-latest.pdf
 
@@ -181,5 +183,6 @@ promote-docs-in-s3:
 		docs/out/rsconnect_jupyter-$(VERSION).html \
 		s3://docs.rstudio.com/rsconnect-jupyter/rsconnect_jupyter-$(VERSION).html
 	aws s3 cp --acl bucket-owner-full-control \
+		--cache-control max-age=300 \
 		docs/out/rsconnect_jupyter-$(VERSION).html \
 		s3://docs.rstudio.com/rsconnect-jupyter/index.html
