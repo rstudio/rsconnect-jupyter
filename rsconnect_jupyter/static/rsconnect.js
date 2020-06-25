@@ -265,12 +265,12 @@ define([
               return result;
             },
 
-            inspectEnvironment: function (compatibilityMode, forceGenerate) {
+            inspectEnvironment: function (condaMode, forceGenerate) {
               return this.getRunningPythonPath().then(function(pythonPath) {
                 try {
                     var flags = '';
-                    if (compatibilityMode || forceGenerate) {
-                        flags = '-' + (compatibilityMode ? 'c' : '') + (forceGenerate ? 'f' : '');
+                    if (condaMode || forceGenerate) {
+                        flags = '-' + (condaMode ? 'c' : '') + (forceGenerate ? 'f' : '');
                     }
                     var cmd = [
                         '!"',
@@ -349,11 +349,11 @@ define([
              * @param notebookTitle {string} Title of the notebook to be passed as name/title
              * @param appMode {'static'|'jupyter-static'} App mode to deploy. 'static' is not rendered.
              * @param files {Array<String>} paths to files to deploy.
-             * @param compatibilityMode {boolean} whether or not to force `requirements.txt` usage even if in a conda environment
+             * @param condaMode {boolean} whether or not to use conda to build an `environment.yml`.
              * @param forceGenerate {boolean} whether to force `requirements.txt` to be generated even if one exists.
              * @returns {PromiseLike<T>|*|PromiseLike<any>|Promise<T>}
              */
-            publishContent: function (serverId, appId, notebookTitle, appMode, files, compatibilityMode, forceGenerate) {
+            publishContent: function (serverId, appId, notebookTitle, appMode, files, condaMode, forceGenerate) {
                 var self = this;
                 var notebookPath = Utils.encode_uri_components(
                     Jupyter.notebook.notebook_path
@@ -476,7 +476,7 @@ define([
                 }
 
                 if (appMode === 'jupyter-static') {
-                    return this.inspectEnvironment(compatibilityMode, forceGenerate).then(deploy);
+                    return this.inspectEnvironment(condaMode, forceGenerate).then(deploy);
                 } else {
                     return deploy(null);
                 }
