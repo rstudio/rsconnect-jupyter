@@ -1,16 +1,20 @@
+CONNECT_API_KEY ?= 0123456789abcdef0123456789abcdef
 CONNECT_DOCKERFILE_DIR := mock-connect
 CONNECT_HOST := mock-connect
 CONNECT_IMAGE := rstudio/rsconnect-mock-connect
 CONNECT_PORT := 6958
-CONNECT_API_KEY ?= 0123456789abcdef0123456789abcdef
+IMAGE := rstudio/rsconnect-jupyter-py
 IMAGE_PREFIX := rstudio/rsconnect-jupyter-py
 JUPYTER_HOST := jupyter
 JUPYTER_IMAGE := rstudio/rsconnect-jupyter-py3.8
+JUPYTER_LOG_LEVEL ?= INFO
 JUPYTER_PORT := 9483
 NB_GID := $(shell id -g)
 NB_UID := $(shell id -u)
 NOTEBOOKS_DIR := $(CURDIR)/notebooks3.8
+NOTEBOOKS_DIR := /notebooks
 NOTEBOOKS_DIR_MOUNT := /notebooks
+PORT := $(shell printenv PORT || echo 9999)
 PROJECT := rscjnet
 RSCONNECT_DIR := /rsconnect_jupyter
 S3_PREFIX := s3://rstudio-connect-downloads/connect/rsconnect-jupyter
@@ -18,7 +22,6 @@ VERSION := $(shell pipenv run python setup.py --version 2>/dev/null || echo 'NOT
 
 BDIST_WHEEL := dist/rsconnect_jupyter-$(VERSION)-py2.py3-none-any.whl
 NETWORK := $(PROJECT)_default
-JUPYTER_LOG_LEVEL ?= INFO
 
 # NOTE: See the `dist` target for why this exists.
 SOURCE_DATE_EPOCH := $(shell date +%s)
@@ -85,15 +88,20 @@ dist: version-frontend
 
 .PHONY: run
 run: install
+	mkdir -p $(NOTEBOOKS_DIR)
 	pipenv run jupyter notebook \
 		-y \
 		--log-level=$(JUPYTER_LOG_LEVEL) \
-		--notebook-dir=/notebooks \
+		--notebook-dir=$(NOTEBOOKS_DIR) \
 		--ip='0.0.0.0' \
 		--port=$(JUPYTER_PORT) \
 		--no-browser \
 		--NotebookApp.token='' \
 		--NotebookApp.disable_check_xsrf=True
+
+.PHONY: run-local
+run-local: NOTEBOOKS_DIR := $(CURDIR)/notebooks3.8
+run-local: run
 
 .PHONY: install
 install:
