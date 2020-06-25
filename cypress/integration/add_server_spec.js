@@ -10,11 +10,11 @@ describe('Add server', () => {
   it('Creates a new notebook', () => {
     cy.contains('New').click()
     cy.contains('Python 3').click()
-    cy.get('#refresh_notebook_list').click()
+    cy.get('#refresh_notebook_list', { timeout: 5000 }).click()
   })
 
   it('Navigates to the new notebook', () => {
-    cy.get('.item_link')
+    cy.get('.item_link', { timeout: 5000 })
       .should('have.attr', 'href').and('include', 'notebooks')
       .then((href) => {
         cy.visit(JUPYTER + href)
