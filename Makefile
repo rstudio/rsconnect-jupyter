@@ -133,7 +133,7 @@ yarn:
 
 .PHONY: cypress-specs
 cypress-specs:
-	pipenv run ./scripts/wait-for-healthy-container $(JUPYTER_HOST)
+	./scripts/wait-for-healthy-container $(JUPYTER_HOST)
 	docker run --rm \
 		$(DOCKER_TTY_FLAGS) \
 		--network=$(NETWORK) \
