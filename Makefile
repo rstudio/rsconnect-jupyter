@@ -8,11 +8,10 @@ IMAGE_PREFIX := rstudio/rsconnect-jupyter-py
 JUPYTER_HOST := jupyter
 JUPYTER_IMAGE := rstudio/rsconnect-jupyter-py3.8
 JUPYTER_LOG_LEVEL ?= INFO
-JUPYTER_PORT := 9483
+JUPYTER_PORT ?= 9483
 NB_GID := $(shell id -g)
 NB_UID := $(shell id -u)
-NOTEBOOKS_DIR := $(CURDIR)/notebooks3.8
-NOTEBOOKS_DIR := /notebooks
+NOTEBOOKS_DIR ?= $(CURDIR)/notebooks3.8
 NOTEBOOKS_DIR_MOUNT := /notebooks
 PORT := $(shell printenv PORT || echo 9999)
 PROJECT := rscjnet
@@ -134,6 +133,7 @@ yarn:
 
 .PHONY: cypress-specs
 cypress-specs:
+	pipenv run ./scripts/wait-for-healthy-container $(JUPYTER_HOST)
 	docker run --rm \
 		$(DOCKER_TTY_FLAGS) \
 		--network=$(NETWORK) \
@@ -164,11 +164,12 @@ jupyter-up:
 		-e PY_VERSION=$(PY_VERSION) \
 		-e TINI_SUBREAPER=1 \
 		-e PYTHONPATH=$(RSCONNECT_DIR) \
+		-e JUPYTER_LOG_LEVEL \
+		-e NOTEBOOKS_DIR=$(NOTEBOOKS_DIR_MOUNT) \
 		-p :$(JUPYTER_PORT):$(JUPYTER_PORT) \
 		-w $(RSCONNECT_DIR) \
 		-u $(NB_UID):$(NB_GID) \
-		$(JUPYTER_IMAGE) \
-		make -C $(RSCONNECT_DIR) run JUPYTER_LOG_LEVEL=$(JUPYTER_LOG_LEVEL)
+		$(JUPYTER_IMAGE)
 
 .PHONY: jupyter-down
 jupyter-down:

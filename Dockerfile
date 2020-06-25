@@ -23,13 +23,21 @@ RUN useradd --password password \
 
 USER ${NB_UID}:${NB_GID}
 WORKDIR /rsconnect_jupyter
-ENV WORKON_HOME=/home/builder \
+ENV JUPYTER_LOG_LEVEL=INFO \
+    JUPYTER_PORT=9483 \
+    NOTEBOOKS_DIR=/notebooks \
+    PATH=/home/builder/.local/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
     PIPENV_DONT_LOAD_ENV=1 \
     PIPENV_SHELL=/bin/bash \
-    PATH=/home/builder/.local/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
-    PYTHONPATH=/rsconnect_jupyter
+    PYTHONPATH=/rsconnect_jupyter \
+    WORKON_HOME=/home/builder
 COPY Pipfile Pipfile
 COPY Pipfile.lock Pipfile.lock
 RUN python -m pip install -I -U pip pipenv && \
     pipenv install --dev --python=/usr/local/bin/python && \
     rm -vf Pipfile*
+
+HEALTHCHECK --timeout=3s --retries=42 \
+  CMD curl -fs http://127.0.0.1:$JUPYTER_PORT/tree &>/dev/null || exit 1
+
+CMD ["make", "run"]
