@@ -6,43 +6,10 @@ describe('End to end', {
   baseUrl: JUPYTER
 }, () => {
   beforeEach(() => {
-    cy.visit('/')
-  })
-
-  before(() => {
-    cy.visit('/')
-    cy.get('#refresh_notebook_list').should('be.visible').click()
-    cy.get('#button-select-all').should('be.visible').click()
-    cy.get('body').then(($body) => {
-      const $deleteButtons = $body.find('button.delete-button')
-      if (($deleteButtons.length === 0) || (!$deleteButtons.is(':visible'))) {
-        return
-      }
-      cy.get('button.delete-button').should('be.visible').click()
-      cy.get('div.modal-footer').should('be.visible').contains('Delete').click()
-      cy.get('#refresh_notebook_list').should('be.visible').click()
-      cy.wait(3000)
-    })
-  })
-
-  it('Creates and opens a new notebook', () => {
-    cy.contains('New').click()
-    cy.contains('Python 3').click()
-    cy.get('#refresh_notebook_list').should('be.visible').click()
-    cy.get('.item_link')
-      .should('have.attr', 'href')
-      .and('include', 'notebooks')
-      .then(($href) => {
-        cy.visit($href)
-      })
+    cy.visit('/notebooks/feelings-about-cats.ipynb')
   })
 
   it('Registers the new server address', () => {
-    cy.get('.item_link')
-      .should('have.attr', 'href').and('include', 'notebooks')
-      .then((href) => {
-        cy.visit(href)
-      })
     cy.get('.rsc-dropdown [data-jupyter-action="rsconnect_jupyter:publish"]').should('be.visible').click()
     cy.get('#publish-to-connect').should('be.visible').click()
 
@@ -64,19 +31,10 @@ describe('End to end', {
       .should('be.visible')
       .contains('mock-connect')
       .contains(MOCK_CONNECT)
-      .then(($a) => {
-        if (!$a.hasClass('active')) {
-          cy.wrap($a).click()
-        }
-      })
+	cy.get('.modal-dialog button.close').should('be.visible').click()
   })
 
   it('Publishes with source', () => {
-    cy.get('.item_link')
-      .should('have.attr', 'href').and('include', 'notebooks')
-      .then((href) => {
-        cy.visit(href)
-      })
     cy.get('.rsc-dropdown [data-jupyter-action="rsconnect_jupyter:publish"]').should('be.visible').click()
     cy.get('#publish-to-connect').should('be.visible').click()
 
@@ -93,11 +51,6 @@ describe('End to end', {
   })
 
   it.skip('Publishes static', () => {
-    cy.get('.item_link')
-      .should('have.attr', 'href').and('include', 'notebooks')
-      .then((href) => {
-        cy.visit(href)
-      })
     cy.get('.rsc-dropdown [data-jupyter-action="rsconnect_jupyter:publish"]').should('be.visible').click()
     cy.get('#publish-to-connect').should('be.visible').click()
 

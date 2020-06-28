@@ -38,6 +38,6 @@ RUN python -m pip install -I -U pip pipenv && \
     rm -vf Pipfile*
 
 HEALTHCHECK --timeout=3s --retries=42 \
-  CMD curl -fs http://127.0.0.1:$JUPYTER_PORT/tree &>/dev/null || exit 1
+  CMD ["bash", "-c", "curl -fs http://127.0.0.1:$JUPYTER_PORT/tree &>/dev/null || exit 1"]
 
 CMD ["make", "run"]

@@ -17,6 +17,8 @@ PORT := $(shell printenv PORT || echo 9999)
 PROJECT := rscjnet
 RSCONNECT_DIR := /rsconnect_jupyter
 S3_PREFIX := s3://rstudio-connect-downloads/connect/rsconnect-jupyter
+TMPDIR ?= /tmp
+TMP_FIXTURES := $(TMPDIR)/rsconnect-jupyter-tmp-fixtures
 VERSION := $(shell pipenv run python setup.py --version 2>/dev/null || echo 'NOTSET')
 
 BDIST_WHEEL := dist/rsconnect_jupyter-$(VERSION)-py2.py3-none-any.whl
@@ -170,6 +172,15 @@ jupyter-up:
 		-w $(RSCONNECT_DIR) \
 		-u $(NB_UID):$(NB_GID) \
 		$(JUPYTER_IMAGE)
+
+.PHONY: jupyter-up-fixtures
+jupyter-up-fixtures: NOTEBOOKS_DIR = $(TMP_FIXTURES)/notebooks
+jupyter-up-fixtures: sync-fixtures jupyter-up
+
+.PHONY: sync-fixtures
+sync-fixtures:
+	mkdir -p $(TMP_FIXTURES)
+	rsync -av --exclude .ipynb_checkpoints --delete $(CURDIR)/tests/fixtures/ $(TMP_FIXTURES)
 
 .PHONY: jupyter-down
 jupyter-down:

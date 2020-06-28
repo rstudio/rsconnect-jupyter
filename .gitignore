@@ -1,6 +1,7 @@
 *.pyc
 .DS_Store
 .coverage
+.ipynb_checkpoints/
 .vagrant
 /*.egg
 /*.egg-info
@@ -10,11 +11,11 @@
 /.jupyter/
 /.local/
 /build/
+/cypress/screenshots/*
+/cypress/videos/*
 /dist/
 /docs/out/
 /node_modules/
 /notebooks*/
 /rsconnect_jupyter/static/version.json
 /rsconnect_jupyter/version.py
-/cypress/screenshots/*
-/cypress/videos/*
