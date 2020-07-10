@@ -1,3 +1,8 @@
+`rsconnect-jupyter` 1.4.0
+--------------------------------------------------------------------------------
+*   Bump version of `rsconnect-python` used.
+
+
 `rsconnect-jupyter` 1.3.3
 --------------------------------------------------------------------------------
 *   Bump version of `rsconnect-python` used.
