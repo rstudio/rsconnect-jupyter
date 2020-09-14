@@ -16,7 +16,7 @@ define([
       ? window.localStorage.getItem('__RSCONNECT_JUPYTER_DEBUG_MODE__') === 'enabled' : false;
   function verbose() {
     if (debugModeEnabled) {
-      console.log.apply(window, arguments);
+      console.error.apply(window, arguments);
     }
   }
   // this will be filled in by `init()`
