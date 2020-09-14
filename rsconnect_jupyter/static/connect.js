@@ -11,6 +11,14 @@ define([
    * Extension bootstrap (main)
    ***********************************************************************/
 
+  var debugModeEnabled = window.localStorage
+      // eslint-disable-next-line multiline-ternary
+      ? window.localStorage.getItem('__RSCONNECT_JUPYTER_DEBUG_MODE__') === 'enabled' : false;
+  function verbose() {
+    if (debugModeEnabled) {
+      console.error.apply(window, arguments);
+    }
+  }
   // this will be filled in by `init()`
   var notify = null;
 
@@ -1150,8 +1158,10 @@ define([
               return ContentsManager.list_contents(notebookDirectory);
             })
             .then(function (contents) {
+              verbose('Got contents of directory:', contents);
               for(var index in contents.content) {
                 if (contents.content[index].name === 'requirements.txt') {
+                  verbose('Found requirements.txt:', contents.content[index]);
                   hasRequirementsTxt = true;
                 } else if (contents.content[index].name === 'environment.yml') {
                   // TODO: Enable when ready
@@ -1220,6 +1230,12 @@ define([
          *        What the previously selected check was
          */
         function preparePublishRequirementsTxtDialog(hasRequirements, hasEnvironment, isConda, checked) {
+          verbose(
+              'Initializing requirements.txt dialog with arguments: [hasRequirements, hasEnvironment, isConda, checked]',
+              hasRequirements,
+              hasEnvironment,
+              isConda,
+              checked);
           var requirementsTxtContainer = $('#requirements-txt-container');
           requirementsTxtContainer.empty();
 
