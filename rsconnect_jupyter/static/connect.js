@@ -316,6 +316,7 @@ define([
         $container.empty();
         ContentsManager.list_contents(that.currentPath)
             .then(function(contents) {
+              verbose('got contents:', contents);
               var content = contents.content.sort(function (a, b) {
                 // Directories come first
                 if (a.type === 'directory' ? b.type !== 'directory' : b.type === 'directory') {
@@ -1157,18 +1158,45 @@ define([
             .then(function() {
               return ContentsManager.list_contents(notebookDirectory);
             })
-            .then(function (contents) {
-              verbose('Got contents of directory:', contents);
-              for(var index in contents.content) {
-                if (contents.content[index].name === 'requirements.txt') {
-                  verbose('Found requirements.txt:', contents.content[index]);
-                  hasRequirementsTxt = true;
-                } else if (contents.content[index].name === 'environment.yml') {
-                  // TODO: Enable when ready
-                  // hasEnvironmentYml = true;
+            .then(function (result) {
+              function getRequirements(contents) {
+                verbose('contents:', contents);
+                for (var index in contents.content) {
+                  if (contents.content[index].name === 'requirements.txt') {
+                    verbose('Found requirements.txt:', contents.content[index]);
+                    hasRequirementsTxt = true;
+                  } else if (contents.content[index].name === 'environment.yml') {
+                    // TODO: Enable when ready
+                    // hasEnvironmentYml = true;
+                  }
                 }
               }
-              preparePublishRequirementsTxtDialog(hasRequirementsTxt, hasEnvironmentYml, isCondaEnvironment, environmentOptions);
+              if (result instanceof window.Promise) {
+                verbose('Using legacy promise mode.');
+                return result.then(getRequirements);
+              } else {
+                return getRequirements(result);
+              }
+            })
+            .then(function(result) {
+              if (result instanceof window.Promise) {
+                result.then(function () {
+                      preparePublishRequirementsTxtDialog(
+                          hasRequirementsTxt,
+                          hasEnvironmentYml,
+                          isCondaEnvironment,
+                          environmentOptions
+                      );
+                    }
+                );
+              } else {
+                preparePublishRequirementsTxtDialog(
+                          hasRequirementsTxt,
+                          hasEnvironmentYml,
+                          isCondaEnvironment,
+                          environmentOptions
+                );
+              }
             });
 
         // generate server list
