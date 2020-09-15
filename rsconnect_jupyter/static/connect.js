@@ -1963,16 +1963,42 @@ define([
             .then(function() {
               return ContentsManager.list_contents(notebookDirectory);
             })
-            .then(function (contents) {
-              for(var index in contents.content) {
-                if (contents.content[index].name === 'requirements.txt') {
-                  hasRequirementsTxt = true;
-                } else if (contents.content[index].name === 'environment.yml') {
-                  // TODO: Enable when ready
-                  // hasEnvironmentYml = true;
+            .then(function (result) {
+              function getRequirements(contents) {
+                verbose('contents:', contents);
+                for (var index in contents.content) {
+                  if (contents.content[index].name === 'requirements.txt') {
+                    verbose('Found requirements.txt:', contents.content[index]);
+                    hasRequirementsTxt = true;
+                  } else if (contents.content[index].name === 'environment.yml') {
+                    // TODO: Enable when ready
+                    // hasEnvironmentYml = true;
+                  }
                 }
               }
-              prepareManifestRequirementsTxtDialog(hasRequirementsTxt, hasEnvironmentYml, isCondaEnvironment);
+
+              if (result instanceof window.Promise) {
+                verbose('Using legacy promise mode.');
+                return result.then(getRequirements);
+              } else {
+                return getRequirements(result);
+              }
+            })
+            .then(function (result) {
+if (result instanceof window.Promise) {
+                result.then(function () {
+                prepareManifestRequirementsTxtDialog(
+                          hasRequirementsTxt,
+                          hasEnvironmentYml,
+                          isCondaEnvironment);
+                    }
+                );
+              } else {
+                prepareManifestRequirementsTxtDialog(
+                          hasRequirementsTxt,
+                          hasEnvironmentYml,
+                          isCondaEnvironment);
+              }
             });
 
         var btnCancel = $(
