@@ -19,6 +19,23 @@ define([
       console.error.apply(window, arguments);
     }
   }
+
+  /**
+   * legacyPromiseHandler applies a function to a result whether or not
+   * it's a plain value or a promise.
+   * @param result {Promise|any} either a promise or a plain value
+   * @param callback {Function} a function that takes result as a plain value
+   * @returns {Promise|any} If result was a promise, a promise. If result was a
+   * plain value, a plain value.
+   */
+  function legacyPromiseHandler(result, callback) {
+    if (result instanceof window.Promise) {
+      verbose('Using legacy promise mode.')
+      return result.then(callback);
+    } else {
+      return callback(result);
+    }
+  }
   // this will be filled in by `init()`
   var notify = null;
 
@@ -1171,32 +1188,18 @@ define([
                   }
                 }
               }
-              if (result instanceof window.Promise) {
-                verbose('Using legacy promise mode.');
-                return result.then(getRequirements);
-              } else {
-                return getRequirements(result);
-              }
+              return legacyPromiseHandler(result, getRequirements);
             })
             .then(function(result) {
-              if (result instanceof window.Promise) {
-                result.then(function () {
-                      preparePublishRequirementsTxtDialog(
-                          hasRequirementsTxt,
-                          hasEnvironmentYml,
-                          isCondaEnvironment,
-                          environmentOptions
-                      );
-                    }
-                );
-              } else {
+              function doPrepare() {
                 preparePublishRequirementsTxtDialog(
-                          hasRequirementsTxt,
-                          hasEnvironmentYml,
-                          isCondaEnvironment,
-                          environmentOptions
+                    hasRequirementsTxt,
+                    hasEnvironmentYml,
+                    isCondaEnvironment,
+                    environmentOptions
                 );
               }
+              return legacyPromiseHandler(result, doPrepare);
             });
 
         // generate server list
@@ -1976,29 +1979,16 @@ define([
                   }
                 }
               }
-
-              if (result instanceof window.Promise) {
-                verbose('Using legacy promise mode.');
-                return result.then(getRequirements);
-              } else {
-                return getRequirements(result);
-              }
+              return legacyPromiseHandler(result, getRequirements);
             })
             .then(function (result) {
-if (result instanceof window.Promise) {
-                result.then(function () {
+              function doPrepare() {
                 prepareManifestRequirementsTxtDialog(
-                          hasRequirementsTxt,
-                          hasEnvironmentYml,
-                          isCondaEnvironment);
-                    }
-                );
-              } else {
-                prepareManifestRequirementsTxtDialog(
-                          hasRequirementsTxt,
-                          hasEnvironmentYml,
-                          isCondaEnvironment);
+                    hasRequirementsTxt,
+                    hasEnvironmentYml,
+                    isCondaEnvironment);
               }
+              return legacyPromiseHandler(result, doPrepare);
             });
 
         var btnCancel = $(
