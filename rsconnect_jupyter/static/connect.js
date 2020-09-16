@@ -30,7 +30,7 @@ define([
    */
   function legacyPromiseHandler(result, callback) {
     if (result instanceof window.Promise) {
-      verbose('Using legacy promise mode.')
+      verbose('Using legacy promise mode.');
       return result.then(callback);
     } else {
       return callback(result);
