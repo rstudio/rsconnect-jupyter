@@ -276,7 +276,7 @@ define([
                         '!"',
                         pythonPath,
                         '" -m rsconnect.environment ' +
-                        flags + ' "${PWD}"'
+                        flags + ' ""'
                     ].join('');
                     console.log('executing: ' + cmd);
                 } catch (e) {
