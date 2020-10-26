@@ -19,6 +19,23 @@ define([
       console.error.apply(window, arguments);
     }
   }
+
+  /**
+   * legacyPromiseHandler applies a function to a result whether or not
+   * it's a plain value or a promise.
+   * @param result {Promise|any} either a promise or a plain value
+   * @param callback {Function} a function that takes result as a plain value
+   * @returns {Promise|any} If result was a promise, a promise. If result was a
+   * plain value, a plain value.
+   */
+  function legacyPromiseHandler(result, callback) {
+    if (result instanceof window.Promise) {
+      verbose('Using legacy promise mode.');
+      return result.then(callback);
+    } else {
+      return callback(result);
+    }
+  }
   // this will be filled in by `init()`
   var notify = null;
 
@@ -316,6 +333,7 @@ define([
         $container.empty();
         ContentsManager.list_contents(that.currentPath)
             .then(function(contents) {
+              verbose('got contents:', contents);
               var content = contents.content.sort(function (a, b) {
                 // Directories come first
                 if (a.type === 'directory' ? b.type !== 'directory' : b.type === 'directory') {
@@ -1157,18 +1175,31 @@ define([
             .then(function() {
               return ContentsManager.list_contents(notebookDirectory);
             })
-            .then(function (contents) {
-              verbose('Got contents of directory:', contents);
-              for(var index in contents.content) {
-                if (contents.content[index].name === 'requirements.txt') {
-                  verbose('Found requirements.txt:', contents.content[index]);
-                  hasRequirementsTxt = true;
-                } else if (contents.content[index].name === 'environment.yml') {
-                  // TODO: Enable when ready
-                  // hasEnvironmentYml = true;
+            .then(function (result) {
+              function getRequirements(contents) {
+                verbose('contents:', contents);
+                for (var index in contents.content) {
+                  if (contents.content[index].name === 'requirements.txt') {
+                    verbose('Found requirements.txt:', contents.content[index]);
+                    hasRequirementsTxt = true;
+                  } else if (contents.content[index].name === 'environment.yml') {
+                    // TODO: Enable when ready
+                    // hasEnvironmentYml = true;
+                  }
                 }
               }
-              preparePublishRequirementsTxtDialog(hasRequirementsTxt, hasEnvironmentYml, isCondaEnvironment, environmentOptions);
+              return legacyPromiseHandler(result, getRequirements);
+            })
+            .then(function(result) {
+              function doPrepare() {
+                preparePublishRequirementsTxtDialog(
+                    hasRequirementsTxt,
+                    hasEnvironmentYml,
+                    isCondaEnvironment,
+                    environmentOptions
+                );
+              }
+              return legacyPromiseHandler(result, doPrepare);
             });
 
         // generate server list
@@ -1933,16 +1964,29 @@ define([
             .then(function() {
               return ContentsManager.list_contents(notebookDirectory);
             })
-            .then(function (contents) {
-              for(var index in contents.content) {
-                if (contents.content[index].name === 'requirements.txt') {
-                  hasRequirementsTxt = true;
-                } else if (contents.content[index].name === 'environment.yml') {
-                  // TODO: Enable when ready
-                  // hasEnvironmentYml = true;
+            .then(function (result) {
+              function getRequirements(contents) {
+                verbose('contents:', contents);
+                for (var index in contents.content) {
+                  if (contents.content[index].name === 'requirements.txt') {
+                    verbose('Found requirements.txt:', contents.content[index]);
+                    hasRequirementsTxt = true;
+                  } else if (contents.content[index].name === 'environment.yml') {
+                    // TODO: Enable when ready
+                    // hasEnvironmentYml = true;
+                  }
                 }
               }
-              prepareManifestRequirementsTxtDialog(hasRequirementsTxt, hasEnvironmentYml, isCondaEnvironment);
+              return legacyPromiseHandler(result, getRequirements);
+            })
+            .then(function (result) {
+              function doPrepare() {
+                prepareManifestRequirementsTxtDialog(
+                    hasRequirementsTxt,
+                    hasEnvironmentYml,
+                    isCondaEnvironment);
+              }
+              return legacyPromiseHandler(result, doPrepare);
             });
 
         var btnCancel = $(
