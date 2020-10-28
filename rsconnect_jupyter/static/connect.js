@@ -1446,8 +1446,6 @@ define([
                   'Installation Section of the rsconnect-jupyter documentation</a> for more information.';
             } else if (typeof xhr === 'string') {
               msg = 'An unexpected error occurred: ' + xhr;
-            } else if (xhr.status === 500) {
-              msg = 'An internal error occurred.';
             } else if (xhr.responseJSON) {
               if (xhr.responseJSON.message) {
                 msg = 'Error: ' + xhr.responseJSON.message;
