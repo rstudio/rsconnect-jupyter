@@ -1,3 +1,12 @@
+`rsconnect-jupyter` 1.4.1
+--------------------------------------------------------------------------------
+*   UI now shows more error details for troubleshooting.
+*   Fixed an issue where Windows 10 was not detecting `requirements.txt`.
+*   Fixed an issue where older versions (around 5.4.0) of Jupyter notebook failed to
+    recognize the presence of a `requirements.txt` file.
+*   Bumped version of `rsconnect-python` used to 1.5.1.
+
+
 `rsconnect-jupyter` 1.4.0
 --------------------------------------------------------------------------------
 *   Bump version of `rsconnect-python` used.
