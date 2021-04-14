@@ -49,7 +49,7 @@ jobs:
         restore-keys: |
           virtualenvs-${{ matrix.os }}-py${{ matrix.python-version }}-${{ hashFiles('Pipfile.lock') }}
           virtualenvs-${{ matrix.os }}-py${{ matrix.python-version }}-
-    - run: echo '::set-env name=PYTHONPATH::'${GITHUB_WORKSPACE}
+    - run: echo "PYTHONPATH=${GITHUB_WORKSPACE}" >> $GITHUB_ENV
     - run: make prereqs
     - run: make version
     - run: make install
@@ -77,7 +77,7 @@ jobs:
         restore-keys: |
           virtualenvs-ubuntu-latest-py3.8-${{ hashFiles('Pipfile.lock') }}
           virtualenvs-ubuntu-latest-py3.8-
-    - run: echo '::set-env name=PYTHONPATH::'${GITHUB_WORKSPACE}
+    - run: echo "PYTHONPATH=${GITHUB_WORKSPACE}" >> $GITHUB_ENV
     - run: make image3.8
     - run: make -C selenium build
     - run: make -C selenium clean
@@ -107,7 +107,7 @@ jobs:
         restore-keys: |
           virtualenvs-ubuntu-latest-py3.8-${{ hashFiles('Pipfile.lock') }}
           virtualenvs-ubuntu-latest-py3.8-
-    - run: echo '::set-env name=PYTHONPATH::'${GITHUB_WORKSPACE}
+    - run: echo "PYTHONPATH=${GITHUB_WORKSPACE}" >> $GITHUB_ENV
     - run: make prereqs
     - run: pipenv clean
     - run: pipenv install --skip-lock --dev
