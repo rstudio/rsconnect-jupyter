@@ -19,8 +19,7 @@ pytestmark = [
 class TestAddServer(object):
     @pytest.fixture(autouse=True)
     def setup(self, browser_config, jupyter_url, notebook):
-        """Navigate to the front page
-        """
+        """Navigate to the front page"""
 
         self.notebook = notebook
 
@@ -32,8 +31,7 @@ class TestAddServer(object):
         MainToolBar().rsconnect_publish.click()
 
     def test_valid_address_valid_name(self, connect_url):
-        """Fill in the add server form with valid address and name
-        """
+        """Fill in the add server form with valid address and name"""
 
         server_name = generate_random_string()
         api_key = "0123456789abcdef0123456789abcdef"
@@ -42,7 +40,11 @@ class TestAddServer(object):
         sleep(1)
 
         AddServerForm().populate_form(
-            {"address": connect_url, "api_key": api_key, "name": server_name,}
+            {
+                "address": connect_url,
+                "api_key": api_key,
+                "name": server_name,
+            }
         )
 
         AddServerForm().submit_form()

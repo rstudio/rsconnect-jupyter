@@ -24,8 +24,7 @@ class TestPublishSource(object):
         MainToolBar().rsconnect_publish.click()
 
     def test_publish_source(self, connect_url):
-        """Publish a document with source
-        """
+        """Publish a document with source"""
         pf = PublishContentForm()
         # dialog is racy with event setup
         sleep(1)

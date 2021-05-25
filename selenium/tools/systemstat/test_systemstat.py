@@ -34,8 +34,7 @@ class TestSystemStatTool(object):
         assert tool._iterations == 1
 
     def test_system_up_no_waiting(self):
-        """if is_ready() returns True, wait_until_ready() doesn't wait.
-        """
+        """if is_ready() returns True, wait_until_ready() doesn't wait."""
 
         class MySystemStatTool(SystemStatTool):
             def __init__(self):
@@ -62,8 +61,7 @@ class TestSystemStatTool(object):
         assert tool._iterations == 1
 
     def test_delay_systemup(self):
-        """wait_until_ready() waits and polls while system is down.
-        """
+        """wait_until_ready() waits and polls while system is down."""
 
         class MySystemStatTool(SystemStatTool):
             def __init__(self):

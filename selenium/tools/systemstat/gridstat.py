@@ -67,7 +67,10 @@ class GridStat(systemstat.SystemStat):
             # response was not "ok", log error details
             self.logger.info(
                 'hub responded at "{}" with error:\n{}\n{}\n{}'.format(
-                    grid_api_hub_url, response.status_code, response.headers, response.text,
+                    grid_api_hub_url,
+                    response.status_code,
+                    response.headers,
+                    response.text,
                 )
             )
 

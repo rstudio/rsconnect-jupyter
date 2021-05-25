@@ -101,7 +101,8 @@ class EndpointHandler(APIHandler):
             except Exception as err:
                 self.log.exception("Unable to verify that the provided server is running RStudio Connect")
                 raise web.HTTPError(
-                    400, u"Unable to verify that the provided server is running RStudio Connect: %s" % err,
+                    400,
+                    u"Unable to verify that the provided server is running RStudio Connect: %s" % err,
                 )
             if canonical_address is not None:
                 uri = canonical_address.url
@@ -177,7 +178,8 @@ class EndpointHandler(APIHandler):
                     raise web.HTTPError(500, u"Bundle creation failed: %s" % exc)
             else:
                 raise web.HTTPError(
-                    400, 'Invalid app_mode: %s, must be "static" or "jupyter-static"' % app_mode,
+                    400,
+                    'Invalid app_mode: %s, must be "static" or "jupyter-static"' % app_mode,
                 )
 
             try:
