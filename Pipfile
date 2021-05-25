@@ -4,7 +4,7 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-black = "*"
+black = "==20.8b1"
 coverage = "*"
 flake8 = "*"
 importlib-metadata = "*"
@@ -22,7 +22,6 @@ nbformat = "*"
 notebook = ">=6.1.5"
 rsconnect-python = ">=1.5.0"
 six = "*"
-
 # Dependabot fixes
 py = ">=1.10.0"
 Pygments = ">=2.7.4"
