@@ -1,0 +1,48 @@
+# image name for container
+export IMAGE := "rsconnect-jupyter-docs"
+
+# are we attached to a terminal?
+interactive := `tty -s && echo "-it" || echo ""`
+
+# build documentation
+build:
+    just container mkdocs build
+
+
+# watch and serve documentation over HTTP
+watch:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    export PORT=${PORT:-8001}
+    echo -e "\n--> Serving on http://localhost:${PORT}/\n"
+    just container mkdocs serve -a 0.0.0.0:${PORT} \
+        | grep -v "Serving on http"
+
+# clean built documentation
+clean:
+    rm -rf site/
+
+# run commands in mkdocs container
+container +args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    args=("")
+    if [[ -n "${PORT:-}" ]]; then
+        args+=(-p ${PORT}:${PORT})
+    fi
+
+    cmd=(
+        docker run --rm --init {{ interactive }}
+            -u `id -u`:`id -g`
+            ${args[*]}
+            -v "`pwd`":/mkdocs
+            -w /mkdocs
+            ${IMAGE} {{ args }}
+    )
+    echo ${cmd[*]}
+    ${cmd[*]}
+
+image:
+    docker build -t ${IMAGE} .

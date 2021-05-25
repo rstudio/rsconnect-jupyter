@@ -1,0 +1,4 @@
+# mkdocs output directory
+site
+# copy of primary jupyter.md
+docs/jupyter.md
