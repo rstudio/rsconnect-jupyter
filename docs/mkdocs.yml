@@ -1,0 +1,53 @@
+site_name: 'rsconnect-jupyter User Guide'
+copyright: RStudio, PBC. All Rights Reserved
+
+# We activate GA only when hosted on our public docs site
+# and not when installed.
+#
+# See overrides/partials/integrations/analytics.html
+google_analytics:
+  - 'UA-20375833-3'
+  - 'auto'
+
+nav:
+- 'Introduction': 'index.md'
+
+
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+  - attr_list: {}
+  - def_list: {}
+  - tables: {}
+  - pymdownx.superfences: {}
+  - codehilite:
+      guess_lang: false
+  - pymdownx.tabbed
+  - pymdownx.snippets:
+      base_path: 'docs/'
+      check_paths: true
+
+plugins:
+  - search:
+      separator: '[\s\-\.]+'
+  - macros
+
+theme:
+  name: material
+  custom_dir: overrides
+  logo: 'images/rstudio-logo.png'
+  palette:
+    primary: 'white'
+
+extra_css:
+  - css/external-links.css
+  - css/superfences-tabs.css
+  - css/custom.css
+
+extra_javascript:
+  - js/custom.js
+
+extra:
+  search:
+    tokenizer: '[\s\-\.]+'
