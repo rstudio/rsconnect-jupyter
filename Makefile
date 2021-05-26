@@ -135,23 +135,6 @@ ifeq (Linux,$(shell uname))
 	DOCKER_RUN_AS = -u $(shell id -u):$(shell id -g)
 endif
 
-BUILD_DOC := docker run --rm=true $(DOCKER_RUN_AS) \
-	-e VERSION=$(VERSION) \
-	$(DOCKER_ARGS) \
-	-v $(CURDIR):/rsconnect_jupyter \
-	-w /rsconnect_jupyter \
-	pandoc/latex:2.9 docs/build-doc.sh
-
-.PHONY: docs-build
-docs-build: docs/out
-	$(BUILD_DOC)
-
-docs/out:
-	mkdir -p $@
-
-dist/rsconnect-jupyter-$(VERSION).pdf: docs/README.md docs/*.gif docs/out
-	$(BUILD_DOC)
-
 .PHONY: version
 version:
 	@echo $(VERSION)
@@ -169,20 +152,19 @@ sync-latest-to-s3:
 .PHONY: sync-latest-docs-to-s3
 sync-latest-docs-to-s3:
 	aws s3 cp --acl bucket-owner-full-control \
+		--recursive \
 		--cache-control max-age=0 \
-		docs/out/rsconnect_jupyter-$(VERSION).html \
-		$(S3_PREFIX)/latest/rsconnect_jupyter-latest.html
-	aws s3 cp --acl bucket-owner-full-control \
-		--cache-control max-age=0 \
-		docs/out/rsconnect_jupyter-$(VERSION).pdf \
-		$(S3_PREFIX)/latest/rsconnect_jupyter-latest.pdf
+		docs/site/ \
+		$(S3_PREFIX)/latest/
 
 .PHONY: promote-docs-in-s3
 promote-docs-in-s3:
 	aws s3 cp --acl bucket-owner-full-control \
-		docs/out/rsconnect_jupyter-$(VERSION).html \
-		s3://docs.rstudio.com/rsconnect-jupyter/rsconnect_jupyter-$(VERSION).html
+		--recursive \
+		docs/site/ \
+		s3://docs.rstudio.com/rsconnect-jupyter/rsconnect_jupyter-$(VERSION)/
 	aws s3 cp --acl bucket-owner-full-control \
+		--recursive \
 		--cache-control max-age=300 \
-		docs/out/rsconnect_jupyter-$(VERSION).html \
-		s3://docs.rstudio.com/rsconnect-jupyter/index.html
+		docs/site/ \
+		s3://docs.rstudio.com/rsconnect-jupyter/
