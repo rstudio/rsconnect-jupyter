@@ -46,15 +46,24 @@ def pytest_addoption(parser):
     """Define and parse command line options"""
 
     parser.addoption(
-        "--selene-reports", action=ReportsAction, help="parent directory for storing selene test reports",
+        "--selene-reports",
+        action=ReportsAction,
+        help="parent directory for storing selene test reports",
     )
 
     parser.addoption(
-        "--selene-timeout", action=TimeoutAction, default=4, type=int, help="set the default timeout in selene",
+        "--selene-timeout",
+        action=TimeoutAction,
+        default=4,
+        type=int,
+        help="set the default timeout in selene",
     )
 
     parser.addoption(
-        "--jupyter-url", action="store", default="http://jupyter-py2/", help="URI of the Jupyter system under test",
+        "--jupyter-url",
+        action="store",
+        default="http://jupyter-py2/",
+        help="URI of the Jupyter system under test",
     )
 
     parser.addoption(
@@ -65,11 +74,17 @@ def pytest_addoption(parser):
     )
 
     parser.addoption(
-        "--data-dir", action="store", default="/selenium/data", help="Directory where data files are stored",
+        "--data-dir",
+        action="store",
+        default="/selenium/data",
+        help="Directory where data files are stored",
     )
 
     parser.addoption(
-        "--notebooks-dir", action="store", default="/notebooks", help="Directory where Jupyter Notebooks are stored",
+        "--notebooks-dir",
+        action="store",
+        default="/notebooks",
+        help="Directory where Jupyter Notebooks are stored",
     )
 
 
@@ -80,7 +95,9 @@ def log_web_error(msg):
     when using Python's `assert` keyword to perform assertions.
     """
 
-    screenshot = selene.helpers.take_screenshot(selene.browser.driver(),)
+    screenshot = selene.helpers.take_screenshot(
+        selene.browser.driver(),
+    )
     msg = """{original_msg}
         screenshot: file://{screenshot}""".format(
         original_msg=msg, screenshot=screenshot
@@ -90,32 +107,28 @@ def log_web_error(msg):
 
 @pytest.fixture(scope="session")
 def jupyter_url(request):
-    """Retrieve the url of the system under test
-    """
+    """Retrieve the url of the system under test"""
 
     return request.config.getoption("--jupyter-url")
 
 
 @pytest.fixture(scope="session")
 def connect_url(request):
-    """Retrieve the url of the Connect server where content is deployed
-    """
+    """Retrieve the url of the Connect server where content is deployed"""
 
     return request.config.getoption("--connect-url")
 
 
 @pytest.fixture(scope="session")
 def data_dir(request):
-    """Retrieve the directory where data files, used in tests, are stored
-    """
+    """Retrieve the directory where data files, used in tests, are stored"""
 
     return request.config.getoption("--data-dir")
 
 
 @pytest.fixture(scope="session")
 def notebooks_dir(request):
-    """Retrieve the directory where notebooks for the Jupyer server are stored
-    """
+    """Retrieve the directory where notebooks for the Jupyer server are stored"""
 
     return request.config.getoption("--notebooks-dir")
 
@@ -136,17 +149,16 @@ def browser_config(driver):
 
 
 def generate_random_string(
-    length=8, charset="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()",
+    length=8,
+    charset="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()",
 ):
-    """Randomly pick chars from an alphabet
-    """
+    """Randomly pick chars from an alphabet"""
 
     return "".join(secrets.choice(charset) for i in range(length))
 
 
 def generate_content_name():
-    """Generate random application name
-    """
+    """Generate random application name"""
 
     # start with a letter for safety
 
@@ -160,8 +172,7 @@ def generate_content_name():
 
 @pytest.fixture(scope="function")
 def notebook(data_dir, notebooks_dir):
-    """Create a new, never deployed notebook
-    """
+    """Create a new, never deployed notebook"""
 
     # file that will be used to generate the new notebook
     template_path = os.path.join(data_dir, "spiro.ipynb")

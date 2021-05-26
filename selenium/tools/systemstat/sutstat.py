@@ -14,8 +14,7 @@ class SutStat(systemstat.SystemStat):
         self.logger.info("url: {}".format(url))
 
     def is_ready(self):
-        """check if the system is ready (accepting requests)
-        """
+        """check if the system is ready (accepting requests)"""
 
         ping_url = self._url + "/"
 

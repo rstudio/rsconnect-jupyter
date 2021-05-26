@@ -16,8 +16,7 @@ pytestmark = [
 class TestPublishStatic(object):
     @pytest.fixture(autouse=True)
     def setup(self, browser_config, jupyter_url, notebook, connect_url):
-        """Navigate to the front page
-        """
+        """Navigate to the front page"""
 
         self.notebook = notebook
 
@@ -28,8 +27,7 @@ class TestPublishStatic(object):
         MainToolBar().rsconnect_publish.click()
 
     def test_publish_static(self, connect_url):
-        """Publish a static document
-        """
+        """Publish a static document"""
         pf = PublishContentForm()
         # dialog is racy with event setup
         sleep(1)

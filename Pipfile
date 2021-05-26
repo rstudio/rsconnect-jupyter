@@ -19,9 +19,15 @@ wheel = "*"
 [packages]
 nbconvert = ">=5.0"
 nbformat = "*"
-notebook = "*"
+notebook = ">=6.1.5"
 rsconnect-python = ">=1.5.0"
 six = "*"
+# Dependabot fixes
+py = ">=1.10.0"
+Pygments = ">=2.7.4"
+jinja2 = ">=2.11.3"
+bleach = ">=3.3.0"
+cryptography = ">=3.2"
 
 [pipenv]
 allow_prereleases = true
