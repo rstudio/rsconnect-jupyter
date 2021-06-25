@@ -448,7 +448,7 @@ define([
                         files: files,
                         disable_tls_check: entry.disableTLSCheck || false,
                         cadata: self.getCAData(entry.server),
-                        no_input: entry.no_input,
+                        no_input: entry.no_input
                     };
 
                     var xhr = Utils.ajax({
