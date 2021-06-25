@@ -172,6 +172,24 @@ define([
     };
   }
 
+  // function bindCheckbox(id) {
+  //   // save/restore value in server settings
+  //   var $box = $('#' + id.replace('_', '-'));
+
+  //   if (selectedEntryId) {
+  //     var updatedEntry = config.servers[selectedEntryId];
+  //     $box.prop('checked', updatedEntry[id]);
+  //   }
+
+  //   $box.on('change', function() {
+  //     if (selectedEntryId) {
+  //       var innerEntry = config.servers[selectedEntryId];
+  //       innerEntry[id] = $box.prop('checked');
+  //     }
+  //     updateCheckboxStates();
+  //   });
+  // }
+
   /**
     * addValidationMarkup adds validation hints to an element
     * @param {Boolean} valid when true, validation hints are not added
@@ -1067,6 +1085,10 @@ define([
         '            <span class="help-block"></span>',
         '        </div>',
         '    </div>',
+        '    <div id="hide-input">',
+        '      <input type="checkbox" id="no_input" name="no_input" value="no_input">',
+        '      <label for="no_input"> Hide code cells in output </label><br></br>',
+        '    </div>',
         '    <div id="add-files">',
         '      <label for="rsc-add-files" id="rsc-add-files-label" class="rsc-label">Additional Files</label>',
         '      <button id="rsc-add-files" class="btn btn-default">Select Files...</button>',
@@ -1345,7 +1367,8 @@ define([
 
         function bindCheckbox(id) {
           // save/restore value in server settings
-          var $box = $('#' + id.replace('_', '-'));
+          // var $box = $('#' + id.replace('_', '-'));
+          var $box = $('#' + id);
 
           if (selectedEntryId) {
             var updatedEntry = config.servers[selectedEntryId];
@@ -1360,8 +1383,9 @@ define([
             updateCheckboxStates();
           });
         }
-        bindCheckbox('include_files');
-        bindCheckbox('include_subdirs');
+        // bindCheckbox('include_files');
+        // bindCheckbox('include_subdirs');
+        bindCheckbox('no_input');
 
         // setup app mode choices help icon
         (function() {
@@ -1790,7 +1814,6 @@ define([
     // lazily load the config when clicked since Jupyter's init
     // function is racy w.r.t. loading of notebook metadata
     maybeCreateConfig();
-
     closeMenu();
 
     // save before publishing so the server can pick up changes
