@@ -172,24 +172,6 @@ define([
     };
   }
 
-  // function bindCheckbox(id) {
-  //   // save/restore value in server settings
-  //   var $box = $('#' + id.replace('_', '-'));
-
-  //   if (selectedEntryId) {
-  //     var updatedEntry = config.servers[selectedEntryId];
-  //     $box.prop('checked', updatedEntry[id]);
-  //   }
-
-  //   $box.on('change', function() {
-  //     if (selectedEntryId) {
-  //       var innerEntry = config.servers[selectedEntryId];
-  //       innerEntry[id] = $box.prop('checked');
-  //     }
-  //     updateCheckboxStates();
-  //   });
-  // }
-
   /**
     * addValidationMarkup adds validation hints to an element
     * @param {Boolean} valid when true, validation hints are not added
