@@ -21,9 +21,9 @@ the [Installation in Jupyterhub](#installation-in-jupyterhub) section below.
 the [RStudio Server Pro documentation on Jupyter Notebooks](https://docs.rstudio.com/rsp/integration/jupyter-standalone/#4-install-jupyter-notebooks-jupyterlab-and-python-packages)
 for instructions on installing the plugin to the right location.
 - Otherwise, we recommend using Jupyter within a virtual environment using
-`virtualenv`. See the [Running Jupyter in a `virtualenv`](#running-jupyter-in-a-virtualenv), shown below,  for instructions
+`virtualenv`. See the [Running Jupyter in a virtualenv](#running-jupyter-in-a-virtualenv), shown below,  for instructions
 on setting up a `virtualenv`, or read more at the
-[`virtualenv` documentation](https://virtualenv.pypa.io/en/latest/).
+[virtualenv documentation](https://virtualenv.pypa.io/en/latest/).
 
 The following commands should be run after activating the Python environment where you plan to use `jupyter`.
 
@@ -51,7 +51,7 @@ The following commands should be run after activating the Python environment whe
     - In order to deploy content, you will need at least the [rsconnect-python](https://github.com/rstudio/rsconnect-python) package in every kernel you plan to deploy from.
     - If you run into an issue during installation, please let us know by filing a bug [here](https://github.com/rstudio/rsconnect-jupyter/issues).
   
-### Running Jupyter in a `virtualenv`
+### Running Jupyter in a virtualenv
 
 - These commands create and activate a `virtualenv` at `/my/path`:
   <div class="code-title">Terminal</div>
@@ -117,11 +117,11 @@ You have multiple options in this case, depending on your needs:
  RStudio Connect will still be encrypted, but you will not be able to verify the
  identity of the RStudio Connect server.
 
-<img src="images/add-dialog.png" class="inline" alt="initial dialog that prompts for the location of RStudio Connect">
+<img src="images/add-dialog.png" class="block" alt="initial dialog that prompts for the location of RStudio Connect">
 
 ### Publishing options
 
-<img src="images/manage.png" class="inline" alt="publish dialog">
+<img src="images/manage.png" class="block" alt="publish dialog">
 
 There are two different publication modes. Selecting **Publish finished document only** will 
 publish an HTML snapshot of the notebook to RStudio Connect. HTML snapshots are static and 
@@ -158,12 +158,12 @@ directory must have a valid `manifest.json`. Python content should also have
 some kind of environment file (i.e.: `requirements.txt`) in order to be able
 to restore the package set in your current environment.
 
-<img src="images/deploy-options.png" class="inline" alt="Deployment drop-down
+<img src="images/deploy-options.png" class="block" alt="Deployment drop-down
 menu showing "Publish to Connect" and "Create Manifest for git Publishing>
 
 To begin, select `Create Manifest for git Publishing`.
 
-<img src="images/git-backed.png" class="inline" alt="Dialog titled "Create Manifest" explaining the manifest creation process with "Cancel" and "Create Manifest" options">
+<img src="images/git-backed.png" class="block" alt="Dialog titled "Create Manifest" explaining the manifest creation process with "Cancel" and "Create Manifest" options">
 
 When you click **Create Manifest**, one of the following will happen:
 
@@ -179,7 +179,7 @@ For more information on git publishing, see the
 If content that matches your notebook's title is found on RStudio Connect, you
 may choose to overwrite the existing content or create new content.
 
-<img src="images/overwrite.png" class="inline" alt="dialog that prompts for overwriting or publishing new content">
+<img src="images/overwrite.png" class="block" alt="dialog that prompts for overwriting or publishing new content">
 
 - Choosing **New location** creates a new document in RStudio Connect.
 - You can choose either publication mode:
@@ -193,7 +193,7 @@ shown in toolbar. Clicking the notification will open the published
 document in the RStudio Connect server you selected in the previous
 dialog.
 
-<img src="images/published.gif" class="inline" alt="notification that shows the notebook was published successfully">
+<img src="images/published.gif" class="block" alt="notification that shows the notebook was published successfully">
 
 ## Collaboration
 
@@ -239,17 +239,17 @@ ARG REPOSITORY=https://s3.amazonaws.com/rstudio-rsconnect-jupyter
 
 RUN wget ${REPOSITORY}/rsconnect_jupyter-${VERSION}-py2.py3-none-any.whl
 RUN pip install rsconnect_jupyter-${VERSION}-py2.py3-none-any.whl && \
-	jupyter-nbextension install --sys-prefix --py rsconnect_jupyter && \
-	jupyter-nbextension enable --sys-prefix --py rsconnect_jupyter && \
-	jupyter-serverextension enable --sys-prefix --py rsconnect_jupyter
+    jupyter-nbextension install --sys-prefix --py rsconnect_jupyter && \
+    jupyter-nbextension enable --sys-prefix --py rsconnect_jupyter && \
+    jupyter-serverextension enable --sys-prefix --py rsconnect_jupyter
 
 # create test users
 RUN useradd -m -s /bin/bash user1 && \
-	useradd -m -s /bin/bash user2 && \
-	useradd -m -s /bin/bash user3 && \
-	bash -c 'echo -en "password\npassword" | passwd user1' && \
-	bash -c 'echo -en "password\npassword" | passwd user2' && \
-	bash -c 'echo -en "password\npassword" | passwd user3'
+    useradd -m -s /bin/bash user2 && \
+    useradd -m -s /bin/bash user3 && \
+    bash -c 'echo -en "password\npassword" | passwd user1' && \
+    bash -c 'echo -en "password\npassword" | passwd user2' && \
+    bash -c 'echo -en "password\npassword" | passwd user3'
 
 CMD ["jupyterhub"]
 ```
