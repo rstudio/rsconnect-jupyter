@@ -239,9 +239,9 @@ ARG REPOSITORY=https://s3.amazonaws.com/rstudio-rsconnect-jupyter
 
 RUN wget ${REPOSITORY}/rsconnect_jupyter-${VERSION}-py2.py3-none-any.whl
 RUN pip install rsconnect_jupyter-${VERSION}-py2.py3-none-any.whl && \
-		jupyter-nbextension install --sys-prefix --py rsconnect_jupyter && \
-		jupyter-nbextension enable --sys-prefix --py rsconnect_jupyter && \
-		jupyter-serverextension enable --sys-prefix --py rsconnect_jupyter
+	jupyter-nbextension install --sys-prefix --py rsconnect_jupyter && \
+	jupyter-nbextension enable --sys-prefix --py rsconnect_jupyter && \
+	jupyter-serverextension enable --sys-prefix --py rsconnect_jupyter
 
 # create test users
 RUN useradd -m -s /bin/bash user1 && \
