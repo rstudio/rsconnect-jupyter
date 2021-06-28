@@ -245,11 +245,11 @@ RUN pip install rsconnect_jupyter-${VERSION}-py2.py3-none-any.whl && \
 
 # create test users
 RUN useradd -m -s /bin/bash user1 && \
-		useradd -m -s /bin/bash user2 && \
-		useradd -m -s /bin/bash user3 && \
-		bash -c 'echo -en "password\npassword" | passwd user1' && \
-		bash -c 'echo -en "password\npassword" | passwd user2' && \
-		bash -c 'echo -en "password\npassword" | passwd user3'
+	useradd -m -s /bin/bash user2 && \
+	useradd -m -s /bin/bash user3 && \
+	bash -c 'echo -en "password\npassword" | passwd user1' && \
+	bash -c 'echo -en "password\npassword" | passwd user2' && \
+	bash -c 'echo -en "password\npassword" | passwd user3'
 
 CMD ["jupyterhub"]
 ```
