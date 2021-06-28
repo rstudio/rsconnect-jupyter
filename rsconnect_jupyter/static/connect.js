@@ -1071,6 +1071,10 @@ define([
         '      <input type="checkbox" id="no_input" name="no_input" value="no_input">',
         '      <label for="no_input"> Hide code cells in output </label><br></br>',
         '    </div>',
+        '    <div id="hide-tag">',
+        '      <input type="checkbox" id="no_tag_input" name="no_tag_input" value="no_tag_input">',
+        '      <label for="no_tag_input"> Hide input cells with the "remove_input" tag </label><br></br>',             
+        '    </div>',        
         '    <div id="add-files">',
         '      <label for="rsc-add-files" id="rsc-add-files-label" class="rsc-label">Additional Files</label>',
         '      <button id="rsc-add-files" class="btn btn-default">Select Files...</button>',
@@ -1368,6 +1372,7 @@ define([
         // bindCheckbox('include_files');
         // bindCheckbox('include_subdirs');
         bindCheckbox('no_input');
+        bindCheckbox('no_tag_input');
 
         // setup app mode choices help icon
         (function() {
