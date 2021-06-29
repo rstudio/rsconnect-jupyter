@@ -165,7 +165,9 @@ class EndpointHandler(APIHandler):
 
             if app_mode == "static":
                 try:
-                    bundle = make_notebook_html_bundle(os_path, sys.executable, no_input=no_input, no_tag_input=no_tag_input)
+                    bundle = make_notebook_html_bundle(
+                        os_path, sys.executable, no_input=no_input, no_tag_input=no_tag_input
+                    )
                 except Exception as exc:
                     self.log.exception("Bundle creation failed")
                     raise web.HTTPError(500, u"Bundle creation failed: %s" % exc)
@@ -175,7 +177,11 @@ class EndpointHandler(APIHandler):
 
                 try:
                     bundle = make_notebook_source_bundle(
-                        os_path, Environment(**environment_dict), extra_files, no_input=no_input, no_tag_input=no_tag_input
+                        os_path,
+                        Environment(**environment_dict),
+                        extra_files,
+                        no_input=no_input,
+                        no_tag_input=no_tag_input,
                     )
                 except Exception as exc:
                     self.log.exception("Bundle creation failed")
