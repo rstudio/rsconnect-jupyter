@@ -1069,7 +1069,7 @@ define([
         '    </div>',
         '    <div id="hide-input">',
         '      <input type="checkbox" id="no_input" name="no_input" value="no_input">',
-        '      <label for="no_input"> Hide code cells in output </label><br></br>',
+        '      <label for="no_input"> Hide all input cells </label><br></br>',
         '    </div>',
         '    <div id="hide-tag">',
         '      <input type="checkbox" id="no_tag_input" name="no_tag_input" value="no_tag_input">',
