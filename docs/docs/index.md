@@ -15,42 +15,107 @@
 
 ## Installation
 
-- If you are installing `rsconnect-jupyter` for use in Jupyterhub, please see
-the [Installation in Jupyterhub](#installation-in-jupyterhub) section below.
+The installation method depends on your Python environment that you are installing the `rsconnect-jupyter` package into.
+
+This documentation covers three method:
+
+- [Installing in JupyterHub](#installing-in-jupyterhub)
+- [Installing to Jupyter running on RStudio Workbench](#installing-to-jupyter-running-on-rstudio-workbench)
+- [Installing Jupyter within a virtual environment](#installing-jupyter-within-a-virtual-environment)
+
+Please skip to the installation section below that is best for your environment.
+
+
+### Installing in JupyterHub
+
+In JupyterHub, follow these directions to install the
+`rsconnect-jupyter` package into the Python environment where the Jupyter
+notebook server and kernel are installed:
+
+
+--8<-- "snippets/python_pkg.md"
+
+Typically those will be the same
+environment. If you've configured separate kernel environments, install the
+`rsconnect-jupyter` package in the notebook server environment as well as each
+kernel environment.
+
+The exact install location depends on your Jupyterhub configuration.
+
+#### JupyterHub Example Configuration
+
+This section presents a simple working example of a Jupyterhub configuration
+with `rsconnect-jupyter` installed.
+
+??? example "Docker Example"
+    This example uses Docker, but you can install the `rsconnect-jupyter` package in
+    any Jupyterhub installation. Docker is not required.
+
+    Example Dockerfile:
+
+    <p class="code-title">Dockerfile</p>
+    ```dockerfile
+    FROM jupyterhub/jupyterhub:0.9.4
+
+    # Install Jupyter notebook into the existing base conda environment
+    RUN conda install notebook
+
+    # Download and install rsconnect-jupyter in the same environment
+    # Update this to specify the desired version of the rsconnect-jupyter package,
+    # or pass `--build-arg VERSION=...` to docker build.
+    ARG VERSION=RSCONNECT_VERSION
+    ARG REPOSITORY=https://s3.amazonaws.com/rstudio-rsconnect-jupyter
+
+    RUN wget ${REPOSITORY}/rsconnect_jupyter-${VERSION}-py2.py3-none-any.whl
+    RUN pip install rsconnect_jupyter-${VERSION}-py2.py3-none-any.whl && \
+      jupyter-nbextension install --sys-prefix --py rsconnect_jupyter && \
+      jupyter-nbextension enable --sys-prefix --py rsconnect_jupyter && \
+      jupyter-serverextension enable --sys-prefix --py rsconnect_jupyter
+
+    # create test users
+    RUN useradd -m -s /bin/bash user1 && \
+      useradd -m -s /bin/bash user2 && \
+      useradd -m -s /bin/bash user3 && \
+      bash -c 'echo -en "password\npassword" | passwd user1' && \
+      bash -c 'echo -en "password\npassword" | passwd user2' && \
+      bash -c 'echo -en "password\npassword" | passwd user3'
+
+    CMD ["jupyterhub"]
+    ```
+
+    Run these commands to build and start the container:
+
+    <p class="code-title">Terminal</p>
+    ```bash
+    docker build -t jupyterhub:rsconnect-jupyter .
+    docker run --rm -p 8000:8000 --name jupyterhub jupyterhub:rsconnect-jupyter
+    ```
+
+    Connect to Jupyterhub on http://localhost:8000 and log in as one of the test
+    users. From there, you can create a notebook and publish it to RStudio Connect.
+    Note that the current Jupyterhub docker image uses Python 3.6.5, so you will
+    need a compatible Python version installed on your RStudio Connect server.
+
+---
+
+### Installing to Jupyter running on RStudio Workbench
+
 - If you are installing `rsconnect-jupyter` to Jupyter running on RStudio Server Pro, see
 the [RStudio Server Pro documentation on Jupyter Notebooks](https://docs.rstudio.com/rsp/integration/jupyter-standalone/#4-install-jupyter-notebooks-jupyterlab-and-python-packages)
 for instructions on installing the plugin to the right location.
+
+Once you complete the installation instructions, please return to this document for additional information such as upgrading or usage instructions.
+
+--- 
+
+### Installing Jupyter within a virtual environment
+
 - Otherwise, we recommend using Jupyter within a virtual environment using
 `virtualenv`. See the [Running Jupyter in a virtualenv](#running-jupyter-in-a-virtualenv), shown below,  for instructions
 on setting up a `virtualenv`, or read more at the
 [virtualenv documentation](https://virtualenv.pypa.io/en/latest/).
 
-The following commands should be run after activating the Python environment where you plan to use `jupyter`.
 
-- Install the `rsconnect-jupyter` package with the following command:
-  <div class="code-title">Terminal</div>
-  ```bash
-  pip install rsconnect_jupyter
-  ```
-
-- Enable the `rsconnect-jupyter` extension with the following commands:
-  <div class="code-title">Terminal</div>
-  ```bash
-  # Install `rsconnect-jupyter` as a jupyter extension
-  jupyter-nbextension install --sys-prefix --py rsconnect_jupyter
-
-  # Enable JavaScript extension
-  jupyter-nbextension enable --sys-prefix --py rsconnect_jupyter
-
-  # Enable Python extension
-  jupyter-serverextension enable --sys-prefix --py rsconnect_jupyter
-  ```
-
-!!! note
-    - The above commands only need to be run once when installing `rsconnect_jupyter`.
-    - In order to deploy content, you will need at least the [rsconnect-python](https://github.com/rstudio/rsconnect-python) package in every kernel you plan to deploy from.
-    - If you run into an issue during installation, please let us know by filing a bug [here](https://github.com/rstudio/rsconnect-jupyter/issues).
-  
 ### Running Jupyter in a virtualenv
 
 - These commands create and activate a `virtualenv` at `/my/path`:
@@ -70,7 +135,9 @@ The following commands should be run after activating the Python environment whe
   pip install jupyter
   ```
 
-- [Install rsconnect-python](#installation) with your virtual environment active to install and activate the plugin for that copy of Jupyter.
+- Install rsconnect-python with your virtual environment active to install and activate the plugin for that copy of Jupyter:
+
+    --8<-- "snippets/python_pkg.md"
 
     !!! note
         Be sure to run Jupyter from this virtual environment, not from
@@ -203,69 +270,7 @@ content location to publish to if the notebook title is the same.
 
 You may share notebooks if appropriate.
 
-## Installation in JupyterHub
 
-In JupyterHub, follow the directions [above](#installation) to install the
-`rsconnect-jupyter` package into the Python environment where the Jupyter
-notebook server and kernel are installed. Typically those will be the same
-environment. If you've configured separate kernel environments, install the
-`rsconnect-jupyter` package in the notebook server environment as well as each
-kernel environment.
-
-The exact install location depends on your Jupyterhub configuration.
-
-### JupyterHub Example Configuration
-
-This section presents a simple working example of a Jupyterhub configuration
-with `rsconnect-jupyter` installed.
-
-This example uses Docker, but you can install the `rsconnect-jupyter` package in
-any Jupyterhub installation. Docker is not required.
-
-Example Dockerfile:
-
-<p class="code-title">Dockerfile</p>
-```dockerfile
-FROM jupyterhub/jupyterhub:0.9.4
-
-# Install Jupyter notebook into the existing base conda environment
-RUN conda install notebook
-
-# Download and install rsconnect-jupyter in the same environment
-# Update this to specify the desired version of the rsconnect-jupyter package,
-# or pass `--build-arg VERSION=...` to docker build.
-ARG VERSION=RSCONNECT_VERSION
-ARG REPOSITORY=https://s3.amazonaws.com/rstudio-rsconnect-jupyter
-
-RUN wget ${REPOSITORY}/rsconnect_jupyter-${VERSION}-py2.py3-none-any.whl
-RUN pip install rsconnect_jupyter-${VERSION}-py2.py3-none-any.whl && \
-	jupyter-nbextension install --sys-prefix --py rsconnect_jupyter && \
-	jupyter-nbextension enable --sys-prefix --py rsconnect_jupyter && \
-	jupyter-serverextension enable --sys-prefix --py rsconnect_jupyter
-
-# create test users
-RUN useradd -m -s /bin/bash user1 && \
-	useradd -m -s /bin/bash user2 && \
-	useradd -m -s /bin/bash user3 && \
-	bash -c 'echo -en "password\npassword" | passwd user1' && \
-	bash -c 'echo -en "password\npassword" | passwd user2' && \
-	bash -c 'echo -en "password\npassword" | passwd user3'
-
-CMD ["jupyterhub"]
-```
-
-Run these commands to build and start the container:
-
-<p class="code-title">Terminal</p>
-```bash
-docker build -t jupyterhub:rsconnect-jupyter .
-docker run --rm -p 8000:8000 --name jupyterhub jupyterhub:rsconnect-jupyter
-```
-
-Connect to Jupyterhub on http://localhost:8000 and log in as one of the test
-users. From there, you can create a notebook and publish it to RStudio Connect.
-Note that the current Jupyterhub docker image uses Python 3.6.5, so you will
-need a compatible Python version installed on your RStudio Connect server.
 
 ## Uninstalling
 
