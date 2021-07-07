@@ -15,7 +15,7 @@ nav:
 - 'Usage': 'usage.md'
 - 'Collaboration': 'collaboration.md'
 - 'Uninstalling': 'uninstalling.md'
-- 'Addition Information': 'additional-info.md'
+- 'Additional Information': 'additional-info.md'
 
 markdown_extensions:
   - admonition
