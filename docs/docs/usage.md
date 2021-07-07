@@ -30,11 +30,11 @@ You have multiple options in this case, depending on your needs:
  RStudio Connect will still be encrypted, but you will not be able to verify the
  identity of the RStudio Connect server.
 
-<img src="../images/add-dialog.png" class="block" alt="initial dialog that prompts for the location of RStudio Connect">
+<img class="border" src="../images/add-dialog.png" class="block" alt="initial dialog that prompts for the location of RStudio Connect">
 
 ## Publishing options
 
-<img src="../images/manage.png" class="block" alt="publish dialog">
+<img class="border" src="../images/manage.png" class="block" alt="publish dialog">
 
 There are two different publication modes. Selecting **Publish finished document only** will 
 publish an HTML snapshot of the notebook to RStudio Connect. HTML snapshots are static and 
@@ -71,12 +71,12 @@ directory must have a valid `manifest.json`. Python content should also have
 some kind of environment file (i.e.: `requirements.txt`) in order to be able
 to restore the package set in your current environment.
 
-<img src="../images/deploy-options.png" class="block" alt="Deployment drop-down
+<img class="border" src="../images/deploy-options.png" class="block" alt="Deployment drop-down
 menu showing "Publish to Connect" and "Create Manifest for git Publishing>
 
 To begin, select `Create Manifest for git Publishing`.
 
-<img src="../images/git-backed.png" class="block" alt="Dialog titled "Create Manifest" explaining the manifest creation process with "Cancel" and "Create Manifest" options">
+<img class="border" src="../images/git-backed.png" class="block" alt="Dialog titled "Create Manifest" explaining the manifest creation process with "Cancel" and "Create Manifest" options">
 
 When you click **Create Manifest**, one of the following will happen:
 
@@ -92,7 +92,7 @@ For more information on git publishing, see the
 If content that matches your notebook's title is found on RStudio Connect, you
 may choose to overwrite the existing content or create new content.
 
-<img src="../images/overwrite.png" class="block" alt="dialog that prompts for overwriting or publishing new content">
+<img class="border" src="../images/overwrite.png" class="block" alt="dialog that prompts for overwriting or publishing new content">
 
 - Choosing **New location** creates a new document in RStudio Connect.
 - You can choose either publication mode:
@@ -106,4 +106,4 @@ shown in toolbar. Clicking the notification will open the published
 document in the RStudio Connect server you selected in the previous
 dialog.
 
-<img src="../images/published.gif" class="block" alt="notification that shows the notebook was published successfully">
+<img class="border" src="../images/published.gif" class="block" alt="notification that shows the notebook was published successfully">

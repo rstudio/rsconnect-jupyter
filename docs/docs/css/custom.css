@@ -370,7 +370,17 @@ figure.driver-card {
     list-style-type: square;
 }
 
+/* Image Styles
+*/
 
+img.border {
+    border: solid 2px #f1f1f1;
+    margin-top: 10px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 25px;
+    display: block !important;
+}
 
 /* Admonition and details */
 .md-typeset .admonition,
