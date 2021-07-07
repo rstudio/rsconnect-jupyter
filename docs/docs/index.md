@@ -104,14 +104,13 @@ for instructions on installing the plugin to the right location.
 
 - Once you complete the installation instructions, please return to this document for additional information such as [Upgrading](#upgrading) or [Usage](#usage) instructions.
 
---- 
+---
 
 ### Installing Jupyter within a virtual environment
 
 - To install and use Jupyter within a virtual environment using
 `virtualenv`, follow the [Running Jupyter in a virtualenv](#running-jupyter-in-a-virtualenv), shown below or read more at the
 [Virtualenv](https://virtualenv.pypa.io/en/latest/) documentation.
-
 
 ### Running Jupyter in a virtualenv
 
@@ -123,7 +122,7 @@ for instructions on installing the plugin to the right location.
   source /my/path/bin/activate
   ```
 
-!!! tip 
+!!! tip
     Running `source /my/path/bin/activate` activates the virtual environment. While the `virtualenv` is active, Python-related commands like `python`, `pip`, and `jupyter` will use to copies located inside the virtual environment. You can check which copy of `python` you're using by running `which python`.
 
 - Install Jupyter inside the `virtualenv`:
@@ -267,8 +266,6 @@ content location to publish to if the notebook title is the same.
 
 You may share notebooks if appropriate.
 
-
-
 ## Uninstalling
 
 - First disable and remove the `rsconnect-jupyter` notebook extension:
@@ -287,8 +284,7 @@ You may share notebooks if appropriate.
   pip uninstall rsconnect_jupyter
   ```
 
-
 ## Related Documentation
 
 For a step-by-step guide for creating and publishing a new Jupyter Notebook to
-RStudio Connect, view our [How To](https://docs.rstudio.com/how-to-guides/users/basic/publish-jupyter-notebook/).
+RStudio Connect, view our [How To Publish a Jupyter Notebook to RStudio Connect](https://docs.rstudio.com/how-to-guides/users/basic/publish-jupyter-notebook/).
