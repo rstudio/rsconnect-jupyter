@@ -3,7 +3,7 @@
 To publish to RStudio Connect:
 
 - Open a notebook.
-- Click the <img class="icon"; src="images/publish-icon.gif" alt="blue toolbar icon used for publishing the notebook"> icon (blue publish icon) and select `Publish to RStudio Connect`
+- Click the <img class="icon"; src="../images/publish-icon.gif" alt="blue toolbar icon used for publishing the notebook"> icon (blue publish icon) and select `Publish to RStudio Connect`
 to publish the current notebook to RStudio Connect.
 
 ## Entering server information
