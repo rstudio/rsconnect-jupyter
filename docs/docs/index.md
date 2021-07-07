@@ -23,7 +23,7 @@ This documentation covers three methods:
 - [Installing `rsconnect-jupyter` to Jupyter running on RStudio Workbench](#installing-to-jupyter-running-on-rstudio-workbench)
 - [Installing Jupyter within a virtual environment](#installing-jupyter-within-a-virtual-environment)
 
-Please skip to the installation section below that is best for your environment.
+Please navigate to the installation section below that is best for your environment.
 
 ### Installation in JupyterHub
 
@@ -102,7 +102,7 @@ with `rsconnect-jupyter` installed.
 the [RStudio Server Pro documentation on Jupyter Notebooks](https://docs.rstudio.com/rsp/integration/jupyter-standalone/#4-install-jupyter-notebooks-jupyterlab-and-python-packages)
 for instructions on installing the plugin to the right location.
 
-- Once you complete the installation instructions, please return to this document for additional information such as upgrading or usage instructions.
+- Once you complete the installation instructions, please return to this document for additional information such as [Upgrading](#upgrading) or [Usage](#usage) instructions.
 
 --- 
 
