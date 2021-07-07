@@ -11,7 +11,7 @@ to publish the current notebook to RStudio Connect.
 - If this is your first time publishing a notebook, you will be
 prompted to enter the location and a nickname for the RStudio Connect server.
 - You will also be prompted to enter your API Key. See the [RStudio Connect User
-Guide](http://docs.rstudio.com/connect/user/api-keys.html) for
+Guide](http://docs.rstudio.com/connect/user/api-keys) for
 instructions on generating API Keys for your user.
 - When you click the **Add Server** button, `rsconnect-jupyter` will send a request to the RStudio Connect server to verify that it can be reached via the requested URL and that the API key is valid.
 
