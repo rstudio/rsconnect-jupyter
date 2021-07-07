@@ -10,8 +10,12 @@ google_analytics:
   - 'auto'
 
 nav:
-- '': 'index.md'
-
+- 'Installing': 'index.md'
+- 'Upgrading': 'upgrading.md'
+- 'Usage': 'usage.md'
+- 'Collaboration': 'collaboration.md'
+- 'Uninstalling': 'uninstalling.md'
+- 'Addition Information': 'additional-info.md'
 
 markdown_extensions:
   - admonition
