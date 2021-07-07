@@ -20,18 +20,16 @@ The installation method depends on your Python environment that you are installi
 This documentation covers three methods:
 
 - [Installation in JupyterHub](#installing-in-jupyterhub)
-- [Installing to Jupyter running on RStudio Workbench](#installing-to-jupyter-running-on-rstudio-workbench)
+- [Installing `rsconnect-jupyter` to Jupyter running on RStudio Workbench](#installing-to-jupyter-running-on-rstudio-workbench)
 - [Installing Jupyter within a virtual environment](#installing-jupyter-within-a-virtual-environment)
 
 Please skip to the installation section below that is best for your environment.
-
 
 ### Installation in JupyterHub
 
 In JupyterHub, follow these directions to install the
 `rsconnect-jupyter` package into the Python environment where the Jupyter
 notebook server and kernel are installed:
-
 
 --8<-- "snippets/python_pkg.md"
 
