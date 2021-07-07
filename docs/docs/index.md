@@ -108,11 +108,9 @@ for instructions on installing the plugin to the right location.
 
 ### Installing Jupyter within a virtual environment
 
-- To install and use Jupyter within a virtual environment using
-`virtualenv`, follow the [Running Jupyter in a virtualenv](#running-jupyter-in-a-virtualenv), shown below or read more at the
+To install and use Jupyter within a virtual environment using
+`virtualenv`, follow the procedures shown below or learn more using the
 [Virtualenv](https://virtualenv.pypa.io/en/latest/) documentation.
-
-### Running Jupyter in a virtualenv
 
 - These commands create and activate a `virtualenv` at `/my/path`:
   <div class="code-title">Terminal</div>
