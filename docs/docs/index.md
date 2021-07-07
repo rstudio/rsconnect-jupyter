@@ -104,16 +104,15 @@ with `rsconnect-jupyter` installed.
 the [RStudio Server Pro documentation on Jupyter Notebooks](https://docs.rstudio.com/rsp/integration/jupyter-standalone/#4-install-jupyter-notebooks-jupyterlab-and-python-packages)
 for instructions on installing the plugin to the right location.
 
-Once you complete the installation instructions, please return to this document for additional information such as upgrading or usage instructions.
+- Once you complete the installation instructions, please return to this document for additional information such as upgrading or usage instructions.
 
 --- 
 
 ### Installing Jupyter within a virtual environment
 
-- Otherwise, we recommend using Jupyter within a virtual environment using
-`virtualenv`. See the [Running Jupyter in a virtualenv](#running-jupyter-in-a-virtualenv), shown below,  for instructions
-on setting up a `virtualenv`, or read more at the
-[virtualenv documentation](https://virtualenv.pypa.io/en/latest/).
+- To install and use Jupyter within a virtual environment using
+`virtualenv`, follow the [Running Jupyter in a virtualenv](#running-jupyter-in-a-virtualenv), shown below or read more at the
+[Virtualenv](https://virtualenv.pypa.io/en/latest/) documentation.
 
 
 ### Running Jupyter in a virtualenv
@@ -139,18 +138,18 @@ on setting up a `virtualenv`, or read more at the
 
     --8<-- "snippets/python_pkg.md"
 
-    !!! note
-        Be sure to run Jupyter from this virtual environment, not from
-        another installation, or the `rsconnect-python` extension will
-        not be available. To do so, you will need to activate the virtual
-        environment in each new terminal session before you run `jupyter`.
+!!! important
+    Be sure to run Jupyter from this virtual environment, not from
+    another installation, or the `rsconnect-python` extension will
+    not be available. To do so, you will need to activate the virtual
+    environment in each new terminal session before you run `jupyter`.
 
 ## Upgrading
 
 To upgrade `rsconnect-jupyter`:
 
-- First, uninstall the extension.
-- Then, re-install it.
+- First, [uninstall](#uninstalling) the extension.
+- Then, reinstall it.
 
 ## Usage
 
