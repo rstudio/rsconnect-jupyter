@@ -8,6 +8,10 @@ To publish to RStudio Connect:
 - Click the <img class="icon"; src="../images/publish-icon.gif" alt="blue toolbar icon used for publishing the notebook"> icon (blue publish button) and select **Publish to RStudio Connect**
 to publish the current notebook to RStudio Connect.
 
+!!! note
+    This plugin is only for notebooks using Python kernels. Therefore, R notebooks cannot be published using this plugin.
+
+    
 ## Entering server information
 
 - If this is your first time publishing a notebook, you will be
@@ -44,7 +48,6 @@ Connect to recreate the environment and re-run the notebook at a later time.
 - Selecting **Publish finished document only** will 
 publish an HTML snapshot of the notebook to RStudio Connect. HTML snapshots are static and 
 cannot be scheduled or re-run on the RStudio Connect server.
-
 
 <img class="border" src="../images/manage.png" class="block" alt="publish dialog">
 
