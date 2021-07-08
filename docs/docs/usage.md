@@ -1,5 +1,7 @@
 # Usage
 
+## Publish to RStudio Connect
+
 To publish to RStudio Connect:
 
 - Open a Jupyter notebook.
