@@ -28,7 +28,7 @@ You have multiple options in this case, depending on your needs:
  **Upload TLS Certificate Bundle** to upload the bundle to Jupyter, which will verify
  your secure connection to RStudio Connect.
 1. If you cannot obtain the CA bundle, you can disable TLS verification completely
- by selecting the **Disable TLS Certificate Verification** checkbox. Your connection to
+ by selecting the **Disable TLS Certificate Verification** check box. Your connection to
  RStudio Connect will still be encrypted, but you will not be able to verify the
  identity of the RStudio Connect server.
 
