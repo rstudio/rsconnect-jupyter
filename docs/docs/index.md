@@ -4,7 +4,7 @@
 
 ## Requirements
 
-- Python 2.7.9 or Python 3.5.0 and higher
+- Python 2.7.9 or Python 3.5.0, and higher
 - Jupyter Notebook 5.x
 - [pip](https://pypi.org/project/pip/)
 - [wheel](https://pypi.org/project/wheel/)
@@ -19,7 +19,7 @@ The installation method depends on the Python environment that you are installin
 
 !!! note
     The `rsc-jupyter` package is developed for Jupyter Notebook, specifically. Therefore, the package does not work with the JupyterLab development environment.
-   
+
 This documentation covers three methods:
 
 - [Installation in JupyterHub](#installing-in-jupyterhub)
