@@ -22,11 +22,54 @@ The installation method depends on the Python environment that you are installin
 
 This documentation covers three methods:
 
-- [Installation in JupyterHub](#installing-in-jupyterhub)
-- [Installing `rsconnect-jupyter` to Jupyter running on RStudio Workbench](#installing-to-jupyter-running-on-rstudio-workbench)
 - [Installing Jupyter within a virtual environment](#installing-jupyter-within-a-virtual-environment)
+- [Installing `rsconnect-jupyter` to Jupyter running on RStudio Workbench](#installing-to-jupyter-running-on-rstudio-workbench)
+- [Installation in JupyterHub](#installing-in-jupyterhub)
 
 Please navigate to the installation section below that is best for your environment.
+
+### Installing Jupyter within a virtual environment
+
+To install and use Jupyter within a virtual environment using
+`virtualenv`, follow the procedures shown below or learn more using the
+[Virtualenv](https://virtualenv.pypa.io/en/latest/) documentation.
+
+- These commands create and activate a `virtualenv` at `/my/path`:
+  <div class="code-title">Terminal</div>
+  ```bash
+  pip install virtualenv
+  virtualenv /my/path
+  source /my/path/bin/activate
+  ```
+
+!!! tip
+    Running `source /my/path/bin/activate` activates the virtual environment. While the `virtualenv` is active, Python-related commands like `python`, `pip`, and `jupyter` will use to copies located inside the virtual environment. You can check which copy of `python` you're using by running `which python`.
+
+- Install Jupyter inside the `virtualenv`:
+  <div class="code-title">Terminal</div>
+  ```bash
+  pip install jupyter
+  ```
+
+- Install rsconnect-python with your virtual environment active to install and activate the plugin for that copy of Jupyter:
+
+    --8<-- "snippets/python_pkg.md"
+
+!!! important
+    Be sure to run Jupyter from this virtual environment, not from
+    another installation, or the `rsconnect-python` extension will
+    not be available. To do so, you will need to activate the virtual
+    environment in each new terminal session before you run `jupyter`.
+
+### Installing to Jupyter running on RStudio Workbench
+
+- If you are installing `rsconnect-jupyter` to Jupyter running on RStudio Server Pro, see
+the [RStudio Server Pro documentation on Jupyter Notebooks](https://docs.rstudio.com/rsp/integration/jupyter-standalone/#4-install-jupyter-notebooks-jupyterlab-and-python-packages)
+for instructions on installing the plugin to the right location.
+
+- Once you complete the installation instructions, please return to this document for additional information such as [Upgrading](/upgrading) or [Usage](/usage) instructions.
+
+---
 
 ### Installation in JupyterHub
 
@@ -41,11 +84,11 @@ environment. If you've configured separate kernel environments, install the
 `rsconnect-jupyter` package in the notebook server environment as well as each
 kernel environment.
 
-The exact install location depends on your Jupyterhub configuration.
+The exact install location depends on your JupyterHub configuration.
 
 #### JupyterHub Example Configuration
 
-This section presents a simple working example of a Jupyterhub configuration
+This section presents a simple working example of a JupyterHub configuration
 with `rsconnect-jupyter` installed.
 
 ??? example "Docker Example"
@@ -97,47 +140,3 @@ with `rsconnect-jupyter` installed.
     Note that the current Jupyterhub docker image uses Python 3.6.5, so you will
     need a compatible Python version installed on your RStudio Connect server.
 
----
-
-### Installing to Jupyter running on RStudio Workbench
-
-- If you are installing `rsconnect-jupyter` to Jupyter running on RStudio Server Pro, see
-the [RStudio Server Pro documentation on Jupyter Notebooks](https://docs.rstudio.com/rsp/integration/jupyter-standalone/#4-install-jupyter-notebooks-jupyterlab-and-python-packages)
-for instructions on installing the plugin to the right location.
-
-- Once you complete the installation instructions, please return to this document for additional information such as [Upgrading](/upgrading) or [Usage](/usage) instructions.
-
----
-
-### Installing Jupyter within a virtual environment
-
-To install and use Jupyter within a virtual environment using
-`virtualenv`, follow the procedures shown below or learn more using the
-[Virtualenv](https://virtualenv.pypa.io/en/latest/) documentation.
-
-- These commands create and activate a `virtualenv` at `/my/path`:
-  <div class="code-title">Terminal</div>
-  ```bash
-  pip install virtualenv
-  virtualenv /my/path
-  source /my/path/bin/activate
-  ```
-
-!!! tip
-    Running `source /my/path/bin/activate` activates the virtual environment. While the `virtualenv` is active, Python-related commands like `python`, `pip`, and `jupyter` will use to copies located inside the virtual environment. You can check which copy of `python` you're using by running `which python`.
-
-- Install Jupyter inside the `virtualenv`:
-  <div class="code-title">Terminal</div>
-  ```bash
-  pip install jupyter
-  ```
-
-- Install rsconnect-python with your virtual environment active to install and activate the plugin for that copy of Jupyter:
-
-    --8<-- "snippets/python_pkg.md"
-
-!!! important
-    Be sure to run Jupyter from this virtual environment, not from
-    another installation, or the `rsconnect-python` extension will
-    not be available. To do so, you will need to activate the virtual
-    environment in each new terminal session before you run `jupyter`.
