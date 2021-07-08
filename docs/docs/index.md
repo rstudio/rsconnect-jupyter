@@ -15,8 +15,11 @@
 
 ## Installation
 
-The installation method depends on your Python environment that you are installing the `rsconnect-jupyter` package into.
+The installation method depends on the Python environment that you are installing the `rsconnect-jupyter` package into.
 
+!!! note
+    The `rsc-jupyter` package is developed for Jupyter Notebook, specifically. Therefore, the package does not work with the JupyterLab development environment.
+   
 This documentation covers three methods:
 
 - [Installation in JupyterHub](#installing-in-jupyterhub)
