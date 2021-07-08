@@ -61,6 +61,8 @@ To install and use Jupyter within a virtual environment using
     not be available. To do so, you will need to activate the virtual
     environment in each new terminal session before you run `jupyter`.
 
+---
+
 ### Installing to Jupyter running on RStudio Workbench
 
 - If you are installing `rsconnect-jupyter` to Jupyter running on RStudio Server Pro, see
@@ -139,4 +141,3 @@ with `rsconnect-jupyter` installed.
     users. From there, you can create a notebook and publish it to RStudio Connect.
     Note that the current Jupyterhub docker image uses Python 3.6.5, so you will
     need a compatible Python version installed on your RStudio Connect server.
-
