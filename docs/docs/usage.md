@@ -2,8 +2,8 @@
 
 To publish to RStudio Connect:
 
-- Open a notebook.
-- Click the <img class="icon"; src="../images/publish-icon.gif" alt="blue toolbar icon used for publishing the notebook"> icon (blue publish icon) and select `Publish to RStudio Connect`
+- Open a Jupyter notebook.
+- Click the <img class="icon"; src="../images/publish-icon.gif" alt="blue toolbar icon used for publishing the notebook"> icon (blue publish button) and select **Publish to RStudio Connect**
 to publish the current notebook to RStudio Connect.
 
 ## Entering server information
@@ -23,10 +23,10 @@ You have multiple options in this case, depending on your needs:
  Bundle for your RStudio Connect server, ask your Jupyter Administrator if it
  can be added to the trusted system store.
 1. If the CA Bundle cannot be added to the trusted system store, you may select
- `Upload TLS Certificate Bundle` to upload the bundle to Jupyter, which will verify
+ **Upload TLS Certificate Bundle** to upload the bundle to Jupyter, which will verify
  your secure connection to RStudio Connect.
 1. If you cannot obtain the CA bundle, you can disable TLS verification completely
- by selecting the `Disable TLS Certificate Verification` box. Your connection to
+ by selecting the **Disable TLS Certificate Verification** checkbox. Your connection to
  RStudio Connect will still be encrypted, but you will not be able to verify the
  identity of the RStudio Connect server.
 
@@ -34,21 +34,26 @@ You have multiple options in this case, depending on your needs:
 
 ## Publishing options
 
-<img class="border" src="../images/manage.png" class="block" alt="publish dialog">
+There are two different publication modes:
 
-There are two different publication modes. Selecting **Publish finished document only** will 
+- If you select **Publish document with source code**, the notebook file and a list of the Python 
+packages installed in your environment will be sent to RStudio Connect. This enables RStudio 
+Connect to recreate the environment and re-run the notebook at a later time.
+- Selecting **Publish finished document only** will 
 publish an HTML snapshot of the notebook to RStudio Connect. HTML snapshots are static and 
 cannot be scheduled or re-run on the RStudio Connect server.
 
-If you select **Publish document with source code**, the notebook file and a list of the Python 
-packages installed in your environment will be sent to RStudio Connect. This enables RStudio 
-Connect to recreate the environment and re-run the notebook at a later time.
+
+<img class="border" src="../images/manage.png" class="block" alt="publish dialog">
 
 ### Additional Files
 
 If your notebook needs some external file in order to render, add the file using the 
-**Select Files** button. You can select any file within the notebook folder. However,
+**Select Files...** button. You can select any file within the notebook folder. However,
 these files may not be made available to users after render.
+
+<img class="border" src="../images/add-files.png" class="block" alt="publish dialog">
+
 
 ### Environment detection with pip
 
@@ -71,12 +76,12 @@ directory must have a valid `manifest.json`. Python content should also have
 some kind of environment file (i.e.: `requirements.txt`) in order to be able
 to restore the package set in your current environment.
 
+
+
+To begin, click the **Publish** button and select **Create Manifest for git Publishing**.
+
 <img class="border" src="../images/deploy-options.png" class="block" alt="Deployment drop-down
 menu showing "Publish to Connect" and "Create Manifest for git Publishing>
-
-To begin, select `Create Manifest for git Publishing`.
-
-<img class="border" src="../images/git-backed.png" class="block" alt="Dialog titled "Create Manifest" explaining the manifest creation process with "Cancel" and "Create Manifest" options">
 
 When you click **Create Manifest**, one of the following will happen:
 
@@ -84,8 +89,11 @@ When you click **Create Manifest**, one of the following will happen:
 - If they do exist, you will be presented with a message
 informing you of this fact. If you need to regenerate the files, delete them in the Jupyter UI or using the console, then repeat this process.
 
+<img class="border" src="../images/git-backed.png" class="block" alt="Dialog titled "Create Manifest" explaining the manifest creation process with "Cancel" and "Create Manifest" options">
+
+
 For more information on git publishing, see the 
-[RStudio Connect User Guide](https://docs.rstudio.com/connect/user/git-backed.html#git-backed-publishing).
+[RStudio Connect User Guide](https://docs.rstudio.com/connect/user/git-backed#git-backed-publishing).
 
 ## Handling conflicts
 
