@@ -1067,13 +1067,13 @@ define([
         '            <span class="help-block"></span>',
         '        </div>',
         '    </div>',
-        '    <div id="hide-input">',
-        '      <input type="checkbox" id="no_input" name="no_input" value="no_input">',
-        '      <label for="no_input"> Hide all input cells </label><br></br>',
+        '    <div id="hide-all-input">',
+        '      <input type="checkbox" id="hide_all_input" name="hide_all_input" value="hide_all_input">',
+        '      <label for="hide_all_input"> Hide all input code cells </label><br></br>',
         '    </div>',
-        '    <div id="hide-tag">',
-        '      <input type="checkbox" id="no_tag_input" name="no_tag_input" value="no_tag_input">',
-        '      <label for="no_tag_input"> Hide input cells with the "remove_input" tag </label><br></br>',             
+        '    <div id="hide-tagged_input">',
+        '      <input type="checkbox" id="hide_tagged_input" name="hide_tagged_input" value="hide_tagged_input">',
+        '      <label for="hide_tagged_input"> Hide input code cells with the "hide_input" tag </label><br></br>',             
         '    </div>',        
         '    <div id="add-files">',
         '      <label for="rsc-add-files" id="rsc-add-files-label" class="rsc-label">Additional Files</label>',
@@ -1371,8 +1371,8 @@ define([
         }
         // bindCheckbox('include_files');
         // bindCheckbox('include_subdirs');
-        bindCheckbox('no_input');
-        bindCheckbox('no_tag_input');
+        bindCheckbox('hide_all_input');
+        bindCheckbox('hide_tagged_input');
 
         // setup app mode choices help icon
         (function() {

@@ -150,8 +150,8 @@ class EndpointHandler(APIHandler):
             disable_tls_check = data["disable_tls_check"]
             cadata = data.get("cadata", None)
             extra_files = data.get("files", [])
-            no_input = data.get("no_input", None)
-            no_tag_input = data.get("no_tag_input", None)
+            hide_all_input = data.get("hide_all_input", None)
+            hide_tagged_input = data.get("hide_tagged_input", None)
 
             model = self.contents_manager.get(path=nb_path)
             if model["type"] != "notebook":
@@ -166,7 +166,7 @@ class EndpointHandler(APIHandler):
             if app_mode == "static":
                 try:
                     bundle = make_notebook_html_bundle(
-                        os_path, sys.executable, no_input=no_input, no_tag_input=no_tag_input
+                        os_path, sys.executable, hide_all_input=hide_all_input, hide_tagged_input=hide_tagged_input
                     )
                 except Exception as exc:
                     self.log.exception("Bundle creation failed")
@@ -180,8 +180,8 @@ class EndpointHandler(APIHandler):
                         os_path,
                         Environment(**environment_dict),
                         extra_files,
-                        no_input=no_input,
-                        no_tag_input=no_tag_input,
+                        hide_all_input=hide_all_input,
+                        hide_tagged_input=hide_tagged_input,
                     )
                 except Exception as exc:
                     self.log.exception("Bundle creation failed")
