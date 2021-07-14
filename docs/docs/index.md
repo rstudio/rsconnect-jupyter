@@ -57,7 +57,7 @@ To install and use Jupyter within a virtual environment using
 
 !!! important
     Be sure to run Jupyter from this virtual environment, not from
-    another installation, or the `rsconnect-python` extension will
+    another installation, or the `rsconnect-jupyter` extension will
     not be available. To do so, you will need to activate the virtual
     environment in each new terminal session before you run `jupyter`.
 
