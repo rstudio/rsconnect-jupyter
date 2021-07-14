@@ -92,12 +92,12 @@
     background-color:  #4c83b6;
 }
 
-.md-footer-nav {
-    background-color: #fff;
-    color: #000;
+.md-footer {
+    background-color: #fff !important;
+    color: #000  !important;
 }
 
-.md-footer-nav__direction {
+.md-footer__direction {
     color: #000;
     font-size: .65rem;
 }
@@ -117,6 +117,11 @@
 .md-footer-meta.md-typeset a {
     color: #6F6B6B !important;
     font-weight: 400;
+}
+
+.md-footer-nav {
+    background-color: #fff;
+    color: #000;
 }
 
 .md-typeset .tabbed-set>label {
@@ -365,7 +370,17 @@ figure.driver-card {
     list-style-type: square;
 }
 
+/* Image Styles
+*/
 
+img.border {
+    border: solid 2px #f1f1f1;
+    margin-top: 10px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 25px;
+    display: block !important;
+}
 
 /* Admonition and details */
 .md-typeset .admonition,
