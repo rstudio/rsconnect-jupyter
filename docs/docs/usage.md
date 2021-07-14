@@ -24,8 +24,8 @@ If your RStudio Connect server was configured with a self-signed certificate (or
 
 You have multiple options in this case, depending on your needs:
 
-1. If your RStudio Connect Administrator can give you the Certificate Authority (CA)
- Bundle for your RStudio Connect server, ask your Jupyter Administrator if it
+1. If your administrator can give you the Certificate Authority (CA)
+ Bundle for your RStudio Connect server, ask your administrator if it
  can be added to the trusted system store.
 1. If the CA Bundle cannot be added to the trusted system store, you may select
  **Upload TLS Certificate Bundle** to upload the bundle to Jupyter, which will verify
