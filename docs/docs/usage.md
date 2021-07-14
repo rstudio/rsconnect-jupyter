@@ -90,7 +90,7 @@ menu showing "Publish to Connect" and "Create Manifest for git Publishing>
 When you click **Create Manifest**, one of the following will happen:
 
 - If a `manifest.json` and `requirements.txt` file does not exist, they will be generated for the current notebook using your current environment.
-- If they do exist, you will be presented with a message
+- If either file exists, you will be presented with a message
 informing you of this fact. If you need to regenerate the files, delete them in the Jupyter UI or using the console, then repeat this process.
 
 <img class="border" src="../images/git-backed.png" class="block" alt="Dialog titled "Create Manifest" explaining the manifest creation process with "Cancel" and "Create Manifest" options">
