@@ -3,7 +3,7 @@
     - Install the `rsconnect-jupyter` package with the following command:
     <div class="code-title">Terminal</div>
     ```bash
-    pip install rsconnect_jupyter
+    $ pip install rsconnect_jupyter
     ```
 
     - Enable the `rsconnect-jupyter` extension with the following commands:

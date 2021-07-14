@@ -37,7 +37,7 @@ To install and use Jupyter within a virtual environment using
 - These commands create and activate a `virtualenv` at `/my/path`:
   <div class="code-title">Terminal</div>
   ```bash
-  pip install virtualenv
+  $ pip install virtualenv
   virtualenv /my/path
   source /my/path/bin/activate
   ```
@@ -48,10 +48,10 @@ To install and use Jupyter within a virtual environment using
 - Install Jupyter inside the `virtualenv`:
   <div class="code-title">Terminal</div>
   ```bash
-  pip install jupyter
+  $ pip install jupyter
   ```
 
-- Install rsconnect-python with your virtual environment active to install and activate the plugin for that copy of Jupyter:
+- Install rsconnect-jupyter with your virtual environment active to install and activate the plugin for that copy of Jupyter:
 
     --8<-- "snippets/python_pkg.md"
 
