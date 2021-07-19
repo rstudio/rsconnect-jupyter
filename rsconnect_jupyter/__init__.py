@@ -150,8 +150,8 @@ class EndpointHandler(APIHandler):
             disable_tls_check = data["disable_tls_check"]
             cadata = data.get("cadata", None)
             extra_files = data.get("files", [])
-            hide_all_input = data.get("hide_all_input", None)
-            hide_tagged_input = data.get("hide_tagged_input", None)
+            hide_all_input = data.get("hide_all_input", False)
+            hide_tagged_input = data.get("hide_tagged_input", False)
 
             model = self.contents_manager.get(path=nb_path)
             if model["type"] != "notebook":
