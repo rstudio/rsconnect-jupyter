@@ -1073,7 +1073,7 @@ define([
         '    </div>',
         '    <div id="hide-tagged_input">',
         '      <input type="checkbox" id="hide_tagged_input" name="hide_tagged_input" value="hide_tagged_input">',
-        '      <label for="hide_tagged_input"> Hide input code cells with the "hide_input" tag </label><br></br>',             
+        '      <label for="hide_tagged_input"> Hide input code cells with the <span class="code">"hide_input"</span> tag </label><br></br>',             
         '    </div>',        
         '    <div id="add-files">',
         '      <label for="rsc-add-files" id="rsc-add-files-label" class="rsc-label">Additional Files</label>',
