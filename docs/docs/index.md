@@ -69,7 +69,7 @@ To install and use Jupyter within a virtual environment using
 the [RStudio Server Pro documentation on Jupyter Notebooks](https://docs.rstudio.com/rsp/integration/jupyter-standalone/#4-install-jupyter-notebooks-jupyterlab-and-python-packages)
 for instructions on installing the plugin to the right location.
 
-- Once you complete the installation instructions, please return to this document for additional information such as [Upgrading](/upgrading) or [Usage](/usage) instructions.
+- Once you complete the installation instructions, please return to this document for additional information such as [Upgrading](../upgrading) or [Usage](../usage) instructions.
 
 ---
 
