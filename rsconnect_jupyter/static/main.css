@@ -130,3 +130,11 @@ p {
     font-size: .7em;
     text-align: right;
 }
+
+#hide-all-input-wrapper {
+    display:flex;
+}
+
+#hide-tagged-input-wrapper {
+    display:flex;
+}
