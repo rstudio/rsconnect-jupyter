@@ -131,10 +131,7 @@ p {
     text-align: right;
 }
 
-#hide-all-input-wrapper {
-    display:flex;
-}
 
-#hide-tagged-input-wrapper {
+#hide-input-wrapper {
     display:flex;
 }

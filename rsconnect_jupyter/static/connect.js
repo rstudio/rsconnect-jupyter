@@ -1067,18 +1067,17 @@ define([
         '            <span class="help-block"></span>',
         '        </div>',
         '    </div>',
-        '    <div id="hide-all-input-wrapper">',
-        '     <div id="hide-all-input">',
-        '       <input type="checkbox" id="hide_all_input" name="hide_all_input" value="hide_all_input">',
-        '       <label for="hide_all_input"> Hide all input code cells </label>',
-        '     </div>',
-        '    </div>',   
-        '    <div id="hide-tagged-input-wrapper">',
-        '     <div id="hide-tagged-input">',
-        '       <input type="checkbox" id="hide_tagged_input" name="hide_tagged_input" value="hide_tagged_input">',
-        '       <label for="hide_tagged_input"> Hide input code cells with the <span class="code">"hide_input"</span> tag </label>',             
-        '     </div>', 
-        '    </div>',             
+        '    <div id="hide-input-wrapper">',
+        '      <label for="hide-input-wrapper"> Hide Input</label>',        
+        '    </div>',        
+        '    <div id="hide-all-input">',
+        '      <input type="checkbox" id="hide_all_input" name="hide_all_input" value="hide_all_input">',
+        '      <label for="hide_all_input"> Hide all input code cells </label>',
+        '    </div>',
+        '    <div id="hide-tagged-input">',
+        '      <input type="checkbox" id="hide_tagged_input" name="hide_tagged_input" value="hide_tagged_input">',
+        '      <label for="hide_tagged_input"> Hide input code cells with the <span class="code">"hide_input"</span> tag </label>',             
+        '    </div><br>', 
         '    <div id="add-files">',
         '      <label for="rsc-add-files" id="rsc-add-files-label" class="rsc-label">Additional Files</label>',
         '      <button id="rsc-add-files" class="btn btn-default">Select Files...</button>',
@@ -1397,10 +1396,10 @@ define([
           $('#rsc-publish-source > label').append(helpIcon);
         })();
 
-        // setup hide all input help icon
+        // setup hide input help icon
         (function() {
           var msg = 
-            '<a href="https://docs.rstudio.com/rsconnect-jupyter/usage/#hide-all-input" target="_blank">Check hide all input documentation</a>';
+            '<a href="https://docs.rstudio.com/rsconnect-jupyter/usage/#hide-all-input" target="_blank">Hide input documentation</a>';
           
             var helpIcon = $(
             [
@@ -1412,25 +1411,7 @@ define([
             .data('html', true)
             .popover();
 
-          $('#hide-all-input-wrapper').append(helpIcon);
-        })();
-
-        // setup hide tagged input help icon
-        (function() {
-          var msg = 
-            '<a href="https://docs.rstudio.com/rsconnect-jupyter/usage/#hide-tagged-input" target="_blank">Check hide tagged input documentation</a>';
-          
-            var helpIcon = $(
-            [
-              '<a tabindex="0" role="button" data-toggle="popover" data-trigger="focus">',
-              '<i class="fa fa-question-circle rsc-fa-icon"></i>'
-            ].join('')
-          )
-            .data('content', msg)
-            .data('html', true)
-            .popover();
-
-          $('#hide-tagged-input-wrapper').append(helpIcon);
+          $('#hide-input-wrapper').append(helpIcon);
         })();
 
         var form = publishModal.find('form').on('submit', function(e) {
