@@ -26,29 +26,6 @@ jobs:
     - uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - if: ${{ matrix.os != 'macos-latest' }}
-      uses: actions/cache@v1
-      with:
-        path: ~/.cache/pip
-        key: pip-${{ matrix.os }}-py${{ matrix.python-version }}-${{ hashFiles('Pipfile.lock') }}
-        restore-keys: |
-          pip-${{ matrix.os }}-py${{ matrix.python-version }}-${{ hashFiles('Pipfile.lock') }}
-          pip-${{ matrix.os }}-py${{ matrix.python-version }}-
-    - if: ${{ matrix.os == 'macos-latest' }}
-      uses: actions/cache@v1
-      with:
-        path: ~/Library/Caches/pip
-        key: pip-${{ matrix.os }}-py${{ matrix.python-version }}-${{ hashFiles('Pipfile.lock') }}
-        restore-keys: |
-          pip-${{ matrix.os }}-py${{ matrix.python-version }}-${{ hashFiles('Pipfile.lock') }}
-          pip-${{ matrix.os }}-py${{ matrix.python-version }}-
-    - uses: actions/cache@v1
-      with:
-        path: ~/.local/share/virtualenvs
-        key: virtualenvs-${{ matrix.os }}-py${{ matrix.python-version }}-${{ hashFiles('Pipfile.lock') }}
-        restore-keys: |
-          virtualenvs-${{ matrix.os }}-py${{ matrix.python-version }}-${{ hashFiles('Pipfile.lock') }}
-          virtualenvs-${{ matrix.os }}-py${{ matrix.python-version }}-
     - run: echo "PYTHONPATH=${GITHUB_WORKSPACE}" >> $GITHUB_ENV
     - run: make prereqs
     - run: make version
@@ -63,20 +40,6 @@ jobs:
     - uses: actions/setup-python@v2
       with:
         python-version: 3.8.x
-    - uses: actions/cache@v1
-      with:
-        path: ~/.cache/pip
-        key: pip-ubuntu-latest-py3.8-${{ hashFiles('Pipfile.lock') }}
-        restore-keys: |
-          pip-ubuntu-latest-py3.8-${{ hashFiles('Pipfile.lock') }}
-          pip-ubuntu-latest-py3.8-
-    - uses: actions/cache@v1
-      with:
-        path: ~/.local/share/virtualenvs
-        key: virtualenvs-ubuntu-latest-py3.8-${{ hashFiles('Pipfile.lock') }}
-        restore-keys: |
-          virtualenvs-ubuntu-latest-py3.8-${{ hashFiles('Pipfile.lock') }}
-          virtualenvs-ubuntu-latest-py3.8-
     - run: echo "PYTHONPATH=${GITHUB_WORKSPACE}" >> $GITHUB_ENV
     - run: make image3.8
     - run: make -C selenium build
@@ -93,20 +56,6 @@ jobs:
     - uses: actions/setup-python@v2
       with:
         python-version: 3.8.x
-    - uses: actions/cache@v1
-      with:
-        path: ~/.cache/pip
-        key: pip-ubuntu-latest-py3.8-${{ hashFiles('Pipfile.lock') }}
-        restore-keys: |
-          pip-ubuntu-latest-py3.8-${{ hashFiles('Pipfile.lock') }}
-          pip-ubuntu-latest-py3.8-
-    - uses: actions/cache@v1
-      with:
-        path: ~/.local/share/virtualenvs
-        key: virtualenvs-ubuntu-latest-py3.8-${{ hashFiles('Pipfile.lock') }}
-        restore-keys: |
-          virtualenvs-ubuntu-latest-py3.8-${{ hashFiles('Pipfile.lock') }}
-          virtualenvs-ubuntu-latest-py3.8-
     - run: echo "PYTHONPATH=${GITHUB_WORKSPACE}" >> $GITHUB_ENV
     - run: make prereqs
     - run: pipenv clean
