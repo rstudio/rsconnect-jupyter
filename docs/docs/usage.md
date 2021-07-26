@@ -48,7 +48,20 @@ Connect to recreate the environment and re-run the notebook at a later time.
 publish an HTML snapshot of the notebook to RStudio Connect. HTML snapshots are static and 
 cannot be scheduled or re-run on the RStudio Connect server.
 
-<img class="border" src="../images/manage.png" class="block" alt="publish dialog">
+<img class="border" src="../images/rsconnect-jupyter-usage.png" class="block" alt="publish dialog">
+
+### Hide Input
+
+There are two options for hiding input code cells in published Jupyter Notebooks. You can choose to hide all the input code cells, or only hide the cells that have been explicitly tagged. 
+
+To hide only the tagged cells, first enable Tags in the **View > Cell Toolbar** menu:
+
+<img class="border" src="../images/view-celltoolbar-tags.png" class="block" alt="Enable Tags in the Cell Toolbar menu">
+
+Once enabled, tag each cell where you would like to hide the input code. The tag must be named `hide_input`.
+
+<img class="border" src="../images/add-tags.png" class="block" alt="Add the hide_input tag to individual cells">
+
 
 ### Additional Files
 
