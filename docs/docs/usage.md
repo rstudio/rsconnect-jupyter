@@ -58,7 +58,10 @@ To hide only the tagged cells, first enable Tags in the **View > Cell Toolbar** 
 
 <img class="border" src="../images/view-celltoolbar-tags.png" class="block" alt="Enable Tags in the Cell Toolbar menu">
 
-Once enabled, tag each cell where you would like to hide the input code. The tag must be named `hide_input`.
+Once enabled, tag each cell where you would like to hide the input code. The tag must be named `hide_input`:
+
+1. Enter `hide_input` into the text field.
+2. Click **Add tag** to apply the tag to a code cell.
 
 <img class="border" src="../images/add-tags.png" class="block" alt="Add the hide_input tag to individual cells">
 
