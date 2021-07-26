@@ -118,11 +118,11 @@ jobs:
         aws-region: us-east-1
     - if: github.event_name == 'push' && github.ref == 'refs/heads/master'
       run: make sync-latest-docs-to-s3
-    - if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+    - if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags') && (contains(github.ref, 'b') == false)
       uses: aws-actions/configure-aws-credentials@v1
       with:
         aws-access-key-id: ${{ secrets.DOCS_AWS_ID }}
         aws-secret-access-key: ${{ secrets.DOCS_AWS_SECRET }}
         aws-region: us-east-1
-    - if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+    - if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags') && (contains(github.ref, 'b') == false)
       run: make promote-docs-in-s3
