@@ -54,7 +54,7 @@ cannot be scheduled or re-run on the RStudio Connect server.
 
 There are two options for hiding input code cells in published Jupyter Notebooks. You can choose to hide all the input code cells, or only hide the cells that have been explicitly tagged. 
 
-To hide only the tagged cells, first enable Tags in the **View > Cell Toolbar** menu:
+To hide only the tagged cells, first enable Tags in the **View** > **Cell Toolbar** menu:
 
 <img class="border" src="../images/view-celltoolbar-tags.png" class="block" alt="Enable Tags in the Cell Toolbar menu">
 
