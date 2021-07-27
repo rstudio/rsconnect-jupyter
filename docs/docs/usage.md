@@ -52,7 +52,13 @@ cannot be scheduled or re-run on the RStudio Connect server.
 
 ### Hide Input
 
-There are two options for hiding input code cells in published Jupyter Notebooks. You can choose to hide all the input code cells, or only hide the cells that have been explicitly tagged. 
+There are two options for hiding input code cells in Jupyter Notebooks published
+to RStudio Connect:
+
+- Hide all input code cells
+- Hide only selected input code cells
+
+To hide all input code cells, make that selection in the Publish dialog under the **Hide Input** section.
 
 To hide only the tagged cells, first enable Tags in the **View** > **Cell Toolbar** menu:
 
