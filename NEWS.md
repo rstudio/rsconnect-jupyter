@@ -1,4 +1,4 @@
-## Unreleased
+`rsconnect-jupyter` 1.4.2
 --------------------------------------------------------------------------------
 * Added ability to hide all code cells when rendering Jupyter notebooks. 
 * Added ability to selectively hide code cells tagged with 'hide_input' when rendering Jupyter notebooks. 
