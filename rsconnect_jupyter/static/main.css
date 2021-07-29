@@ -130,3 +130,8 @@ p {
     font-size: .7em;
     text-align: right;
 }
+
+
+#hide-input-wrapper {
+    display:flex;
+}
