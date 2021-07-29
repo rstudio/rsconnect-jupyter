@@ -1067,6 +1067,17 @@ define([
         '            <span class="help-block"></span>',
         '        </div>',
         '    </div>',
+        '    <div id="hide-input-wrapper">',
+        '      <label for="hide-input-wrapper"> Hide Input</label>',        
+        '    </div>',        
+        '    <div id="hide-all-input">',
+        '      <input type="checkbox" id="hide_all_input" name="hide_all_input" value="hide_all_input">',
+        '      <label for="hide_all_input"> Hide all input code cells </label>',
+        '    </div>',
+        '    <div id="hide-tagged-input">',
+        '      <input type="checkbox" id="hide_tagged_input" name="hide_tagged_input" value="hide_tagged_input">',
+        '      <label for="hide_tagged_input"> Hide input code cells with the <span class="code">"hide_input"</span> tag </label>',             
+        '    </div><br>', 
         '    <div id="add-files">',
         '      <label for="rsc-add-files" id="rsc-add-files-label" class="rsc-label">Additional Files</label>',
         '      <button id="rsc-add-files" class="btn btn-default">Select Files...</button>',
@@ -1345,7 +1356,8 @@ define([
 
         function bindCheckbox(id) {
           // save/restore value in server settings
-          var $box = $('#' + id.replace('_', '-'));
+          // var $box = $('#' + id.replace('_', '-'));
+          var $box = $('#' + id);
 
           if (selectedEntryId) {
             var updatedEntry = config.servers[selectedEntryId];
@@ -1360,8 +1372,10 @@ define([
             updateCheckboxStates();
           });
         }
-        bindCheckbox('include_files');
-        bindCheckbox('include_subdirs');
+        // bindCheckbox('include_files');
+        // bindCheckbox('include_subdirs');
+        bindCheckbox('hide_all_input');
+        bindCheckbox('hide_tagged_input');
 
         // setup app mode choices help icon
         (function() {
@@ -1380,6 +1394,24 @@ define([
             .popover();
 
           $('#rsc-publish-source > label').append(helpIcon);
+        })();
+
+        // setup hide input help icon
+        (function() {
+          var msg = 
+            'Hiding input code cells results in rendering only the output of code cells on publication. <br> <a href="https://docs.rstudio.com/rsconnect-jupyter/usage/#hide-input" target="_blank">Hide Input Documentation</a>';
+          
+            var helpIcon = $(
+            [
+              '<a tabindex="0" role="button" data-toggle="popover" data-trigger="focus">',
+              '<i class="fa fa-question-circle rsc-fa-icon"></i>'
+            ].join('')
+          )
+            .data('content', msg)
+            .data('html', true)
+            .popover();
+
+          $('#hide-input-wrapper').append(helpIcon);
         })();
 
         var form = publishModal.find('form').on('submit', function(e) {
@@ -1790,7 +1822,6 @@ define([
     // lazily load the config when clicked since Jupyter's init
     // function is racy w.r.t. loading of notebook metadata
     maybeCreateConfig();
-
     closeMenu();
 
     // save before publishing so the server can pick up changes

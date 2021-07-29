@@ -150,6 +150,8 @@ class EndpointHandler(APIHandler):
             disable_tls_check = data["disable_tls_check"]
             cadata = data.get("cadata", None)
             extra_files = data.get("files", [])
+            hide_all_input = data.get("hide_all_input", False)
+            hide_tagged_input = data.get("hide_tagged_input", False)
 
             model = self.contents_manager.get(path=nb_path)
             if model["type"] != "notebook":
@@ -163,7 +165,9 @@ class EndpointHandler(APIHandler):
 
             if app_mode == "static":
                 try:
-                    bundle = make_notebook_html_bundle(os_path, sys.executable)
+                    bundle = make_notebook_html_bundle(
+                        os_path, sys.executable, hide_all_input=hide_all_input, hide_tagged_input=hide_tagged_input
+                    )
                 except Exception as exc:
                     self.log.exception("Bundle creation failed")
                     raise web.HTTPError(500, u"Bundle creation failed: %s" % exc)
@@ -172,7 +176,13 @@ class EndpointHandler(APIHandler):
                     raise web.HTTPError(400, "environment is required for jupyter-static app_mode")
 
                 try:
-                    bundle = make_notebook_source_bundle(os_path, Environment(**environment_dict), extra_files)
+                    bundle = make_notebook_source_bundle(
+                        os_path,
+                        Environment(**environment_dict),
+                        extra_files,
+                        hide_all_input=hide_all_input,
+                        hide_tagged_input=hide_tagged_input,
+                    )
                 except Exception as exc:
                     self.log.exception("Bundle creation failed")
                     raise web.HTTPError(500, u"Bundle creation failed: %s" % exc)
