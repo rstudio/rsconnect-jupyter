@@ -1399,7 +1399,7 @@ define([
         // setup hide input help icon
         (function() {
           var msg = 
-            '<a href="https://docs.rstudio.com/rsconnect-jupyter/usage/#hide-all-input" target="_blank">Hide input documentation</a>';
+            'Hiding input code cells results in rendering only the output of code cells on publication. <br> <a href="https://docs.rstudio.com/rsconnect-jupyter/usage/#hide-input" target="_blank">Hide Input Documentation</a>';
           
             var helpIcon = $(
             [
