@@ -18,14 +18,16 @@
 
 .md-tabs__list {
     margin: 0 2em 0 .2rem;
-    padding-top: .8rem;
     list-style: none;
     white-space: nowrap;
 }
 
 .md-tabs__link {
-    margin: 0;
-    padding: 0;
+    margin-top: auto !important;
+}
+
+.md-tabs__item {
+  height: 1.75rem !important;
 }
 
 /* Search bar
@@ -151,6 +153,7 @@
 [data-md-color-primary=white] .md-nav__link--active, [data-md-color-primary=white] .md-nav__link:active {
     color: #2196f3;
 }
+
 
 .md-nav__item hr {
     display: block;
@@ -368,6 +371,13 @@ figure.driver-card {
 
 .md-typeset ul li ul li ul {
     list-style-type: square;
+}
+
+/* Permalinks
+*/
+
+.md-typeset .headerlink:focus, .md-typeset:hover .headerlink, .md-typeset:target .headerlink {
+    color: #ccc !important;
 }
 
 /* Image Styles

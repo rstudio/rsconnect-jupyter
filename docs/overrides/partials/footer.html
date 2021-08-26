@@ -1,13 +1,13 @@
 {#-
-    Make footer navigation stops at separators
-    Remove mkdocs links
-  -#}
-  {% import "partials/language.html" as lang with context %}
-  
-  <!-- Application footer -->
-  <footer class="md-footer">
-  
-      <!-- Link to previous and/or next page -->
+  Make footer navigation stops at separators
+  Remove mkdocs links
+-#}
+{% import "partials/language.html" as lang with context %}
+
+<!-- Application footer -->
+<footer class="md-footer">
+
+  <!-- Link to previous and/or next page -->
   {% if page.previous_page or page.next_page %}
   <nav class="md-footer__inner md-grid" aria-label="{{ lang.t('footer.title') }}">
 
@@ -56,31 +56,30 @@
       </nav>
     </div>
   {% endif %}
-  
-    <!-- Further information -->
-    <div class="md-footer-meta md-typeset">
-      <div class="md-footer-meta__inner md-grid">
-  
-        <!-- Copyright and theme information -->
-        <div class="md-footer-copyright">
-          {% if config.copyright %}
-            <div class="md-footer-copyright__highlight">
-              Copyright &#169; <script type="text/javascript">
-                document.write(new Date().getFullYear());
-              </script>
-              {{ config.copyright }}
-            </div>
-          {% endif %}
-          <!-- powered by
-          <a href="https://www.mkdocs.org">MkDocs</a>
-          and
-          <a href="https://squidfunk.github.io/mkdocs-material/">
-            Material for MkDocs</a> -->
-        </div>
-  
-        <!-- Social links -->
-        {% include "partials/social.html" %}
+
+  <!-- Further information -->
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+
+      <!-- Copyright and theme information -->
+      <div class="md-footer-copyright">
+        {% if config.copyright %}
+          <div class="md-footer-copyright__highlight">
+            Copyright &#169; <script type="text/javascript">
+              document.write(new Date().getFullYear());
+            </script>
+            {{ config.copyright }}
+          </div>
+        {% endif %}
+        <!-- powered by
+        <a href="https://www.mkdocs.org">MkDocs</a>
+        and
+        <a href="https://squidfunk.github.io/mkdocs-material/">
+          Material for MkDocs</a> -->
       </div>
+
+      <!-- Social links -->
+      {% include "partials/social.html" %}
     </div>
-  </footer>
-  
+  </div>
+</footer>
