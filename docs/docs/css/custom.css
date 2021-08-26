@@ -18,14 +18,16 @@
 
 .md-tabs__list {
     margin: 0 2em 0 .2rem;
-    padding-top: .8rem;
     list-style: none;
     white-space: nowrap;
 }
 
 .md-tabs__link {
-    margin: 0;
-    padding: 0;
+    margin-top: auto !important;
+}
+
+.md-tabs__item {
+  height: 1.75rem !important;
 }
 
 /* Search bar
