@@ -15,12 +15,14 @@ nav:
 - 'Usage': 'usage.md'
 - 'Collaboration': 'collaboration.md'
 - 'Uninstalling': 'uninstalling.md'
+- ──────────────: separator.md
 - 'Additional Resources': 'additional.md'
+- 'Release Notes': 'NEWS.md'
 
 markdown_extensions:
   - admonition
   - toc:
-      permalink: true
+      permalink: "#"
   - attr_list: {}
   - def_list: {}
   - tables: {}

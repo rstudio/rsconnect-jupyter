@@ -152,6 +152,7 @@
     color: #2196f3;
 }
 
+
 .md-nav__item hr {
     display: block;
     height: 1px;
@@ -368,6 +369,13 @@ figure.driver-card {
 
 .md-typeset ul li ul li ul {
     list-style-type: square;
+}
+
+/* Permalinks
+*/
+
+.md-typeset .headerlink:focus, .md-typeset:hover .headerlink, .md-typeset:target .headerlink {
+    color: #ccc !important;
 }
 
 /* Image Styles
