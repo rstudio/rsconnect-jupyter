@@ -583,7 +583,8 @@ define([
           '        </div>',
           '        <input type="submit" hidden>',
           '    </fieldset>',
-          '</form>'
+          '</form>',
+          '<div id="version-info"></div>'
         ].join(''),
 
         // allow raw html
@@ -607,6 +608,12 @@ define([
       this.$radioDisableTLSVerification = this.dialog.find('#disable-tls-verification');
       this.$txtServer.val(this.inServerAddress);
       this.$txtServerName.val(this.inServerName);
+      this.dialog.find('#version-info').html(
+            'rsconnect-jupyter server extension version: ' +
+            rsconnectVersionInfo.rsconnect_jupyter_server_extension + '<br />' +
+            'rsconnect-jupyter nbextension version: ' + rsconnectVersionInfo.js_version + '<br />' +
+            'rsconnect-python version:' + rsconnectVersionInfo.rsconnect_python_version
+      );
       var that = this;
       function addCertificateUpload() {
         var certificateUpload = document.createElement('input');
