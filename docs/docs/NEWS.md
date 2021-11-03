@@ -4,6 +4,12 @@ title: rsconnect-jupyter Release Notes
 
 This document contains the release notes associated with each release of `rsconnect-jupyter`.
 
+`rsconnect-jupyter` 1.4.4
+--------------------------------------------------------------------------------
+
+* The dialog for adding server now contains the same version information panel that
+  shows when deploying content or generating a manifest.
+
 `rsconnect-jupyter` 1.4.2
 --------------------------------------------------------------------------------
 New
