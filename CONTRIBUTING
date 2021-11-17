@@ -49,3 +49,18 @@ The following will create a universal [wheel](https://pythonwheels.com/) ready
 to be installed in any python 2 or python 3 environment.
 
     make package
+
+## Updating rsconnect-jupyter on conda-forge
+
+rsconnect-jupyter exists on conda-forge as its own [feedstock](https://github.com/conda-forge/rsconnect-jupyter-feedstock)
+
+Updating the package requires a fork of the repository and a push request [example workflow](https://conda-forge.org/docs/maintainer/updating_pkgs.html#example-workflow-for-updating-a-package). 
+
+- For new version/release, update the [meta.yaml](https://github.com/conda-forge/rsconnect-jupyter-feedstock/blob/master/recipe/meta.yaml) file with the new version number, source url, and corresponding checksum.
+
+- For a rebuild of the same version, increase "number" under "build" by one in the [meta.yaml](https://github.com/conda-forge/rsconnect-jupyter-feedstock/blob/master/recipe/meta.yaml) file.
+
+
+### Adding yourself as a rsconnect-jupyter conda-forge maintainer
+
+Add your github username under recipe-maintainers in the [meta.yaml](https://github.com/conda-forge/rsconnect-jupyter-feedstock/blob/master/recipe/meta.yaml) file.
