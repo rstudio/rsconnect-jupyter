@@ -29,8 +29,6 @@ jobs:
     - run: echo "PYTHONPATH=${GITHUB_WORKSPACE}" >> $GITHUB_ENV
     - run: make prereqs
     - run: make version
-    - if: matrix.python-version == '3.9'
-      run: pipenv run pip install -U 'traitlets>=5.1.1'
     - run: make install
     - run: make lint
     - run: make test
