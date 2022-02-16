@@ -4,7 +4,7 @@
 
 ## Requirements
 
-- Python 2.7.9 or Python 3.5.0, and higher
+- Python 3.5.0 and higher
 - Jupyter Notebook 5.x
 - [pip](https://pypi.org/project/pip/)
 - [wheel](https://pypi.org/project/wheel/)
