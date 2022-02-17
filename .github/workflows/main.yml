@@ -30,7 +30,8 @@ jobs:
     - run: make prereqs
     - run: make version
     - run: make install
-    - run: make lint
+    - if: matrix.python-version  >= '3.6'
+      run: make lint
     - run: make test
   selenium:
     runs-on: ubuntu-latest
