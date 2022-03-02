@@ -82,27 +82,27 @@ class EndpointHandler(APIHandler):
                     RSConnectServer(server_address, api_key, disable_tls_check, cadata)
                 )
             except SSLError as exc:
-                if exc.reason == u"UNKNOWN_PROTOCOL":
+                if exc.reason == "UNKNOWN_PROTOCOL":
                     raise web.HTTPError(
                         400,
-                        u'Received an "SSL:UNKNOWN_PROTOCOL" error when trying to connect securely '
-                        + u"to the RStudio Connect server.\n"
-                        + u'* Try changing "https://" in the "Server Address" field to "http://".\n'
-                        + u"* If the condition persists, contact your RStudio Connect server "
-                        + u"administrator.",
+                        'Received an "SSL:UNKNOWN_PROTOCOL" error when trying to connect securely '
+                        + "to the RStudio Connect server.\n"
+                        + '* Try changing "https://" in the "Server Address" field to "http://".\n'
+                        + "* If the condition persists, contact your RStudio Connect server "
+                        + "administrator.",
                     )
                 raise web.HTTPError(
                     400,
-                    u"A TLS error occurred when trying to reach the RStudio Connect server.\n"
-                    + u"* Ensure that the server address you entered is correct.\n"
-                    + u"* Ask your RStudio Connect administrator if you need a certificate bundle and\n"
-                    + u'  upload it using "Upload TLS Certificate Bundle" below.',
+                    "A TLS error occurred when trying to reach the RStudio Connect server.\n"
+                    + "* Ensure that the server address you entered is correct.\n"
+                    + "* Ask your RStudio Connect administrator if you need a certificate bundle and\n"
+                    + '  upload it using "Upload TLS Certificate Bundle" below.',
                 )
             except Exception as err:
                 self.log.exception("Unable to verify that the provided server is running RStudio Connect")
                 raise web.HTTPError(
                     400,
-                    u"Unable to verify that the provided server is running RStudio Connect: %s" % err,
+                    "Unable to verify that the provided server is running RStudio Connect: %s" % err,
                 )
             if canonical_address is not None:
                 uri = canonical_address.url
@@ -119,7 +119,7 @@ class EndpointHandler(APIHandler):
                         )
                     )
                 except RSConnectException:
-                    raise web.HTTPError(401, u"Unable to verify the provided API key")
+                    raise web.HTTPError(401, "Unable to verify the provided API key")
             return
 
         if action == "app_search":
@@ -156,10 +156,10 @@ class EndpointHandler(APIHandler):
             model = self.contents_manager.get(path=nb_path)
             if model["type"] != "notebook":
                 # not a notebook
-                raise web.HTTPError(400, u"Not a notebook: %s" % nb_path)
+                raise web.HTTPError(400, "Not a notebook: %s" % nb_path)
 
             if not hasattr(self.contents_manager, "_get_os_path"):
-                raise web.HTTPError(400, u"Notebook does not live on a mounted filesystem")
+                raise web.HTTPError(400, "Notebook does not live on a mounted filesystem")
 
             os_path = self.contents_manager._get_os_path(nb_path)
 
@@ -170,7 +170,7 @@ class EndpointHandler(APIHandler):
                     )
                 except Exception as exc:
                     self.log.exception("Bundle creation failed")
-                    raise web.HTTPError(500, u"Bundle creation failed: %s" % exc)
+                    raise web.HTTPError(500, "Bundle creation failed: %s" % exc)
             elif app_mode == "jupyter-static":
                 if not environment_dict:
                     raise web.HTTPError(400, "environment is required for jupyter-static app_mode")
@@ -185,7 +185,7 @@ class EndpointHandler(APIHandler):
                     )
                 except Exception as exc:
                     self.log.exception("Bundle creation failed")
-                    raise web.HTTPError(500, u"Bundle creation failed: %s" % exc)
+                    raise web.HTTPError(500, "Bundle creation failed: %s" % exc)
             else:
                 raise web.HTTPError(
                     400,
