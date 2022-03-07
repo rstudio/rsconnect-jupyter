@@ -7,3 +7,4 @@ target-version = ["py35"]
 
 [tool.setuptools_scm]
 write_to = "rsconnect_jupyter/version.py"
+use_scm_version = {"local_scheme" = ""}
