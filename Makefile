@@ -64,6 +64,7 @@ test-selenium:
 # exported as a point of reference instead.
 .PHONY: dist
 dist: version-frontend
+	git reset --hard HEAD
 	pipenv run python setup.py bdist_wheel
 	pipenv run twine check $(BDIST_WHEEL)
 	rm -vf dist/*.egg
