@@ -21,7 +21,7 @@ traitlets = ">=5.1.1"
 [packages]
 nbconvert = ">=5.0"
 nbformat = "*"
-notebook = ">=6.1.5"
+notebook = ">=6.1.5, <7.0.0"
 rsconnect-python = ">=1.7.1"
 six = "*"
 # Dependabot fixes
