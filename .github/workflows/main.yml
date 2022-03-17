@@ -62,6 +62,7 @@ jobs:
     - run: pipenv clean
     - run: pipenv install --skip-lock --dev
     - run: pipenv run pip install -U 'SecretStorage>=3'
+    - run: git reset --hard HEAD
     - run: make dist
       id: create_dist
     - uses: actions/upload-artifact@v2
