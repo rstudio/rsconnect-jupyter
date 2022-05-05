@@ -58,7 +58,14 @@ def md5(s):
     if hasattr(s, "encode"):
         s = s.encode("utf-8")
 
-    h = hashlib.md5()
+    try:
+        h = hashlib.md5()
+    except Exception:
+        # md5 is not available in FIPS mode, see if the usedforsecurity option is available
+        # (it was added in python 3.9). We set usedforsecurity=False since we are only
+        # using this for a file upload integrity check.
+        h = hashlib.md5(usedforsecurity=False)
+
     h.update(s)
     return h.hexdigest()
 
