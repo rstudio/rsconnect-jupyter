@@ -170,10 +170,14 @@ class EndpointHandler(APIHandler):
 
             os_path = self.contents_manager._get_os_path(nb_path)
 
-            if app_mode == "static":
+            if app_mode == "static":    
                 try:
                     bundle = make_notebook_html_bundle(
-                        os_path, sys.executable, hide_all_input=hide_all_input, hide_tagged_input=hide_tagged_input
+                        filename=os_path, 
+                        python=sys.executable, 
+                        image=None,
+                        hide_all_input=hide_all_input, 
+                        hide_tagged_input=hide_tagged_input
                     )
                 except Exception as exc:
                     self.log.exception("Bundle creation failed")
@@ -181,12 +185,12 @@ class EndpointHandler(APIHandler):
             elif app_mode == "jupyter-static":
                 if not environment_dict:
                     raise web.HTTPError(400, "environment is required for jupyter-static app_mode")
-
                 try:
                     bundle = make_notebook_source_bundle(
-                        os_path,
-                        Environment(**environment_dict),
-                        extra_files,
+                        filename=os_path,
+                        environment=Environment(**environment_dict),
+                        image=None,
+                        extra_files=extra_files,
                         hide_all_input=hide_all_input,
                         hide_tagged_input=hide_tagged_input,
                     )
