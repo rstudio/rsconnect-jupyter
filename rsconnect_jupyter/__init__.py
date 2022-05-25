@@ -170,13 +170,13 @@ class EndpointHandler(APIHandler):
 
             os_path = self.contents_manager._get_os_path(nb_path)
 
-            if app_mode == "static":    
+            if app_mode == "static":
                 try:
                     bundle = make_notebook_html_bundle(
-                        os_path, 
-                        sys.executable, 
+                        os_path,
+                        sys.executable,
                         None,
-                        hide_all_input, 
+                        hide_all_input,
                         hide_tagged_input,
                     )
                 except Exception as exc:
