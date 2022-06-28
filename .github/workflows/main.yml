@@ -123,8 +123,7 @@ jobs:
     - if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags') && (contains(github.ref, 'b') == false)
       uses: aws-actions/configure-aws-credentials@v1
       with:
-        aws-access-key-id: ${{ secrets.DOCS_AWS_ID }}
-        aws-secret-access-key: ${{ secrets.DOCS_AWS_SECRET }}
+        role-to-assume: ${{ secrets.DOCS_AWS_ROLE }}
         aws-region: us-east-1
     - if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags') && (contains(github.ref, 'b') == false)
       run: make promote-docs-in-s3
