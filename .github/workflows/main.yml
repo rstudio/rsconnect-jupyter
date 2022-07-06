@@ -9,6 +9,9 @@ on:
     types: [rsconnect_python_latest]
 env:
   DOCKER_TTY_FLAGS: ''
+permissions:
+  id-token: write
+  contents: write
 jobs:
   test:
     strategy:
