@@ -4,7 +4,7 @@ from selene.api import s, by
 class MainToolBar(object):
     @property
     def rsconnect_dropdown(self):
-        return s(by.css("[title='Publish to RStudio Connect']"))
+        return s(by.css("[title='Publish to Posit Connect']"))
 
     @property
     def rsconnect_publish(self):

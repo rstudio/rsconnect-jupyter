@@ -93,23 +93,23 @@ class EndpointHandler(APIHandler):
                     raise web.HTTPError(
                         400,
                         'Received an "SSL:UNKNOWN_PROTOCOL" error when trying to connect securely '
-                        + "to the RStudio Connect server.\n"
+                        + "to the Posit Connect server.\n"
                         + '* Try changing "https://" in the "Server Address" field to "http://".\n'
-                        + "* If the condition persists, contact your RStudio Connect server "
+                        + "* If the condition persists, contact your Posit Connect server "
                         + "administrator.",
                     )
                 raise web.HTTPError(
                     400,
-                    "A TLS error occurred when trying to reach the RStudio Connect server.\n"
+                    "A TLS error occurred when trying to reach the Posit Connect server.\n"
                     + "* Ensure that the server address you entered is correct.\n"
-                    + "* Ask your RStudio Connect administrator if you need a certificate bundle and\n"
+                    + "* Ask your Posit Connect administrator if you need a certificate bundle and\n"
                     + '  upload it using "Upload TLS Certificate Bundle" below.',
                 )
             except Exception as err:
-                self.log.exception("Unable to verify that the provided server is running RStudio Connect")
+                self.log.exception("Unable to verify that the provided server is running Posit Connect")
                 raise web.HTTPError(
                     400,
-                    "Unable to verify that the provided server is running RStudio Connect: %s" % err,
+                    "Unable to verify that the provided server is running Posit Connect: %s" % err,
                 )
             if canonical_address is not None:
                 uri = canonical_address.url
@@ -119,7 +119,7 @@ class EndpointHandler(APIHandler):
                     self.finish(
                         json.dumps(
                             {
-                                "status": "Provided server is running RStudio Connect",
+                                "status": "Provided server is running Posit Connect",
                                 "address_hash": address_hash,
                                 "server_address": canonical_address.url,
                             }

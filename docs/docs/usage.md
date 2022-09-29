@@ -1,12 +1,12 @@
 # Usage
 
-## Publish to RStudio Connect
+## Publish to Posit Connect
 
-To publish to RStudio Connect:
+To publish to Posit Connect:
 
 - Open a Jupyter notebook.
-- Click the <img class="icon"; src="../images/publish-icon.gif" alt="blue toolbar icon used for publishing the notebook"> icon (blue publish button) and select **Publish to RStudio Connect**
-to publish the current notebook to RStudio Connect.
+- Click the <img class="icon"; src="../images/publish-icon.gif" alt="blue toolbar icon used for publishing the notebook"> icon (blue publish button) and select **Publish to Posit Connect**
+to publish the current notebook to Posit Connect.
 
 !!! note
     This plugin is only for notebooks using Python kernels. Therefore, R notebooks cannot be published using this plugin.
@@ -14,46 +14,46 @@ to publish the current notebook to RStudio Connect.
 ## Entering server information
 
 - If this is your first time publishing a notebook, you will be
-prompted to enter the location and a nickname for the RStudio Connect server.
-- You will also be prompted to enter your API Key. See the [RStudio Connect User
+prompted to enter the location and a nickname for the Posit Connect server.
+- You will also be prompted to enter your API Key. See the [Posit Connect User
 Guide](http://docs.rstudio.com/connect/user/api-keys) for
 instructions on generating API Keys for your user.
-- When you click the **Add Server** button, `rsconnect-jupyter` will send a request to the RStudio Connect server to verify that it can be reached via the requested URL and that the API key is valid.
+- When you click the **Add Server** button, `rsconnect-jupyter` will send a request to the Posit Connect server to verify that it can be reached via the requested URL and that the API key is valid.
 
-If your RStudio Connect server was configured with a self-signed certificate (or other certificates that the computer hosting your Jupyter notebook server does not trust), the attempt to contact RStudio Connect may fail with a TLS-related error.
+If your Posit Connect server was configured with a self-signed certificate (or other certificates that the computer hosting your Jupyter notebook server does not trust), the attempt to contact Posit Connect may fail with a TLS-related error.
 
 You have multiple options in this case, depending on your needs:
 
 1. If your administrator can give you the Certificate Authority (CA)
- Bundle for your RStudio Connect server, ask your administrator if it
+ Bundle for your Posit Connect server, ask your administrator if it
  can be added to the trusted system store.
 1. If the CA Bundle cannot be added to the trusted system store, you may select
  **Upload TLS Certificate Bundle** to upload the bundle to Jupyter, which will verify
- your secure connection to RStudio Connect.
+ your secure connection to Posit Connect.
 1. If you cannot obtain the CA bundle, you can disable TLS verification completely
  by selecting the **Disable TLS Certificate Verification** check box. Your connection to
- RStudio Connect will still be encrypted, but you will not be able to verify the
- identity of the RStudio Connect server.
+ Posit Connect will still be encrypted, but you will not be able to verify the
+ identity of the Posit Connect server.
 
-<img class="border" src="../images/add-dialog.png" class="block" alt="initial dialog that prompts for the location of RStudio Connect">
+<img class="border" src="../images/add-dialog.png" class="block" alt="initial dialog that prompts for the location of Posit Connect">
 
 ## Publishing options
 
 There are two different publication modes:
 
 - If you select **Publish document with source code**, the notebook file and a list of the Python 
-packages installed in your environment will be sent to RStudio Connect. This enables RStudio 
+packages installed in your environment will be sent to Posit Connect. This enables Posit 
 Connect to recreate the environment and re-run the notebook at a later time.
 - Selecting **Publish finished document only** will 
-publish an HTML snapshot of the notebook to RStudio Connect. HTML snapshots are static and 
-cannot be scheduled or re-run on the RStudio Connect server.
+publish an HTML snapshot of the notebook to Posit Connect. HTML snapshots are static and 
+cannot be scheduled or re-run on the Posit Connect server.
 
 <img class="border" src="../images/rsconnect-jupyter-usage.png" class="block" alt="publish dialog">
 
 ### Hide Input
 
 There are two options for hiding input code cells in Jupyter Notebooks published
-to RStudio Connect:
+to Posit Connect:
 
 - Hide all input code cells
 - Hide only selected input code cells
@@ -92,11 +92,11 @@ environment where `jupyter` is installed.
 
 The command `pip freeze` will be used to inspect the environment. The output
 of `pip freeze` lists all packages currently installed, as well as their
-versions, which enables RStudio Connect to recreate the same environment.
+versions, which enables Posit Connect to recreate the same environment.
 
 ## Generating Manifests for git Publishing
 
-RStudio Connect can poll git repositories for deployable content and update
+Posit Connect can poll git repositories for deployable content and update
 as you add new commits to your repository. To be deployable, a
 directory must have a valid `manifest.json`. Python content should also have
 some kind of environment file (i.e.: `requirements.txt`) to be able
@@ -118,16 +118,16 @@ informing you of this fact. If you need to regenerate the files, delete them in 
 <img class="border" src="../images/git-backed.png" class="block" alt="Dialog titled "Create Manifest" explaining the manifest creation process with "Cancel" and "Create Manifest" options">
 
 For more information on git publishing, see the 
-[RStudio Connect User Guide](https://docs.rstudio.com/connect/user/git-backed#git-backed-publishing).
+[Posit Connect User Guide](https://docs.rstudio.com/connect/user/git-backed#git-backed-publishing).
 
 ## Handling conflicts
 
-If content that matches your notebook's title is found on RStudio Connect, you
+If content that matches your notebook's title is found on Posit Connect, you
 may choose to overwrite the existing content or create new content.
 
 <img class="border" src="../images/overwrite.png" class="block" alt="dialog that prompts for overwriting or publishing new content">
 
-- Choosing **New location** creates a new document in RStudio Connect.
+- Choosing **New location** creates a new document in Posit Connect.
 - You can choose either publication mode:
     - an HTML snapshot *or* 
     - a document with source code
@@ -138,7 +138,7 @@ Upon successful publishing of the document, a notification will be
 shown in the toolbar. 
 
 Clicking the notification will open the published
-document in the RStudio Connect server you selected in the previous
+document in the Posit Connect server you selected in the previous
 dialog.
 
 <img class="border" src="../images/published.gif" class="block" alt="notification that shows the notebook was published successfully">

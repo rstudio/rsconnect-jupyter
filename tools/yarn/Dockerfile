@@ -1,5 +1,5 @@
 FROM node:11.10.1
-LABEL maintainer="RStudio Connect <rsconnect@rstudio.com>"
+LABEL maintainer="Posit Connect <rsconnect@rstudio.com>"
 ARG NB_UID
 ARG NB_GID
 

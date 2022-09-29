@@ -1,5 +1,5 @@
 site_name: 'rsconnect-jupyter User Guide'
-copyright: RStudio, PBC. All Rights Reserved
+copyright: Posit Software, PBC. All Rights Reserved
 
 # We activate GA only when hosted on our public docs site
 # and not when installed.

@@ -1,5 +1,5 @@
 FROM python:3.6.6-alpine
-MAINTAINER RStudio Quality <qa@rstudio.com>
+MAINTAINER Posit Quality <qa@rstudio.com>
 
 WORKDIR /opt/work
 COPY requirements.txt requirements.txt
