@@ -1,7 +1,10 @@
 /* Display an icon after external links */
 div.md-content a[href^="http://"]:not([href*="test.rstudio.com"]):after,
 div.md-content a[href^="https://"]:not([href*="test.rstudio.com"]):after,
-div.md-content a[href^="//"]:not([href*="test.rstudio.com"]) {
+div.md-content a[href^="//"]:not([href*="test.rstudio.com"]),
+div.md-content a[href^="http://"]:not([href*="test.posit.co"]):after,
+div.md-content a[href^="https://"]:not([href*="test.posit.co"]):after,
+div.md-content a[href^="//"]:not([href*="test.posit.co"]) {
     content: url(external-link-alt-regular.svg);
     vertical-align: 15%;
     display: inline-block;

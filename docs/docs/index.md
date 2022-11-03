@@ -8,7 +8,7 @@
 - Jupyter Notebook 5.x
 - [pip](https://pypi.org/project/pip/)
 - [wheel](https://pypi.org/project/wheel/)
-- [Posit Connect](https://www.rstudio.com/products/connect/download-commercial/) v1.7.0 or higher, configured with Python support
+- [Posit Connect](https://www.posit.co/download/posit-connect/) v1.7.0 or higher, configured with Python support
 
 !!! note
     If using `conda`, `pip` and `wheel` should already be installed.
