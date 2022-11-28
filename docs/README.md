@@ -1,9 +1,9 @@
-# RStudio Connect Jupyter User Guide
+# Posit Connect Jupyter User Guide
 
-This directory contains the RStudio Connect: Jupyter User Guide. We use
+This directory contains the Posit Connect: Jupyter User Guide. We use
 [mkdocs-1.0.4](https://www.mkdocs.org) to build this guide.
 
-The Jupyter User Guide is geared towards the people who will publish Jupyter Notebooks to RStudio Connect.
+The Jupyter User Guide is geared towards the people who will publish Jupyter Notebooks to Posit Connect.
 
 ## Docker
 

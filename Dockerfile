@@ -1,6 +1,6 @@
 ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
-LABEL maintainer="RStudio Connect <rsconnect@rstudio.com>"
+LABEL maintainer="Posit Connect <rsconnect@posit.co>"
 
 ARG NB_UID
 ARG NB_GID

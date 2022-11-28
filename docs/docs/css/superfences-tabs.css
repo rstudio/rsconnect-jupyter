@@ -1,43 +1,16 @@
-.tabbed-set {
-  display: flex;
-  position: relative;
-  flex-wrap: wrap;
-  border: .05rem solid rgba(0,0,0,.07);
+.md-typeset .tabbed-set>input:checked+label {
+  color: #447099 !important;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 0.1rem solid #EE6331;
 }
 
-.tabbed-set .highlight {
-  background: #f5f5f5;
+.md-typeset .tabbed-set>label:hover {
+  color: #447099;
+  border-bottom: 0.1rem solid #447099;
 }
 
-.tabbed-set .tabbed-content {
-  display: none;
-  order: 99;
-  width: 100%;
-  background-color: hsla(0,0%,92.5%,.5);
-}
-
-.tabbed-set label {
-  width: auto;
-  margin: 0 0.5em;
-  padding: 0.25em;
-  cursor: pointer;
-  font-size: 120%;
-  font-color: #000 !important;
-}
-
-.tabbed-set input {
-  position: absolute;
-  opacity: 0;
-}
-
-.tabbed-set input:nth-child(n+1) {
-}
-
-.tabbed-set input:nth-child(n+1):checked + label {
-    color: #75aadb;
-    border-bottom: .1rem solid transparent;
-}
-
-.tabbed-set input:nth-child(n+1):checked + label + .tabbed-content {
-    display: block;
+[data-md-color-primary=black] .md-typeset .tabbed-alternate input:first-child:checked~.tabbed-labels>:first-child, .md-typeset .tabbed-alternate input:nth-child(2):checked~.tabbed-labels>:nth-child(2), .md-typeset .tabbed-alternate input:nth-child(3):checked~.tabbed-labels>:nth-child(3), .md-typeset .tabbed-alternate input:nth-child(4):checked~.tabbed-labels>:nth-child(4), .md-typeset .tabbed-alternate input:nth-child(5):checked~.tabbed-labels>:nth-child(5), .md-typeset .tabbed-alternate input:nth-child(6):checked~.tabbed-labels>:nth-child(6), .md-typeset .tabbed-alternate input:nth-child(7):checked~.tabbed-labels>:nth-child(7), .md-typeset .tabbed-alternate input:nth-child(8):checked~.tabbed-labels>:nth-child(8), .md-typeset .tabbed-alternate input:nth-child(9):checked~.tabbed-labels>:nth-child(9), .md-typeset .tabbed-alternate input:nth-child(10):checked~.tabbed-labels>:nth-child(10), .md-typeset .tabbed-alternate input:nth-child(11):checked~.tabbed-labels>:nth-child(11), .md-typeset .tabbed-alternate input:nth-child(12):checked~.tabbed-labels>:nth-child(12), .md-typeset .tabbed-alternate input:nth-child(13):checked~.tabbed-labels>:nth-child(13), .md-typeset .tabbed-alternate input:nth-child(14):checked~.tabbed-labels>:nth-child(14), .md-typeset .tabbed-alternate input:nth-child(15):checked~.tabbed-labels>:nth-child(15), .md-typeset .tabbed-alternate input:nth-child(16):checked~.tabbed-labels>:nth-child(16), .md-typeset .tabbed-alternate input:nth-child(17):checked~.tabbed-labels>:nth-child(17), .md-typeset .tabbed-alternate input:nth-child(18):checked~.tabbed-labels>:nth-child(18), .md-typeset .tabbed-alternate input:nth-child(19):checked~.tabbed-labels>:nth-child(19), .md-typeset .tabbed-alternate input:nth-child(20):checked~.tabbed-labels>:nth-child(20).tabbed-labels {
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
 }

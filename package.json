@@ -7,7 +7,7 @@
     "lint": "./node_modules/.bin/eslint ./rsconnect_jupyter/static/*.js"
   },
   "repository": "git@github.com:rstudio/rsconnect-jupyter.git",
-  "author": "Jonathan Curran <jonathan.curran@rstudio.com>",
+  "author": "Jonathan Curran <jonathan.curran@posit.co>",
   "license": "GPL-2.0",
   "devDependencies": {
     "eslint": "^6.4.0"

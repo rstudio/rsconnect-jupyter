@@ -6,14 +6,14 @@ define([
   'base/js/dialog',
   'services/contents',
   './rsconnect'
-], function($, Jupyter, Dialog, Contents, RSConnect) {
+], function ($, Jupyter, Dialog, Contents, RSConnect) {
   /***********************************************************************
    * Extension bootstrap (main)
    ***********************************************************************/
 
   var debugModeEnabled = window.localStorage
-      // eslint-disable-next-line multiline-ternary
-      ? window.localStorage.getItem('__RSCONNECT_JUPYTER_DEBUG_MODE__') === 'enabled' : false;
+    // eslint-disable-next-line multiline-ternary
+    ? window.localStorage.getItem('__RSCONNECT_JUPYTER_DEBUG_MODE__') === 'enabled' : false;
   function verbose() {
     if (debugModeEnabled) {
       console.error.apply(window, arguments);
@@ -56,38 +56,38 @@ define([
   }
 
   function maybeCreateConfig() {
-      if (!config) {
-        config = new RSConnect(debug);
-        window.RSConnect = config;
-        config.getVersionInfo()
-            .then(function(info) {
-              console.log('rsconnect-jupyter nbextension version:', info.js_version);
-              console.log('rsconnect-jupyter serverextension version:', info.rsconnect_jupyter_server_extension);
-              console.log('rsconnect-python version:', info.rsconnect_python_version);
-              rsconnectVersionInfo = info;
-              window.rsconnectVersionInfo = info;
-              if (info.js_version !== info.rsconnect_jupyter_server_extension) {
-                console.error('Version Mismatch: rsconnect-jupyter has been installed incorrectly.');
-                setTimeout(function () {
-                  Dialog.modal({
-                    title: 'Error',
-                    body: 'Plugin Version Mismatch: rsconnect-jupyter has been installed incorrectly. ' +
-                        'The javascript extension version reports ' + info.js_version + ' but the server ' +
-                        'extension reports ' + info.rsconnect_jupyter_server_extension + '.<br />' +
-                        '<ul>' +
-                        '<li>Refer to the <a href="https://docs.rstudio.com/rsconnect-jupyter/#installation">' +
-                        'installation instructions</a> for more information.</li>' +
-                        '<li>Try completely uninstalling every version of the plugin and reinstalling. ' +
-                        'Your server information will be saved.</li>' +
-                        '<li>Continuing to use the plugin as-is may lead to unexpected issues.</li>' +
-                        '</ul>',
-                    sanitize: false,
-                    buttons: {Ok: {class: 'btn-primary'}}
-                  });
-                }, 1000);
-              }
-            });
-      }
+    if (!config) {
+      config = new RSConnect(debug);
+      window.RSConnect = config;
+      config.getVersionInfo()
+        .then(function (info) {
+          console.log('rsconnect-jupyter nbextension version:', info.js_version);
+          console.log('rsconnect-jupyter serverextension version:', info.rsconnect_jupyter_server_extension);
+          console.log('rsconnect-python version:', info.rsconnect_python_version);
+          rsconnectVersionInfo = info;
+          window.rsconnectVersionInfo = info;
+          if (info.js_version !== info.rsconnect_jupyter_server_extension) {
+            console.error('Version Mismatch: rsconnect-jupyter has been installed incorrectly.');
+            setTimeout(function () {
+              Dialog.modal({
+                title: 'Error',
+                body: 'Plugin Version Mismatch: rsconnect-jupyter has been installed incorrectly. ' +
+                  'The javascript extension version reports ' + info.js_version + ' but the server ' +
+                  'extension reports ' + info.rsconnect_jupyter_server_extension + '.<br />' +
+                  '<ul>' +
+                  '<li>Refer to the <a href="https://docs.rstudio.com/rsconnect-jupyter/#installation">' +
+                  'installation instructions</a> for more information.</li>' +
+                  '<li>Try completely uninstalling every version of the plugin and reinstalling. ' +
+                  'Your server information will be saved.</li>' +
+                  '<li>Continuing to use the plugin as-is may lead to unexpected issues.</li>' +
+                  '</ul>',
+                sanitize: false,
+                buttons: { Ok: { class: 'btn-primary' } }
+              });
+            }, 1000);
+          }
+        });
+    }
   }
 
   function init() {
@@ -104,7 +104,7 @@ define([
     var actionName = actions.register(
       {
         icon: 'fa-cloud-upload',
-        help: 'Publish to RStudio Connect',
+        help: 'Publish to Posit Connect',
         help_index: 'zz',
         handler: debounce(1000, onPublishClicked)
       },
@@ -125,7 +125,7 @@ define([
     var $menuContainer = $('<div class="rsc-dropdown"></div>');
     var $menu = $('<div id="rsc-menu" class="rsc-dropdown-content"></div>');
 
-    var publishItem = $('<a href="#" id="publish-to-connect">Publish to RStudio Connect</a>');
+    var publishItem = $('<a href="#" id="publish-to-connect">Publish to Posit Connect</a>');
     publishItem.click(onPublishClicked);
     $menu.append(publishItem);
 
@@ -147,12 +147,12 @@ define([
    ***********************************************************************/
 
   var debug = {
-    info: function() {
+    info: function () {
       var args = [].slice.call(arguments);
       args.unshift('RSConnect:');
       console.info.apply(null, args);
     },
-    error: function() {
+    error: function () {
       var args = [].slice.call(arguments);
       args.unshift('RSConnect:');
       console.error.apply(null, args);
@@ -161,12 +161,12 @@ define([
 
   function debounce(delay, fn) {
     var timeoutId = null;
-    return function() {
+    return function () {
       var self = this;
       if (timeoutId === null) {
         fn.apply(self, arguments);
       }
-      timeoutId = setTimeout(function() {
+      timeoutId = setTimeout(function () {
         timeoutId = null;
       }, delay);
     };
@@ -186,11 +186,11 @@ define([
         .find('.help-block');
       helpBlock.empty();
       if (helpText.match(/\n/) !== null) {
-        helpText.split('\n').forEach(function(line) {
-            helpBlock.append(line+'<br />');
+        helpText.split('\n').forEach(function (line) {
+          helpBlock.append(line + '<br />');
         });
       } else {
-          helpBlock.append(helpText);
+        helpBlock.append(helpText);
       }
     }
   }
@@ -202,9 +202,9 @@ define([
    */
   function addWarningMarkup($el, helpText) {
     $el
-        .closest('.form-group')
-        .find('.help-block')
-        .text(helpText);
+      .closest('.form-group')
+      .find('.help-block')
+      .text(helpText);
   }
 
   function maybeRemoveWarningMarkup($el) {
@@ -222,7 +222,7 @@ define([
    * @returns {String} filename
    */
   function fileName(path) {
-    return path.slice(path.lastIndexOf('/')+1);
+    return path.slice(path.lastIndexOf('/') + 1);
   }
 
   /**
@@ -242,12 +242,12 @@ define([
       basePath: basePath,
       notebookPath: notebookPath,
       excludedFiles: [
-                  notebookPath,
-                  basePath+'/requirements.txt',
-                  basePath+'/manifest.json',
-                  'requirements.txt',
-                  'manifest.json'
-              ],
+        notebookPath,
+        basePath + '/requirements.txt',
+        basePath + '/manifest.json',
+        'requirements.txt',
+        'manifest.json'
+      ],
       currentPath: basePath,
       /**
        * Shows the file selector widget
@@ -255,7 +255,7 @@ define([
        * @returns {PromiseLike<Array<String>,String>} List of files or rejection message
        * @public
        */
-      showAddFilesDialog: function() {
+      showAddFilesDialog: function () {
         var result = $.Deferred();
         var that = this;
         that.currentPath = that.basePath;
@@ -266,8 +266,8 @@ define([
 
           title: 'Add Files to Deploy',
           body: '<label id="file-list-label"></label>' +
-              '<ul class="list-group" id="file-list-container">' +
-              '</ul>',
+            '<ul class="list-group" id="file-list-container">' +
+            '</ul>',
           buttons: {
             'Cancel': {
               'id': 'add-files-dialog-cancel',
@@ -275,7 +275,7 @@ define([
                * Reject the staged files and replace with filelist
                * Note: `.slice(0)` is how you clone arrays in JS
                */
-              click: function() {
+              click: function () {
                 that.stagedFiles = that.fileList.slice(0);
                 result.reject('User cancelled');
               }
@@ -286,7 +286,7 @@ define([
               /**
                * Accept the staged files as the new file list
                */
-              click: function() {
+              click: function () {
                 that.fileList = that.stagedFiles.slice(0);
                 that.updateListGroupItems();
                 result.resolve(that.fileList);
@@ -297,7 +297,7 @@ define([
           /**
            * Opens the file dialog.
            */
-          open: function() {
+          open: function () {
             that.stagedFiles = that.fileList.slice(0);
             that.fillFileList();
           }
@@ -310,12 +310,12 @@ define([
        * @returns {string} path with basepath removed
        * @private
        */
-      pathSanitizer: function(path) {
+      pathSanitizer: function (path) {
         if (this.basePath === '') {
           return path;
         }
         // Assumption in here is that `path` contains `this.basePath`
-        return path.slice(this.basePath.length+1);
+        return path.slice(this.basePath.length + 1);
       },
       /**
        * fillFileList fills the file selection dialog based on the current
@@ -325,88 +325,88 @@ define([
        * - stagedFiles (which files are ready to replace the `fileList`)
        * @private
        */
-      fillFileList: function() {
+      fillFileList: function () {
         var that = this;
         var $container = $('#file-list-container');
         var $label = $('#file-list-label');
         $label.empty().text(that.currentPath + '/');
         $container.empty();
         ContentsManager.list_contents(that.currentPath)
-            .then(function(contents) {
-              verbose('got contents:', contents);
-              var content = contents.content.sort(function (a, b) {
-                // Directories come first
-                if (a.type === 'directory' ? b.type !== 'directory' : b.type === 'directory') {
-                  return a.type === 'directory' ? -1 : 1;
-                }
-                // There is no 0 case because we trust no name collisions in content manager.
-                // If they have the same normalized-case value, capital comes first.
-                if (a.name.toLowerCase() === b.name.toLowerCase()) {
-                  return a.name < b.name ? -1 : 1;
-                }
-                return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1;
-              });
-              // If we're not on the base path, add a ".."
-              if (that.currentPath !== that.basePath) {
-                var li = document.createElement('li');
-                var i = document.createElement('i');
-                i.className = 'fa fa-folder';
-                li.appendChild(i);
-                li.className = 'list-group-item';
-                li.appendChild(document.createTextNode(' ..'));
-                li.addEventListener('click', that.directoryUp());
-                $container.append(li);
+          .then(function (contents) {
+            verbose('got contents:', contents);
+            var content = contents.content.sort(function (a, b) {
+              // Directories come first
+              if (a.type === 'directory' ? b.type !== 'directory' : b.type === 'directory') {
+                return a.type === 'directory' ? -1 : 1;
               }
-              content.forEach(function(item) {
-                // If the file is excluded, don't show
-                if (that.excludedFiles.indexOf(item.path) !== -1) {
-                  return;
+              // There is no 0 case because we trust no name collisions in content manager.
+              // If they have the same normalized-case value, capital comes first.
+              if (a.name.toLowerCase() === b.name.toLowerCase()) {
+                return a.name < b.name ? -1 : 1;
+              }
+              return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1;
+            });
+            // If we're not on the base path, add a ".."
+            if (that.currentPath !== that.basePath) {
+              var li = document.createElement('li');
+              var i = document.createElement('i');
+              i.className = 'fa fa-folder';
+              li.appendChild(i);
+              li.className = 'list-group-item';
+              li.appendChild(document.createTextNode(' ..'));
+              li.addEventListener('click', that.directoryUp());
+              $container.append(li);
+            }
+            content.forEach(function (item) {
+              // If the file is excluded, don't show
+              if (that.excludedFiles.indexOf(item.path) !== -1) {
+                return;
+              }
+              var li2 = document.createElement('li');
+              if (item.type === 'directory') {
+                var i2 = document.createElement('i');
+                i2.className = 'fa fa-folder';
+                li2.appendChild(i2);
+                li2.addEventListener('click', that.directoryClicked(item.path));
+              } else {
+                var input = document.createElement('input');
+                input.type = 'checkbox';
+                input.name = item.name;
+                input.value = item.path;
+                if (that.stagedFiles.indexOf(item.path) !== -1) {
+                  input.checked = true;
                 }
-                var li2 = document.createElement('li');
-                if (item.type === 'directory') {
-                  var i2 = document.createElement('i');
-                  i2.className = 'fa fa-folder';
-                  li2.appendChild(i2);
-                  li2.addEventListener('click', that.directoryClicked(item.path));
-                } else {
-                  var input = document.createElement('input');
-                  input.type = 'checkbox';
-                  input.name = item.name;
-                  input.value = item.path;
-                  if (that.stagedFiles.indexOf(item.path) !== -1) {
-                    input.checked = true;
+                $(input).change(function () {
+                  if (input.checked) {
+                    that.stagedFiles.push(item.path);
+                  } else {
+                    that.stagedFiles.splice(that.stagedFiles.indexOf(item.path), 1);
                   }
-                  $(input).change(function () {
-                    if(input.checked) {
+                });
+                li2.appendChild(input);
+                $(li2).click(function (ev) {
+                  if (ev.target !== input) {
+                    input.checked = !input.checked;
+                    if (input.checked) {
                       that.stagedFiles.push(item.path);
                     } else {
                       that.stagedFiles.splice(that.stagedFiles.indexOf(item.path), 1);
                     }
-                  });
-                  li2.appendChild(input);
-                  $(li2).click(function(ev) {
-                    if (ev.target !== input) {
-                      input.checked = !input.checked;
-                      if (input.checked) {
-                        that.stagedFiles.push(item.path);
-                      } else {
-                        that.stagedFiles.splice(that.stagedFiles.indexOf(item.path), 1);
-                      }
-                    }
-                  });
-                }
-                li2.className = 'list-group-item';
-                li2.appendChild(document.createTextNode(' ' + fileName(item.path)));
-                $container.append(li2);
-              });
+                  }
+                });
+              }
+              li2.className = 'list-group-item';
+              li2.appendChild(document.createTextNode(' ' + fileName(item.path)));
+              $container.append(li2);
             });
+          });
       },
       /**
        * directoryUp is a factory creating a handler for clicking the `..` item in the directory list
        * @returns {function} click handler
        * @private
        */
-      directoryUp: function() {
+      directoryUp: function () {
         function handler() {
           var lastSlashIndex = this.currentPath.lastIndexOf('/');
           if (lastSlashIndex === -1) {
@@ -424,7 +424,7 @@ define([
        * @returns {function} click handler
        * @private
        */
-      directoryClicked: function(directory) {
+      directoryClicked: function (directory) {
         function handler() {
           this.currentPath = directory;
           this.fillFileList();
@@ -434,7 +434,7 @@ define([
       /**
        * updateListGroupItems updates the list group from the list of staged files
        */
-      updateListGroupItems: function() {
+      updateListGroupItems: function () {
         var that = this;
         that.$listGroup.empty();
         that.fileList = that.fileList.sort();
@@ -455,7 +455,7 @@ define([
        * @returns {function} bound click handler
        * @private
        */
-      listGroupItemClicked: function(item) {
+      listGroupItemClicked: function (item) {
         function handler() {
           this.fileList.splice(this.fileList.indexOf(item), 1);
           this.updateListGroupItems();
@@ -519,7 +519,7 @@ define([
   }
 
   function getCertificateUpload(ctx) {
-      return $(ctx).find('#rsc-ca-file')[0];
+    return $(ctx).find('#rsc-ca-file')[0];
   }
 
   function showAddServerDialog(_config, inServerAddress, inServerName) {
@@ -546,13 +546,13 @@ define([
   }
 
   AddServerDialog.prototype = {
-    init: function() {
+    init: function () {
       this.dialog = Dialog.modal({
         // pass the existing keyboard manager so all shortcuts are disabled while
         // modal is active
         keyboard_manager: Jupyter.notebook.keyboard_manager,
 
-        title: 'Add RStudio Connect Server',
+        title: 'Add Posit Connect Server',
         body: [
           '<form>',
           '    <fieldset>',
@@ -594,7 +594,7 @@ define([
       });
     },
 
-    openDialog: function() {
+    openDialog: function () {
       disableKeyboardManagerIfNeeded();
 
       // there is no _close_ event so let's improvise.
@@ -609,10 +609,10 @@ define([
       this.$txtServer.val(this.inServerAddress);
       this.$txtServerName.val(this.inServerName);
       this.dialog.find('#version-info').html(
-            'rsconnect-jupyter server extension version: ' +
-            rsconnectVersionInfo.rsconnect_jupyter_server_extension + '<br />' +
-            'rsconnect-jupyter nbextension version: ' + rsconnectVersionInfo.js_version + '<br />' +
-            'rsconnect-python version:' + rsconnectVersionInfo.rsconnect_python_version
+        'rsconnect-jupyter server extension version: ' +
+        rsconnectVersionInfo.rsconnect_jupyter_server_extension + '<br />' +
+        'rsconnect-jupyter nbextension version: ' + rsconnectVersionInfo.js_version + '<br />' +
+        'rsconnect-python version:' + rsconnectVersionInfo.rsconnect_python_version
       );
       var that = this;
       function addCertificateUpload() {
@@ -621,7 +621,7 @@ define([
         certificateUpload.id = 'rsc-ca-file';
         certificateUpload.className = 'rsc-file-dialog';
         that.dialog.find('#certificate-upload-container')
-            .append(certificateUpload);
+          .append(certificateUpload);
       }
       function maybeRemoveCertificateUpload() {
         var fileDialog = that.dialog.find('#rsc-ca-file');
@@ -632,7 +632,7 @@ define([
       function radioTLSChange() {
         if (that.$radioDisableTLSVerification.is(':checked')) {
           maybeRemoveCertificateUpload();
-          var disableTLSWarning = 'Disabling TLS verification will make your connection to RStudio Connect less secure';
+          var disableTLSWarning = 'Disabling TLS verification will make your connection to Posit Connect less secure';
           addWarningMarkup(that.$radioDisableTLSVerification, disableTLSWarning);
         } else if (that.$radioUploadTLSCertificates.is(':checked')) {
           maybeRemoveWarningMarkup(that.$radioDisableTLSVerification);
@@ -656,7 +656,7 @@ define([
       this.$btnAdd = $(
         '<a class="btn btn-primary" aria-hidden="true"><i class="fa fa-spinner fa-spin hidden"></i> Add Server</a>'
       );
-      this.$btnAdd.on('click', function() {
+      this.$btnAdd.on('click', function () {
         form.trigger('submit');
       });
       this.dialog
@@ -683,15 +683,15 @@ define([
       $('#rsc-tls-options').append(helpIcon);
     },
 
-    closeDialog: function() {
+    closeDialog: function () {
       this.dialogResult.reject('canceled');
     },
 
-    result: function() {
+    result: function () {
       return this.dialogResult;
     },
 
-    validate: function() {
+    validate: function () {
       var server = this.$txtServer.val();
       if (server.indexOf('http') !== 0) {
         this.$txtServer.val('http://' + server);
@@ -708,7 +708,7 @@ define([
       addValidationMarkup(
         validServer,
         this.$txtServer,
-        'This should be the location of RStudio Connect: e.g. https://connect.example.com/'
+        'This should be the location of Posit Connect: e.g. https://connect.example.com/'
       );
       addValidationMarkup(
         validServerName,
@@ -724,7 +724,7 @@ define([
       return (validServer && validServerName && validApiKey);
     },
 
-    toggleAddButton: function(state) {
+    toggleAddButton: function (state) {
       this.dialog.find('fieldset').attr('disabled', state ? null : true);
       this.$btnAdd
         .toggleClass('disabled', !state)
@@ -732,20 +732,20 @@ define([
         .toggleClass('hidden', state);
     },
 
-    getServerError: function(xhr) {
+    getServerError: function (xhr) {
       var msg;
 
       if (xhr.status === 400) {
         if (xhr.responseJSON) {
-            if (xhr.responseJSON.message) {
-                msg = xhr.responseJSON.message;
-            } else {
-                msg = 'Server returned an unexpected response:' + xhr.responseJSON;
-            }
+          if (xhr.responseJSON.message) {
+            msg = xhr.responseJSON.message;
+          } else {
+            msg = 'Server returned an unexpected response:' + xhr.responseJSON;
+          }
         } else {
-            msg = 'Failed to verify that RStudio Connect is running at ' +
-                this.$txtServer.val() +
-                '. Please ensure the server address is valid.';
+          msg = 'Failed to verify that Posit Connect is running at ' +
+            this.$txtServer.val() +
+            '. Please ensure the server address is valid.';
         }
       }
       else if (xhr.status === 401) {
@@ -757,7 +757,7 @@ define([
       return msg;
     },
 
-    onSubmit: function(e) {
+    onSubmit: function (e) {
       var self = this;
       e.preventDefault();
       clearValidationMessages(this.dialog);
@@ -771,40 +771,40 @@ define([
           // if we have a file, we call `addServer` with TLS checking
           // enabled and provide CA data
           submit = readFileToPromise(fileCaBundleFile.files[0])
-              .then(function (cadata) {
-                return that.config
-                  .addServer(
-                    that.$txtServer.val(),
-                    that.$txtServerName.val(),
-                    that.$txtApiKey.val(),
-                    false,
-                    cadata
-                  );
-              });
-        } else {
-          // if not, we optionally disable TLS checking and leave CA data
-          // undefined.
-          submit = that.config
+            .then(function (cadata) {
+              return that.config
                 .addServer(
                   that.$txtServer.val(),
                   that.$txtServerName.val(),
                   that.$txtApiKey.val(),
-                  that.$radioDisableTLSVerification.is(':checked')
+                  false,
+                  cadata
+                );
+            });
+        } else {
+          // if not, we optionally disable TLS checking and leave CA data
+          // undefined.
+          submit = that.config
+            .addServer(
+              that.$txtServer.val(),
+              that.$txtServerName.val(),
+              that.$txtApiKey.val(),
+              that.$radioDisableTLSVerification.is(':checked')
             );
         }
         submit
-          .then(function(serverId) {
+          .then(function (serverId) {
             self.dialogResult.resolve(serverId);
             self.dialog.modal('hide');
           })
-          .fail(function(xhr) {
+          .fail(function (xhr) {
             addValidationMarkup(
               false,
               self.$txtServer,
               self.getServerError(xhr)
             );
           })
-          .always(function() {
+          .always(function () {
             self.toggleAddButton(true);
           });
       }
@@ -857,24 +857,24 @@ define([
       // if it has an API key. This is needed because we previously
       // didn't save API keys, so there could be a saved server without one.
       if (selectedEntryId &&
-          !config.getApiKey(config.servers[selectedEntryId].server)) {
-          showSelectServerDialog(
-              null,
-              null,
-              null,
-              null,
-              null,
-              environmentOptions
-          );
+        !config.getApiKey(config.servers[selectedEntryId].server)) {
+        showSelectServerDialog(
+          null,
+          null,
+          null,
+          null,
+          null,
+          environmentOptions
+        );
       }
       else {
         showSelectServerDialog(
-            selectedEntryId,
-            null,
-            null,
-              null,
-              null,
-            environmentOptions
+          selectedEntryId,
+          null,
+          null,
+          null,
+          null,
+          environmentOptions
         );
       }
     }
@@ -884,14 +884,14 @@ define([
         .addClass('pull-right btn btn-danger btn-xs')
         .attr('type', 'button')
         .append($('<i></i>').addClass('fa fa-remove'))
-        .on('click', function(e) {
+        .on('click', function (e) {
           e.preventDefault();
           e.stopPropagation();
 
           var $a = $(this).closest('a');
           config
             .removeServer(id)
-            .then(function() {
+            .then(function () {
               $a.remove();
               // if active server is removed, disable publish button
               if ($a.hasClass('active')) {
@@ -900,7 +900,7 @@ define([
                 updateCheckboxStates();
               }
             })
-            .fail(function(err) {
+            .fail(function (err) {
               // highly unlikely this will ever be triggered
               debug.error(err);
             });
@@ -918,7 +918,7 @@ define([
         .append(btnRemove);
 
       if (!selectedDeployLocation) {
-        a.on('click', function() {
+        a.on('click', function () {
           var $this = $(this);
           $this
             .toggleClass('active')
@@ -961,7 +961,7 @@ define([
       userEditedTitle || config.getNotebookTitle(selectedEntryId);
 
     function selectPreviousAppMode() {
-      appModeChoices.removeClass('active').addClass(function() {
+      appModeChoices.removeClass('active').addClass(function () {
         if ($(this).data('appmode') === appMode) {
           return 'active';
         }
@@ -1003,7 +1003,7 @@ define([
           var appId = updatedEntry && updatedEntry.appId;
 
           if (appId) {
-            config.getApp(selectedEntryId, appId).then(function(app) {
+            config.getApp(selectedEntryId, appId).then(function (app) {
               if (app.title) {
                 txtTitle.val(app.title);
               }
@@ -1040,7 +1040,7 @@ define([
       // modal is active
       keyboard_manager: Jupyter.notebook.keyboard_manager,
 
-      title: 'Publish to RStudio Connect',
+      title: 'Publish to Posit Connect',
       body: [
         '<form>',
         '    <div class="form-group">',
@@ -1059,15 +1059,15 @@ define([
         '        <div class="list-group">',
         '            <a href="#" id="rsc-publish-with-source" class="list-group-item rsc-appmode" data-appmode="jupyter-static">',
         '                <img src="' +
-          Jupyter.notebook.base_url +
-          'nbextensions/rsconnect_jupyter/images/publishDocWithSource.png" class="rsc-image">',
+        Jupyter.notebook.base_url +
+        'nbextensions/rsconnect_jupyter/images/publishDocWithSource.png" class="rsc-image">',
         '                <span class="rsc-label">Publish document with source code</span><br/>',
         '                <span class="rsc-text-light">Choose this option if you want to create a scheduled report or rebuild your document on the server</span>',
         '            </a>',
         '            <a href="#" id="rsc-publish-without-source" class="list-group-item rsc-appmode" data-appmode="static">',
         '                <img src="' +
-          Jupyter.notebook.base_url +
-          'nbextensions/rsconnect_jupyter/images/publishDocWithoutSource.png" class="rsc-image">',
+        Jupyter.notebook.base_url +
+        'nbextensions/rsconnect_jupyter/images/publishDocWithoutSource.png" class="rsc-image">',
         '                <span class="rsc-label">Publish finished document only</span><br/>',
         '                <span class="rsc-text-light">Choose this option to publish a snapshot of the notebook as it appears in Jupyter</span>',
         '            </a>',
@@ -1075,16 +1075,16 @@ define([
         '        </div>',
         '    </div>',
         '    <div id="hide-input-wrapper">',
-        '      <label for="hide-input-wrapper"> Hide Input</label>',        
-        '    </div>',        
+        '      <label for="hide-input-wrapper"> Hide Input</label>',
+        '    </div>',
         '    <div id="hide-all-input">',
         '      <input type="checkbox" id="hide_all_input" name="hide_all_input" value="hide_all_input">',
         '      <label for="hide_all_input"> Hide all input code cells </label>',
         '    </div>',
         '    <div id="hide-tagged-input">',
         '      <input type="checkbox" id="hide_tagged_input" name="hide_tagged_input" value="hide_tagged_input">',
-        '      <label for="hide_tagged_input"> Hide input code cells with the <span class="code">"hide_input"</span> tag </label>',             
-        '    </div><br>', 
+        '      <label for="hide_tagged_input"> Hide input code cells with the <span class="code">"hide_input"</span> tag </label>',
+        '    </div><br>',
         '    <div id="add-files">',
         '      <label for="rsc-add-files" id="rsc-add-files-label" class="rsc-label">Additional Files</label>',
         '      <button id="rsc-add-files" class="btn btn-default">Select Files...</button>',
@@ -1108,7 +1108,7 @@ define([
 
       // triggered when dialog is visible (would be better if it was
       // post-node creation but before being visible)
-      open: function() {
+      open: function () {
         // The temporary reassignment of `this` is important for the
         // content manager promise to avoid losing our broader dialog
         // scope.
@@ -1122,16 +1122,16 @@ define([
         var isCondaEnvironment = false;
 
         publishModal.find('#version-info').html(
-            'rsconnect-jupyter server extension version: ' +
-            rsconnectVersionInfo.rsconnect_jupyter_server_extension + '<br />' +
-            'rsconnect-jupyter nbextension version: ' + rsconnectVersionInfo.js_version + '<br />' +
-            'rsconnect-python version:' + rsconnectVersionInfo.rsconnect_python_version
+          'rsconnect-jupyter server extension version: ' +
+          rsconnectVersionInfo.rsconnect_jupyter_server_extension + '<br />' +
+          'rsconnect-jupyter nbextension version: ' + rsconnectVersionInfo.js_version + '<br />' +
+          'rsconnect-python version:' + rsconnectVersionInfo.rsconnect_python_version
         );
         that.fileListItemManager = new FileListItemManager(
-            $('#file-list-group'),
-            files,
-            notebookDirectory,
-            Jupyter.notebook.notebook_path
+          $('#file-list-group'),
+          files,
+          notebookDirectory,
+          Jupyter.notebook.notebook_path
         );
         that.fileListItemManager.updateListGroupItems();
         disableKeyboardManagerIfNeeded();
@@ -1139,7 +1139,7 @@ define([
 
         // clicking on links in the modal body prevents the default
         // behavior (i.e. changing location.hash)
-        publishModal.find('a.modal-body').on('click', function(e) {
+        publishModal.find('a.modal-body').on('click', function (e) {
           var target = $(e.target).attr('target');
           if (target !== '_rsconnect' && target !== '_blank') {
             e.preventDefault();
@@ -1147,81 +1147,81 @@ define([
         });
 
         // there is no _close_ event so let's improvise
-        publishModal.on('hide.bs.modal', function() {
+        publishModal.on('hide.bs.modal', function () {
           dialogResult.reject('canceled');
         });
 
         // add server button
-        publishModal.find('#rsc-add-server').on('click', function() {
+        publishModal.find('#rsc-add-server').on('click', function () {
           publishModal.modal('hide');
           showAddServerDialog(config)
-            .then(function(selectedServerId) {
+            .then(function (selectedServerId) {
               showSelectServerDialog(selectedServerId);
             })
             .fail(reselectPreviousServer);
         });
 
         // add files button
-        publishModal.find('#rsc-add-files').on('click', function(ev) {
+        publishModal.find('#rsc-add-files').on('click', function (ev) {
           that.fileListItemManager.showAddFilesDialog()
-              .then(function(result) {
-                  files = result;
-              });
+            .then(function (result) {
+              files = result;
+            });
           // We `preventDefault` because this was causing the form to submit.
           // Possibly the default button behavior?
           ev.preventDefault();
         });
 
         var condaDetector = 'import os\n' +
-            'print("CONDA_PREFIX\t"+str(os.environ.get("CONDA_PREFIX")))\n' +
-            'print("CONDA_DEFAULT_ENV\t"+str(os.environ.get("CONDA_DEFAULT_ENV")))\n';
+          'print("CONDA_PREFIX\t"+str(os.environ.get("CONDA_PREFIX")))\n' +
+          'print("CONDA_DEFAULT_ENV\t"+str(os.environ.get("CONDA_DEFAULT_ENV")))\n';
         // Detect if we're in a conda environment
         notebookExecuteToPromise(condaDetector)
-            .then(function (response) {
-              var output = response.content.text;
-              var lines = output.split('\n');
-              var map = {};
-              lines.forEach(function (line) {
-                var token = line.split('\t');
-                map[token[0]] = token[1];
-                if(token[1] !== 'None' && token[0] !== '') {
-                  // TODO: enable when ready
-                  // isCondaEnvironment = true;
-                }
-              });
-            })
-            .then(function() {
-              return ContentsManager.list_contents(notebookDirectory);
-            })
-            .then(function (result) {
-              function getRequirements(contents) {
-                verbose('contents:', contents);
-                for (var index in contents.content) {
-                  if (contents.content[index].name === 'requirements.txt') {
-                    verbose('Found requirements.txt:', contents.content[index]);
-                    hasRequirementsTxt = true;
-                  } else if (contents.content[index].name === 'environment.yml') {
-                    // TODO: Enable when ready
-                    // hasEnvironmentYml = true;
-                  }
-                }
+          .then(function (response) {
+            var output = response.content.text;
+            var lines = output.split('\n');
+            var map = {};
+            lines.forEach(function (line) {
+              var token = line.split('\t');
+              map[token[0]] = token[1];
+              if (token[1] !== 'None' && token[0] !== '') {
+                // TODO: enable when ready
+                // isCondaEnvironment = true;
               }
-              return legacyPromiseHandler(result, getRequirements);
-            })
-            .then(function(result) {
-              function doPrepare() {
-                preparePublishRequirementsTxtDialog(
-                    hasRequirementsTxt,
-                    hasEnvironmentYml,
-                    isCondaEnvironment,
-                    environmentOptions
-                );
-              }
-              return legacyPromiseHandler(result, doPrepare);
             });
+          })
+          .then(function () {
+            return ContentsManager.list_contents(notebookDirectory);
+          })
+          .then(function (result) {
+            function getRequirements(contents) {
+              verbose('contents:', contents);
+              for (var index in contents.content) {
+                if (contents.content[index].name === 'requirements.txt') {
+                  verbose('Found requirements.txt:', contents.content[index]);
+                  hasRequirementsTxt = true;
+                } else if (contents.content[index].name === 'environment.yml') {
+                  // TODO: Enable when ready
+                  // hasEnvironmentYml = true;
+                }
+              }
+            }
+            return legacyPromiseHandler(result, getRequirements);
+          })
+          .then(function (result) {
+            function doPrepare() {
+              preparePublishRequirementsTxtDialog(
+                hasRequirementsTxt,
+                hasEnvironmentYml,
+                isCondaEnvironment,
+                environmentOptions
+              );
+            }
+            return legacyPromiseHandler(result, doPrepare);
+          });
 
         // generate server list
-        var serverItems = Object.keys(config.servers).map(function(id) {
+        var serverItems = Object.keys(config.servers).map(function (id) {
           var matchingServer = serverId === id;
           return mkServerItem(id, matchingServer);
         });
@@ -1258,7 +1258,7 @@ define([
         selectPreviousAppMode();
         updateCheckboxStates();
 
-        appModeChoices.on('click', function() {
+        appModeChoices.on('click', function () {
           appMode = $(this).data('appmode');
 
           $(this)
@@ -1280,21 +1280,21 @@ define([
          */
         function preparePublishRequirementsTxtDialog(hasRequirements, hasEnvironment, isConda, checked) {
           verbose(
-              'Initializing requirements.txt dialog with arguments: [hasRequirements, hasEnvironment, isConda, checked]',
-              hasRequirements,
-              hasEnvironment,
-              isConda,
-              checked);
+            'Initializing requirements.txt dialog with arguments: [hasRequirements, hasEnvironment, isConda, checked]',
+            hasRequirements,
+            hasEnvironment,
+            isConda,
+            checked);
           var requirementsTxtContainer = $('#requirements-txt-container');
           requirementsTxtContainer.empty();
 
           requirementsTxtContainer.append(
-              '<label for="requirements-txt" class="rsc-label">Environment Restore</label><br />'
+            '<label for="requirements-txt" class="rsc-label">Environment Restore</label><br />'
           );
           if (!hasRequirements && !hasEnvironment && !isConda) {
             var message = '<p><i class="fa fa-question-circle"></i> ' +
-                'A <span class="code">requirements.txt</span> file was ' +
-                'not found in the notebook directory.';
+              'A <span class="code">requirements.txt</span> file was ' +
+              'not found in the notebook directory.';
             // var message = '<p><i class="fa fa-question-circle"></i> ' +
             //     'A <span class="code">requirements.txt</span> or <span class="code">environment.yml</span> file was ' +
             //     'not found in the notebook directory.';
@@ -1312,15 +1312,15 @@ define([
                 checked = 'use-existing-conda';
               }
               requirementsTxtContainer.append(
-                  '<input ' +
-                  '  type="radio"' +
-                  '  name="requirements-txt"' +
-                  '  id="use-existing-conda" ' +
-                  '  value="use-existing-conda" ' +
-                  (checked === 'use-existing-conda' ? 'checked' : '') + ' />' +
-                  '<label for="use-existing-conda">' +
-                  ' Use the existing <span class="code">environment.yml</span> file in the notebook directory.' +
-                  '</label><br />'
+                '<input ' +
+                '  type="radio"' +
+                '  name="requirements-txt"' +
+                '  id="use-existing-conda" ' +
+                '  value="use-existing-conda" ' +
+                (checked === 'use-existing-conda' ? 'checked' : '') + ' />' +
+                '<label for="use-existing-conda">' +
+                ' Use the existing <span class="code">environment.yml</span> file in the notebook directory.' +
+                '</label><br />'
               );
             }
             if (hasRequirements) {
@@ -1328,15 +1328,15 @@ define([
                 checked = 'use-existing-pip';
               }
               requirementsTxtContainer.append(
-                  '<input ' +
-                  '  type="radio"' +
-                  '  name="requirements-txt"' +
-                  '  id="use-existing-pip" ' +
-                  '  value="use-existing-pip" ' +
-                  (checked === 'use-existing-pip' ? 'checked' : '') + ' />' +
-                  '<label for="use-existing-pip">' +
-                  ' Use the existing <span class="code">requirements.txt</span> file in the notebook directory.' +
-                  '</label><br />'
+                '<input ' +
+                '  type="radio"' +
+                '  name="requirements-txt"' +
+                '  id="use-existing-pip" ' +
+                '  value="use-existing-pip" ' +
+                (checked === 'use-existing-pip' ? 'checked' : '') + ' />' +
+                '<label for="use-existing-pip">' +
+                ' Use the existing <span class="code">requirements.txt</span> file in the notebook directory.' +
+                '</label><br />'
               );
             }
             if (isConda) {
@@ -1344,19 +1344,19 @@ define([
                 checked = 'generate-new-conda';
               }
               requirementsTxtContainer.append(
-                  '<input type="radio" name="requirements-txt" id="generate-new-conda" value="generate-new" ' +
-                  (checked === 'generate-new-conda' ? 'checked' : '') + '/>' +
-                  '<label for="generate-new-conda">' +
-                  '  Generate an <span class="code">environment.yml</span> from the current conda environment.' +
-                  '</label><br />'
+                '<input type="radio" name="requirements-txt" id="generate-new-conda" value="generate-new" ' +
+                (checked === 'generate-new-conda' ? 'checked' : '') + '/>' +
+                '<label for="generate-new-conda">' +
+                '  Generate an <span class="code">environment.yml</span> from the current conda environment.' +
+                '</label><br />'
               );
             }
             requirementsTxtContainer.append(
-                '<input type="radio" name="requirements-txt" id="generate-new-pip" value="generate-new" ' +
-                (checked === 'generate-new-pip' ? 'checked' : '') + ' />' +
-                '<label for="generate-new-pip">' +
-                '  Generate a <span class="code">requirements.txt</span> from the current pip environment.' +
-                '</label>'
+              '<input type="radio" name="requirements-txt" id="generate-new-pip" value="generate-new" ' +
+              (checked === 'generate-new-pip' ? 'checked' : '') + ' />' +
+              '<label for="generate-new-pip">' +
+              '  Generate a <span class="code">requirements.txt</span> from the current pip environment.' +
+              '</label>'
             );
           }
         }
@@ -1371,7 +1371,7 @@ define([
             $box.prop('checked', updatedEntry[id]);
           }
 
-          $box.on('change', function() {
+          $box.on('change', function () {
             if (selectedEntryId) {
               var innerEntry = config.servers[selectedEntryId];
               innerEntry[id] = $box.prop('checked');
@@ -1385,7 +1385,7 @@ define([
         bindCheckbox('hide_tagged_input');
 
         // setup app mode choices help icon
-        (function() {
+        (function () {
           var msg =
             'To create a new deployment, change the title, ' +
             'click "Next", select "New location", and then ' +
@@ -1404,11 +1404,11 @@ define([
         })();
 
         // setup hide input help icon
-        (function() {
-          var msg = 
+        (function () {
+          var msg =
             'Hiding input code cells results in rendering only the output of code cells on publication. <br> <a href="https://docs.rstudio.com/rsconnect-jupyter/usage/#hide-input" target="_blank">Hide Input Documentation</a>';
-          
-            var helpIcon = $(
+
+          var helpIcon = $(
             [
               '<a tabindex="0" role="button" data-toggle="popover" data-trigger="focus">',
               '<i class="fa fa-question-circle rsc-fa-icon"></i>'
@@ -1421,7 +1421,7 @@ define([
           $('#hide-input-wrapper').append(helpIcon);
         })();
 
-        var form = publishModal.find('form').on('submit', function(e) {
+        var form = publishModal.find('form').on('submit', function (e) {
           e.preventDefault();
           publishModal.find('.form-group').removeClass('has-error');
           publishModal.find('.help-block').text('');
@@ -1462,27 +1462,27 @@ define([
           var validTitle = txtTitle.val().length >= 3;
 
           addValidationMarkup(
-              validTitle,
-              txtTitle,
-              'Title must be at least 3 characters.'
+            validTitle,
+            txtTitle,
+            'Title must be at least 3 characters.'
           );
 
           function togglePublishButton(enabled) {
             btnPublish
-                .toggleClass('disabled', !enabled)
-                .find('i.fa')
-                .toggleClass('hidden', enabled);
+              .toggleClass('disabled', !enabled)
+              .find('i.fa')
+              .toggleClass('hidden', enabled);
           }
 
           function handleFailure(xhr) {
             var msg;
             if (
-                typeof xhr === 'string' &&
-                xhr.match(/No module named .*rsconnect.*/) !== null
+              typeof xhr === 'string' &&
+              xhr.match(/No module named .*rsconnect.*/) !== null
             ) {
               msg = 'The rsconnect-python package is not installed in your current notebook kernel.<br />' +
-                  'See the <a href="https://docs.rstudio.com/rsconnect-jupyter/#installation" target="_blank">' +
-                  'Installation Section of the rsconnect-jupyter documentation</a> for more information.';
+                'See the <a href="https://docs.rstudio.com/rsconnect-jupyter/#installation" target="_blank">' +
+                'Installation Section of the rsconnect-jupyter documentation</a> for more information.';
             } else if (typeof xhr === 'string') {
               msg = 'An unexpected error occurred: ' + xhr;
             } else if (xhr.responseJSON) {
@@ -1521,7 +1521,7 @@ define([
             if (notebookDirectory.length !== 0) {
               files.forEach(function (file) {
                 normalizedFiles.push(
-                    file.slice(notebookDirectory.length + 1)
+                  file.slice(notebookDirectory.length + 1)
                 );
               });
             } else {
@@ -1529,47 +1529,47 @@ define([
             }
 
             config
-                .publishContent(
-                    selectedEntryId,
-                    appId,
-                    txtTitle.val(),
-                    appMode,
-                    normalizedFiles,
-                    condaMode,
-                    forceGenerate
-                )
-                .always(function () {
-                  togglePublishButton(true);
-                })
-                .fail(handleFailure)
-                .then(function (result) {
-                  notify.set_message(
-                      ' Successfully published content',
-                      // timeout in milliseconds after which the notification
-                      // should disappear
-                      15 * 1000,
-                      // click handler
-                      function () {
-                        // note: logs_url is included in result.config
-                        window.open(result.config.config_url, '');
-                      },
-                      // options
-                      {
-                        class: 'info',
-                        icon: 'fa fa-link',
-                        // tooltip
-                        title: 'Click to open published content on RStudio Connect'
-                      }
-                  );
-                  publishModal.modal('hide');
-                });
+              .publishContent(
+                selectedEntryId,
+                appId,
+                txtTitle.val(),
+                appMode,
+                normalizedFiles,
+                condaMode,
+                forceGenerate
+              )
+              .always(function () {
+                togglePublishButton(true);
+              })
+              .fail(handleFailure)
+              .then(function (result) {
+                notify.set_message(
+                  ' Successfully published content',
+                  // timeout in milliseconds after which the notification
+                  // should disappear
+                  15 * 1000,
+                  // click handler
+                  function () {
+                    // note: logs_url is included in result.config
+                    window.open(result.config.config_url, '');
+                  },
+                  // options
+                  {
+                    class: 'info',
+                    icon: 'fa fa-link',
+                    // tooltip
+                    title: 'Click to open published content on Posit Connect'
+                  }
+                );
+                publishModal.modal('hide');
+              });
           }
 
           if (selectedEntryId !== null && validTitle) {
             togglePublishButton(false);
 
             var currentNotebookTitle =
-                config.servers[selectedEntryId].notebookTitle;
+              config.servers[selectedEntryId].notebookTitle;
             var currentAppId = config.servers[selectedEntryId].appId;
 
             // FIXME: Pull this out into a higher scope
@@ -1581,41 +1581,41 @@ define([
               } else {
                 // no selection, show content selection dialog
                 config
-                    .appSearch(
+                  .appSearch(
+                    selectedEntryId,
+                    txtTitle.val(),
+                    currentAppId
+                  )
+                  .fail(handleFailure)
+                  .then(function (searchResults) {
+                    if (searchResults.count === 0) {
+                      // no matching content so publish to new endpoint
+                      selectedDeployLocation = DeploymentLocation.New;
+                      publish();
+                    } else {
+                      // some search results so let user choose an option.
+                      // note: in case of single match we can't be 100% sure
+                      // that the user wants to overwrite the content
+                      publishModal.modal('hide');
+                      showSearchDialog(
+                        searchResults,
                         selectedEntryId,
                         txtTitle.val(),
-                        currentAppId
-                    )
-                    .fail(handleFailure)
-                    .then(function (searchResults) {
-                      if (searchResults.count === 0) {
-                        // no matching content so publish to new endpoint
-                        selectedDeployLocation = DeploymentLocation.New;
-                        publish();
-                      } else {
-                        // some search results so let user choose an option.
-                        // note: in case of single match we can't be 100% sure
-                        // that the user wants to overwrite the content
-                        publishModal.modal('hide');
-                        showSearchDialog(
-                            searchResults,
-                            selectedEntryId,
-                            txtTitle.val(),
-                            currentAppId,
-                            appMode,
-                            that.fileListItemManager.fileList,
-                            environmentOptions
-                        );
-                      }
-                    });
+                        currentAppId,
+                        appMode,
+                        that.fileListItemManager.fileList,
+                        environmentOptions
+                      );
+                    }
+                  });
               }
             }
 
             if (!currentNotebookTitle) {
               // never been published before (or would have notebook title)
               debug.info(
-                  'publishing for the first time, user selected something: ',
-                  !!selectedDeployLocation
+                'publishing for the first time, user selected something: ',
+                !!selectedDeployLocation
               );
 
               publishOrSearch();
@@ -1624,8 +1624,8 @@ define([
             } else if (currentNotebookTitle !== txtTitle.val()) {
               // published previously but title changed
               debug.info(
-                  'title changed, user selected something: ',
-                  !!selectedDeployLocation
+                'title changed, user selected something: ',
+                !!selectedDeployLocation
               );
 
               publishOrSearch();
@@ -1645,7 +1645,7 @@ define([
           '<a class="btn btn-primary" aria-hidden="true"><i class="fa fa-spinner fa-spin hidden"></i> Publish</a>'
         );
         btnPublish.toggleClass('disabled', serverId === null);
-        btnPublish.on('click', function() {
+        btnPublish.on('click', function () {
           form.trigger('submit');
         });
         publishModal
@@ -1728,7 +1728,7 @@ define([
         .addClass('radio')
         .append(label);
 
-      label.on('click', function() {
+      label.on('click', function () {
         btnDeploy.text('Deploy');
       });
       return div;
@@ -1742,7 +1742,7 @@ define([
       .find('#new-location')
       .text('New location with title "' + title + '"');
 
-    var radios = searchResults.map(function(app) {
+    var radios = searchResults.map(function (app) {
       return mkRadio(
         app.id,
         app.title || app.name,
@@ -1767,7 +1767,7 @@ define([
       // allow raw html
       sanitize: false,
 
-      open: function() {
+      open: function () {
         disableKeyboardManagerIfNeeded();
 
         var form = searchDialog.find('form');
@@ -1788,14 +1788,14 @@ define([
         var selectedLocation = null;
 
         // add footer buttons
-        btnCancel.on('click', function() {
+        btnCancel.on('click', function () {
           backToSelectServerDialog(DeploymentLocation.Canceled);
         });
-        btnDeploy.on('click', function() {
+        btnDeploy.on('click', function () {
           backToSelectServerDialog(selectedLocation);
         });
 
-        newLocationRadio.find('label').on('click', function() {
+        newLocationRadio.find('label').on('click', function () {
           btnDeploy.text('Next');
         });
         searchDialog
@@ -1803,7 +1803,7 @@ define([
           .append(btnCancel)
           .append(btnDeploy);
 
-        form.on('change', 'input', function() {
+        form.on('change', 'input', function () {
           selectedLocation = $(this).val();
           selectedAppMode = $(this).data('appmode');
           btnDeploy.removeClass('disabled');
@@ -1835,20 +1835,20 @@ define([
     Jupyter.notebook
       .save_notebook()
       .then(config.fetchConfig())
-      .then(function() {
+      .then(function () {
         if (Object.keys(config.servers).length === 0) {
           showAddServerDialog(config).then(showSelectServerDialog);
         } else {
           showSelectServerDialog(
-              config.previousServerId,
-              null,
-              null,
-              null,
-              null,
-              null);
+            config.previousServerId,
+            null,
+            null,
+            null,
+            null,
+            null);
         }
       })
-      .catch(function(err) {
+      .catch(function (err) {
         // unlikely but possible if we aren't able to save
         debug.error('Failed to save notebook:', err);
         Dialog.modal({
@@ -1885,7 +1885,7 @@ define([
       body: [
         '<p>',
         '  Click <b>Create Manifest</b> to create the files needed ',
-        '  for publishing to RStudio Connect via git:',
+        '  for publishing to Posit Connect via git:',
         '</p>',
         '<div style="margin-left: 20px">',
         '<p id="write-manifest-environment-info">',
@@ -1917,7 +1917,7 @@ define([
       // allow raw html
       sanitize: false,
 
-    open: function() {
+      open: function () {
         // TODO: Use this in the conda support branch
         var condaMode = false;
         var forceGenerate = false;
@@ -1928,7 +1928,7 @@ define([
           var info = dialog.find('#write-manifest-overwrite-info');
           if (!hasRequirements && !hasEnvironment) {
             var html = '<p><i class="fa fa-question-circle"></i> Neither a <span class="code">requirements.txt</span> nor an' +
-                '<span class="code">requirements.txt</span> file was found in the notebook directory.</p>';
+              '<span class="code">requirements.txt</span> file was found in the notebook directory.</p>';
             if (!isConda) {
               html += '<p>One will be generated automatically from your current python environment.</p>';
             } else {
@@ -1938,7 +1938,7 @@ define([
                 '  Generate a <span class="code">requirements.txt</span> from the current python environment.' +
                 '</label><br />' +
                 '<input type="radio" name="requirements-txt" id="generate-new-conda" value="generate-new-conda" checked' +
-                  ' />' +
+                ' />' +
                 '<label for="generate-new-conda">' +
                 '  Generate an <span class="code">environment.yml</span> from the current conda environment.' +
                 '</label></div>';
@@ -1948,26 +1948,26 @@ define([
             var requirementsContainer = '<div id="requirements-txt-container">';
             if (hasRequirements) {
               requirementsContainer += '<input type="radio" name="requirements-txt" id="use-existing-pip" value="use-existing-pip" checked />' +
-                  '<label for="use-existing">' +
-                  ' Use the existing <span class="code">requirements.txt</span> file in the notebook directory.' +
-                  '</label><br />';
+                '<label for="use-existing">' +
+                ' Use the existing <span class="code">requirements.txt</span> file in the notebook directory.' +
+                '</label><br />';
             }
             if (hasEnvironment) {
               requirementsContainer += '<input type="radio" name="requirements-txt" id="use-existing-conda" value="use-existing-conda" />' +
-                  '<label for="use-existing">' +
-                  ' Use the existing <span class="code">environment.yml</span> file in the notebook directory.' +
-                  '</label><br />';
+                '<label for="use-existing">' +
+                ' Use the existing <span class="code">environment.yml</span> file in the notebook directory.' +
+                '</label><br />';
             }
             // Always present the option to generate requirements.txt
             requirementsContainer += '<input type="radio" name="requirements-txt" id="generate-new-pip" value="generate-new" />' +
-                '<label for="generate-new">' +
-                '  Generate a <span class="code">requirements.txt</span> from the current python environment.' +
-                '</label><br />';
+              '<label for="generate-new">' +
+              '  Generate a <span class="code">requirements.txt</span> from the current python environment.' +
+              '</label><br />';
             if (isConda) {
               requirementsContainer += '<input type="radio" name="requirements-txt" id="generate-new-conda" value="generate-new" />' +
-                  '<label for="generate-new">' +
-                  '  Generate an <span class="code">environment.yml</span> from the current python environment.' +
-                  '</label>';
+                '<label for="generate-new">' +
+                '  Generate an <span class="code">environment.yml</span> from the current python environment.' +
+                '</label>';
             }
             requirementsContainer += '</div>';
             info.html(requirementsContainer);
@@ -1975,57 +1975,57 @@ define([
         }
 
         dialog.find('#version-info').html(
-            'rsconnect-jupyter server extension version: ' +
-            rsconnectVersionInfo.rsconnect_jupyter_server_extension + '<br />' +
-            'rsconnect-jupyter nbextension version: ' + rsconnectVersionInfo.js_version + '<br />' +
-            'rsconnect-python version:' + rsconnectVersionInfo.rsconnect_python_version
+          'rsconnect-jupyter server extension version: ' +
+          rsconnectVersionInfo.rsconnect_jupyter_server_extension + '<br />' +
+          'rsconnect-jupyter nbextension version: ' + rsconnectVersionInfo.js_version + '<br />' +
+          'rsconnect-python version:' + rsconnectVersionInfo.rsconnect_python_version
         );
 
         var condaDetector = 'import os\n' +
-            'print("CONDA_PREFIX\t"+str(os.environ.get("CONDA_PREFIX")))\n' +
-            'print("CONDA_DEFAULT_ENV\t"+str(os.environ.get("CONDA_DEFAULT_ENV")))\n';
+          'print("CONDA_PREFIX\t"+str(os.environ.get("CONDA_PREFIX")))\n' +
+          'print("CONDA_DEFAULT_ENV\t"+str(os.environ.get("CONDA_DEFAULT_ENV")))\n';
         // Detect if we're in a conda environment
         notebookExecuteToPromise(condaDetector)
-            .then(function (response) {
-              var output = response.content.text;
-              var lines = output.split('\n');
-              var map = {};
-              lines.forEach(function (line) {
-                var token = line.split('\t');
-                map[token[0]] = token[1];
-                if(token[1] !== 'None' && token[0] !== '') {
-                  // TODO: Enable when ready
-                  // isCondaEnvironment = true;
-                }
-              });
-            })
-            .then(function() {
-              return ContentsManager.list_contents(notebookDirectory);
-            })
-            .then(function (result) {
-              function getRequirements(contents) {
-                verbose('contents:', contents);
-                for (var index in contents.content) {
-                  if (contents.content[index].name === 'requirements.txt') {
-                    verbose('Found requirements.txt:', contents.content[index]);
-                    hasRequirementsTxt = true;
-                  } else if (contents.content[index].name === 'environment.yml') {
-                    // TODO: Enable when ready
-                    // hasEnvironmentYml = true;
-                  }
-                }
+          .then(function (response) {
+            var output = response.content.text;
+            var lines = output.split('\n');
+            var map = {};
+            lines.forEach(function (line) {
+              var token = line.split('\t');
+              map[token[0]] = token[1];
+              if (token[1] !== 'None' && token[0] !== '') {
+                // TODO: Enable when ready
+                // isCondaEnvironment = true;
               }
-              return legacyPromiseHandler(result, getRequirements);
-            })
-            .then(function (result) {
-              function doPrepare() {
-                prepareManifestRequirementsTxtDialog(
-                    hasRequirementsTxt,
-                    hasEnvironmentYml,
-                    isCondaEnvironment);
-              }
-              return legacyPromiseHandler(result, doPrepare);
             });
+          })
+          .then(function () {
+            return ContentsManager.list_contents(notebookDirectory);
+          })
+          .then(function (result) {
+            function getRequirements(contents) {
+              verbose('contents:', contents);
+              for (var index in contents.content) {
+                if (contents.content[index].name === 'requirements.txt') {
+                  verbose('Found requirements.txt:', contents.content[index]);
+                  hasRequirementsTxt = true;
+                } else if (contents.content[index].name === 'environment.yml') {
+                  // TODO: Enable when ready
+                  // hasEnvironmentYml = true;
+                }
+              }
+            }
+            return legacyPromiseHandler(result, getRequirements);
+          })
+          .then(function (result) {
+            function doPrepare() {
+              prepareManifestRequirementsTxtDialog(
+                hasRequirementsTxt,
+                hasEnvironmentYml,
+                isCondaEnvironment);
+            }
+            return legacyPromiseHandler(result, doPrepare);
+          });
 
         var btnCancel = $(
           '<a class="btn" data-dismiss="modal" aria-hidden="true">Cancel</a>'
@@ -2033,7 +2033,7 @@ define([
         var btnCreateManifest = $(
           '<a class="btn" aria-hidden="true">Create Manifest</a>'
         );
-        btnCreateManifest.on('click', function() {
+        btnCreateManifest.on('click', function () {
           var $status = $('#rsc-manifest-status');
           var $spinner = $('<i class="fa fa-spinner fa-spin" style="margin-left: 15px"></i>');
           btnCreateManifest.append($spinner);
@@ -2062,8 +2062,8 @@ define([
             condaMode = true;
           }
 
-          config.inspectEnvironment(condaMode, forceGenerate).then(function(environment) {
-            return config.writeManifest(Jupyter.notebook.get_notebook_name(), environment).then(function(response) {
+          config.inspectEnvironment(condaMode, forceGenerate).then(function (environment) {
+            return config.writeManifest(Jupyter.notebook.get_notebook_name(), environment).then(function (response) {
               var createdLinks = response.created.map(makeEditLink);
               $status.empty();
               if (response.created.length > 0) {
@@ -2078,32 +2078,32 @@ define([
                 $status.append(skippedLinks);
               }
             })
-            .fail(function(response) {
-              $status.text(response.responseJSON.message);
-            });
+              .fail(function (response) {
+                $status.text(response.responseJSON.message);
+              });
           })
-          .fail(function(response) {
-            if (
-              typeof response === 'string' &&
-              response.match(/No module named .*rsconnect.*/) !== null
-            ) {
-              $status.html(
-             'The rsconnect-python package is not installed in your current notebook kernel.<br />' +
+            .fail(function (response) {
+              if (
+                typeof response === 'string' &&
+                response.match(/No module named .*rsconnect.*/) !== null
+              ) {
+                $status.html(
+                  'The rsconnect-python package is not installed in your current notebook kernel.<br />' +
                   'See the <a href="https://docs.rstudio.com/rsconnect-jupyter/#installation" target="_blank">' +
                   'Installation Section of the rsconnect-jupyter documentation</a> for more information.'
-              );
-            } else if (typeof response === 'string') {
-              $status.html(
+                );
+              } else if (typeof response === 'string') {
+                $status.html(
                   'An unexpected error occurred while inspecting the environment: ' + response
-              );
-            } else {
-              $status.text(response.responseJSON.message);
-            }
-          })
-          .always(function() {
-            $spinner.remove();
-            btnCreateManifest.attr('disabled', false);
-          });
+                );
+              } else {
+                $status.text(response.responseJSON.message);
+              }
+            })
+            .always(function () {
+              $spinner.remove();
+              btnCreateManifest.attr('disabled', false);
+            });
         });
 
         dialog

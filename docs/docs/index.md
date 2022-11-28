@@ -1,6 +1,6 @@
 # `rsconnect-jupyter` User Guide
 
-`rsconnect-jupyter` is a plugin for Jupyter Notebooks that enables publishing notebooks to RStudio Connect.
+`rsconnect-jupyter` is a plugin for Jupyter Notebooks that enables publishing notebooks to Posit Connect.
 
 ## Requirements
 
@@ -8,7 +8,7 @@
 - Jupyter Notebook 5.x
 - [pip](https://pypi.org/project/pip/)
 - [wheel](https://pypi.org/project/wheel/)
-- [RStudio Connect](https://www.rstudio.com/products/connect/download-commercial/) v1.7.0 or higher, configured with Python support
+- [Posit Connect](https://www.posit.co/download/posit-connect/) v1.7.0 or higher, configured with Python support
 
 !!! note
     If using `conda`, `pip` and `wheel` should already be installed.
@@ -23,7 +23,7 @@ The installation method depends on the Python environment that you are installin
 This documentation covers three methods:
 
 - [Installing Jupyter within a virtual environment](#installing-jupyter-within-a-virtual-environment)
-- [Installing `rsconnect-jupyter` to Jupyter running on RStudio Workbench](#installing-to-jupyter-running-on-rstudio-workbench)
+- [Installing `rsconnect-jupyter` to Jupyter running on Posit Workbench](#installing-to-jupyter-running-on-posit-workbench)
 - [Installation in JupyterHub](#installing-in-jupyterhub)
 
 Please navigate to the installation section below that is best for your environment.
@@ -63,7 +63,7 @@ To install and use Jupyter within a virtual environment using
 
 ---
 
-### Installing to Jupyter running on RStudio Workbench
+### Installing to Jupyter running on Posit Workbench
 
 - If you are installing `rsconnect-jupyter` to Jupyter running on RStudio Server Pro, see
 the [RStudio Server Pro documentation on Jupyter Notebooks](https://docs.rstudio.com/rsp/integration/jupyter-standalone/#4-install-jupyter-notebooks-jupyterlab-and-python-packages)
@@ -138,6 +138,6 @@ with `rsconnect-jupyter` installed.
     ```
 
     Connect to Jupyterhub on http://localhost:8000 and log in as one of the test
-    users. From there, you can create a notebook and publish it to RStudio Connect.
+    users. From there, you can create a notebook and publish it to Posit Connect.
     Note that the current Jupyterhub docker image uses Python 3.6.5, so you will
-    need a compatible Python version installed on your RStudio Connect server.
+    need a compatible Python version installed on your Posit Connect server.

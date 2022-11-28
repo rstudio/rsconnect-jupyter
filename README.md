@@ -2,8 +2,8 @@
 
 [rsconnect-jupyter](https://www.github.com/rstudio/rsconnect-jupyter/) is a
 plugin for [Jupyter Notebook](https://jupyter.org/) that enables
-publishing notebooks to [RStudio
-Connect](https://www.rstudio.com/products/connect/).
+publishing notebooks to [Posit
+Connect](https://www.posit.co/products/enterprise/connect/).
 
 # Requirements
 
@@ -11,7 +11,7 @@ Connect](https://www.rstudio.com/products/connect/).
 - Jupyter Notebook 5.x
 - [pip](https://pypi.org/project/pip/)
 - [wheel](https://pypi.org/project/wheel/)
-- [RStudio Connect](https://www.rstudio.com/products/connect/download-commercial/) v1.7.0
+- [Posit Connect](https://www.posit.co/download/posit-connect/) v1.7.0
   or higher, configured with Python support.
 
 # Documentation

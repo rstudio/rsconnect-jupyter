@@ -1,6 +1,6 @@
 # Using dated tags from https://hub.docker.com/_/ubuntu/
 FROM ubuntu:bionic-20201119
-MAINTAINER RStudio Connect <rsconnect@rstudio.com>
+MAINTAINER Posit Connect <rsconnect@posit.co>
 
 # Configure apt-get to use the mirror in us-east-1 instead of the Docker default of archive.ubuntu.com
 RUN sed -i "s/archive.ubuntu.com/us-east-1.ec2.archive.ubuntu.com/g" /etc/apt/sources.list
