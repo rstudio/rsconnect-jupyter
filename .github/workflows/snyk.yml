@@ -16,6 +16,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install Pipfile.lock dependencies
+        run: pipenv sync
+
       - name: Run Snyk
         uses: snyk/actions/python@master
         with:
