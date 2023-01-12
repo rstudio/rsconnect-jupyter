@@ -7,7 +7,7 @@ Connect](https://www.posit.co/products/enterprise/connect/).
 
 # Requirements
 
-- Python 3.5.0 and higher
+- Python 3.7.0 and higher
 - Jupyter Notebook 5.x
 - [pip](https://pypi.org/project/pip/)
 - [wheel](https://pypi.org/project/wheel/)

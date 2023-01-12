@@ -33,7 +33,7 @@ clean:
 	rm -rf build/ dist/ docs/out/ rsconnect_jupyter.egg-info/
 
 .PHONY: all-images
-all-images: image2.7 image3.5 image3.6 image3.7 image3.8
+all-images: image3.7 image3.8 image3.9 image3.10 image3.11
 
 image%:
 	docker build \
@@ -46,7 +46,7 @@ image%:
 		.
 
 .PHONY: all-tests
-all-tests: test2.7 test3.5 test3.6 test3.7 test3.8
+all-tests: test3.7 test3.8 test3.9 test3.10 test3.11
 
 .PHONY: test
 test: version-frontend
@@ -121,12 +121,12 @@ lint-js:
 
 .PHONY: lint-py
 lint-py:
-	pipenv run black --check --diff .
-	pipenv run flake8 .
+	pipenv run black --check --diff ./rsconnect_jupyter
+	pipenv run flake8 ./rsconnect_jupyter
 
 .PHONY: fmt
 fmt:
-	pipenv run black .
+	pipenv run black ./rsconnect_jupyter
 
 ## Specify that Docker runs with the calling user's uid/gid to avoid file
 ## permission issues on Linux dev hosts.
