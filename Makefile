@@ -121,12 +121,12 @@ lint-js:
 
 .PHONY: lint-py
 lint-py:
-	pipenv run black --check --diff .
-	pipenv run flake8 .
+	pipenv run black --check --diff ./rsconnect_jupyter
+	pipenv run flake8 ./rsconnect_jupyter
 
 .PHONY: fmt
 fmt:
-	pipenv run black .
+	pipenv run black ./rsconnect_jupyter
 
 ## Specify that Docker runs with the calling user's uid/gid to avoid file
 ## permission issues on Linux dev hosts.
