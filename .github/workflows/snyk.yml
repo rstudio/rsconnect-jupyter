@@ -9,7 +9,26 @@ env:
   SNYK_ORG: rstudio-connect
 
 jobs:
-  snyk-monitor:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install pipenv
+        run: |
+          python -m pip install --upgrade pipenv
+
+      - name: Install Pipfile dependencies (as required by Snyk)
+        run: pipenv install
+
+      - name: Run Snyk
+        uses: snyk/actions/python@master
+        with:
+          command: monitor
+          args: --file=Pipfile --project-name=python --org=${{ env.SNYK_ORG }}
+  ui:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -17,7 +36,7 @@ jobs:
           fetch-depth: 0
 
       - name: Run Snyk
-        uses: snyk/actions/python@master
+        uses: snyk/actions/node@master
         with:
           command: monitor
-          args: --file=Pipfile --org=${{ env.SNYK_ORG }}
+          args: --file=yarn.lock --project-name=ui --org=${{ env.SNYK_ORG }}
