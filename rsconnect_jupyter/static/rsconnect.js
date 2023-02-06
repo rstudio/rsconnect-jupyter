@@ -347,7 +347,7 @@ define([
          * @param serverId {string} the server identifier
          * @param appId {number} the numeric app ID
          * @param notebookTitle {string} Title of the notebook to be passed as name/title
-         * @param appMode {'static'|'jupyter-static'} App mode to deploy. 'static' is not rendered.
+         * @param appMode {'static'|'jupyter-static'|'jupyter-voila'} App mode to deploy. 'static' is not rendered.
          * @param files {Array<String>} paths to files to deploy.
          * @param condaMode {boolean} whether or not to use conda to build an `environment.yml`.
          * @param forceGenerate {boolean} whether to force `requirements.txt` to be generated even if one exists.
@@ -477,7 +477,7 @@ define([
                 return xhr;
             }
 
-            if (appMode === 'jupyter-static') {
+            if (appMode === 'jupyter-static' || appMode === 'jupyter-voila') {
                 return this.inspectEnvironment(condaMode, forceGenerate).then(deploy);
             } else {
                 return deploy(null);

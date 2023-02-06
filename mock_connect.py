@@ -258,6 +258,7 @@ def read_html(tarball):
 app_modes = {
     "static": 4,
     "jupyter-static": 7,
+    "jupyter-voila": 16,
 }
 
 

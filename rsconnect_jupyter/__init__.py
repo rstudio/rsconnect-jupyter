@@ -4,7 +4,7 @@ import os
 import sys
 
 from six.moves.urllib.parse import unquote_plus
-from os.path import dirname
+from os.path import basename, dirname
 
 from notebook.base.handlers import APIHandler
 from notebook.utils import url_path_join
@@ -22,6 +22,7 @@ from rsconnect.api import (
 from rsconnect.bundle import (
     make_notebook_html_bundle,
     make_notebook_source_bundle,
+    make_voila_bundle,
     write_manifest,
 )
 from rsconnect.environment import Environment
@@ -189,6 +190,24 @@ class EndpointHandler(APIHandler):
                         extra_files,
                         hide_all_input=hide_all_input,
                         hide_tagged_input=hide_tagged_input,
+                    )
+                except Exception as exc:
+                    self.log.exception("Bundle creation failed")
+                    raise web.HTTPError(500, "Bundle creation failed: %s" % exc)
+            elif app_mode == "jupyter-voila":
+                # workaround current dir issue with rsconnect-python's voila deployments
+                os.chdir(dirname(os_path))
+                if not environment_dict:
+                    raise web.HTTPError(400, "environment is required for jupyter-voila app_mode")
+
+                try:
+                    bundle = make_voila_bundle(
+                        dirname(os_path),
+                        basename(os_path),
+                        extra_files,
+                        [],  # excludes
+                        False,  # force_generate
+                        Environment(**environment_dict),
                     )
                 except Exception as exc:
                     self.log.exception("Bundle creation failed")
