@@ -89,7 +89,6 @@ run-local: run
 .PHONY: install
 install: yarn
 	pipenv install --dev
-	$(MAKE) install-latest-rsconnect-python
 	$(MAKE) version-frontend
 	pipenv run jupyter nbextension install --symlink --user --py rsconnect_jupyter
 	pipenv run jupyter nbextension enable --py rsconnect_jupyter
