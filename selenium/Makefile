@@ -197,7 +197,7 @@ jupyter-up: $(NOTEBOOKS_DIR)
 	    $(JUPYTER_IMAGE) \
 	    make -C ${RSCONNECT_DIR} run JUPYTER_LOG_LEVEL=$(JUPYTER_LOG_LEVEL) \
 	    1>/dev/null
-	@docker logs -f ${JUPYTER_HOST} > ${JUPYTER_LOG} &
+	@docker logs -f ${JUPYTER_HOST} &
 	@echo " done"
 
 jupyter-down:
