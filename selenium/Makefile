@@ -140,7 +140,8 @@ wait-for-systems-up:
 	        -n $$(( ${SCALE_FIREFOX} + ${SCALE_CHROME} )) \
 	        -l ${LOGS_DIR} \
 	        -j '${JUPYTER_SCHEME}://${JUPYTER_HOST}:${JUPYTER_PORT}' \
-	        -c '${CONNECT_SCHEME}://${CONNECT_HOST}:${CONNECT_PORT}'
+	        -c '${CONNECT_SCHEME}://${CONNECT_HOST}:${CONNECT_PORT}' \
+		|| cat ${JUPYTER_LOG}
 
 grid-up: network-up
 	NETWORK=${NETWORK} \
