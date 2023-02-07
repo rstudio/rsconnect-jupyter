@@ -4,7 +4,7 @@ import systemstat
 
 
 class SutStat(systemstat.SystemStat):
-    def __init__(self, url="http://localhost:6969", sleep=5.0, wait=60, **kwargs):
+    def __init__(self, url="http://localhost:6969", sleep=5.0, wait=120, **kwargs):
         super(SutStat, self).__init__(sleep=sleep, wait=wait, **kwargs)
 
         self._url = url
