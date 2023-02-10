@@ -50,6 +50,18 @@ jobs:
     - run: make -C selenium test-env-up
     - run: make -C selenium jupyter-up
     - run: make -C selenium test
+    - uses: actions/upload-artifact@v3
+      with:
+        name: selenium-logs
+        path: jupyter-py3.8.log
+    - uses: actions/upload-artifact@v3
+      with:
+        name: selenium-logs
+        path: selenium_tests.log
+    - uses: actions/upload-artifact@v3
+      with:
+        name: selenium-logs
+        path: ./selenium/*.log
   distributions:
     needs: test
     runs-on: ubuntu-latest
