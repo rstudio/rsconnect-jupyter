@@ -141,7 +141,7 @@ wait-for-systems-up:
 	        -l ${LOGS_DIR} \
 	        -j '${JUPYTER_SCHEME}://${JUPYTER_HOST}:${JUPYTER_PORT}' \
 	        -c '${CONNECT_SCHEME}://${CONNECT_HOST}:${CONNECT_PORT}' \
-		|| cat ${JUPYTER_LOG}
+		|| (echo "Jupyter log: "; cat ${JUPYTER_LOG})
 
 grid-up: network-up
 	NETWORK=${NETWORK} \
