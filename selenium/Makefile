@@ -121,14 +121,14 @@ prepare-logging:
 	tee ${PYTESTLOG} < ${TMP_PIPE} &
 
 run: $(NOTEBOOKS_DIR)
-	@${DOCKER_RUN_COMMAND} ${COMMAND}
+	${DOCKER_RUN_COMMAND} ${COMMAND}
 
 test-env-up: grid-up connect-up
 
 test-env-down: network-down
 
 wait-for-systems-up:
-	@docker run --rm \
+	docker run --rm \
 	    --name=systemstat \
 	    --network=$(NETWORK) \
 	    --volume=${CURDIR}/..:${RSCONNECT_DIR} \
@@ -163,14 +163,14 @@ grid-restart:
 
 network-up:
 	$(eval NETWORK_EXISTS=$(shell docker network inspect ${NETWORK} > /dev/null 2>&1 && echo 0 || echo 1))
-	@if [ "${NETWORK_EXISTS}" = "1" ] ; then \
+	if [ "${NETWORK_EXISTS}" = "1" ] ; then \
 	    echo "Creating network: ${NETWORK}"; \
 	    docker network create --driver bridge ${NETWORK} ; \
 	fi
 
 network-down: connect-down grid-down
 	$(eval NETWORK_EXISTS=$(shell docker network inspect ${NETWORK} > /dev/null 2>&1 && echo 0 || echo 1))
-	@if [ "${NETWORK_EXISTS}" = "0" ] ; then \
+	if [ "${NETWORK_EXISTS}" = "0" ] ; then \
 	    for i in `docker network inspect -f '{{range .Containers}}{{.Name}} {{end}}' ${NETWORK}`; do \
 	        echo "Removing container \"$${i}\" from network \"${NETWORK}\""; \
 	        docker network disconnect -f ${NETWORK} $${i}; \
@@ -180,8 +180,8 @@ network-down: connect-down grid-down
 	fi
 
 jupyter-up: $(NOTEBOOKS_DIR)
-	@echo "Creating ${JUPYTER_HOST} ..."
-	@docker run --rm -d --init \
+	echo "Creating ${JUPYTER_HOST} ..."
+	docker run --rm -d --init \
 	    ${DOCKER_TTY_FLAGS} \
 	    --name=${JUPYTER_HOST} \
 	    --network=${NETWORK} \
@@ -198,20 +198,20 @@ jupyter-up: $(NOTEBOOKS_DIR)
 	    $(JUPYTER_IMAGE) \
 	    make -C ${RSCONNECT_DIR} run JUPYTER_LOG_LEVEL=$(JUPYTER_LOG_LEVEL) \
 	    1>/dev/null
-	@docker logs -f ${JUPYTER_HOST} > ${JUPYTER_LOG} &
-	@echo " done"
+	docker logs -f ${JUPYTER_HOST} > ${JUPYTER_LOG} &
+	echo " done"
 
 jupyter-down:
 	$(eval JUPYTER_EXISTS=$(shell docker container inspect ${JUPYTER_HOST} > /dev/null 2>&1 && echo 0 || echo 1))
-	@if [ "${JUPYTER_EXISTS}" = "0" ] ; then \
+	if [ "${JUPYTER_EXISTS}" = "0" ] ; then \
 	    echo "Stopping ${JUPYTER_HOST} ..."; \
 	    docker stop ${JUPYTER_HOST} 1>/dev/null; \
 	    echo " done"; \
 	fi
 
 connect-up:
-	@echo "Creating ${CONNECT_HOST} ..."
-	@docker run --rm -d --init \
+	echo "Creating ${CONNECT_HOST} ..."
+	docker run --rm -d --init \
 	    ${DOCKER_TTY_FLAGS} \
 	    --name=${CONNECT_HOST} \
 	    --network=${NETWORK} \
@@ -223,12 +223,12 @@ connect-up:
 	    $(CONNECT_IMAGE) \
 	    flask run --host=0.0.0.0 --port=${CONNECT_PORT} \
 	    1>/dev/null
-	@docker logs -f ${CONNECT_HOST} > ${CONNECT_LOG} &
-	@echo " done"
+	docker logs -f ${CONNECT_HOST} > ${CONNECT_LOG} &
+	echo " done"
 
 connect-down:
 	$(eval CONNECT_EXISTS=$(shell docker container inspect ${CONNECT_HOST} > /dev/null 2>&1 && echo 0 || echo 1))
-	@if [ "${CONNECT_EXISTS}" = "0" ] ; then \
+	if [ "${CONNECT_EXISTS}" = "0" ] ; then \
 	    echo "Stopping ${CONNECT_HOST} ..."; \
 	    docker stop ${CONNECT_HOST} 1>/dev/null; \
 	    echo " done"; \
