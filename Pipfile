@@ -22,7 +22,8 @@ traitlets = ">=5.1.1"
 nbconvert = ">=5.0"
 nbformat = "*"
 notebook = ">=6.1.5, <7.0.0"
-rsconnect-python = "git+https://github.com/rstudio/rsconnect-python.git@bcwu-voila"
+# https://github.com/pypa/setuptools/issues/2568#issuecomment-821040991
+rsconnect-python = "rsconnect-python @ git+https://github.com/rstudio/rsconnect-python.git@bcwu-voila"
 six = "*"
 # Dependabot fixes
 py = ">=1.10.0"

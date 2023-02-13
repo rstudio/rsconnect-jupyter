@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "e219b149258a67dbfcf240f84b3f9beee3f4c55b8088933f9526438716be4d7a"
+            "sha256": "6f6b9ee3dfd3c7e578eeac9ce2a92157a192535518964434595582023e0420aa"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -295,11 +295,11 @@
         },
         "ipykernel": {
             "hashes": [
-                "sha256:1a04bb359212e23e46adc0116ec82ea128c1e5bd532fde4fbe679787ff36f0cf",
-                "sha256:a0f8eece39cab1ee352c9b59ec67bbe44d8299f8238e4c16ff7f4cf0052d3378"
+                "sha256:430d00549b6aaf49bd0f5393150691edb1815afa62d457ee6b1a66b25cb17874",
+                "sha256:6e9213484e4ce1fb14267ee435e18f23cc3a0634e635b9fb4ed4677b84e0fdf8"
             ],
             "markers": "python_version >= '3.8'",
-            "version": "==6.21.1"
+            "version": "==6.21.2"
         },
         "ipython": {
             "hashes": [
@@ -710,11 +710,11 @@
         },
         "python-json-logger": {
             "hashes": [
-                "sha256:3b03487b14eb9e4f77e4fc2a023358b5394b82fd89cecf5586259baed57d8c6f",
-                "sha256:764d762175f99fcc4630bd4853b09632acb60a6224acb27ce08cd70f0b1b81bd"
+                "sha256:3853e0b73e6c1ba4b1f2543066b24950bf1c21ed104f297a7bff8c74532a6ab2",
+                "sha256:f389ccb0a8fd26f84c294dc627a999daf58f759b457ee022f698098f6547288d"
             ],
-            "markers": "python_version >= '3.5'",
-            "version": "==2.0.4"
+            "markers": "python_version >= '3.6'",
+            "version": "==2.0.5"
         },
         "pyyaml": {
             "hashes": [
@@ -862,9 +862,11 @@
             "version": "==0.1.1"
         },
         "rsconnect-python": {
-            "editable": true,
-            "git": "https://github.com/rstudio/rsconnect-python.git",
-            "ref": "cad1ae62a07b2b6326b79066bdf7d92044246c8a"
+            "hashes": [
+                "sha256:b583a276eeaa418e8f850c50d925e80ab774d2e8025eea570343031ffd708298"
+            ],
+            "index": "pypi",
+            "version": "==1.14.1"
         },
         "semver": {
             "hashes": [
