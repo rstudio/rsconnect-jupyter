@@ -22,14 +22,11 @@ RUN useradd --password password \
     chown ${NB_UID}:${NB_GID} /rsconnect_jupyter
 
 USER ${NB_UID}:${NB_GID}
-WORKDIR /rsconnect_jupyter
 ENV WORKON_HOME=/home/builder \
-    PIPENV_DONT_LOAD_ENV=1 \
-    PIPENV_SHELL=/bin/bash \
     PATH=/home/builder/.local/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
     PYTHONPATH=/rsconnect_jupyter
-COPY Pipfile Pipfile
-COPY Pipfile.lock Pipfile.lock
-RUN python -m pip install -I -U pip pipenv && \
-    pipenv install --dev --python=/usr/local/bin/python && \
-    rm -vf Pipfile*
+COPY requirements.txt .
+COPY requirements-dev.txt .
+RUN /usr/local/bin/python -m pip install -I -U pip && \
+    /usr/local/bin/python -m pip install -r requirements-dev.txt
+WORKDIR /rsconnect_jupyter

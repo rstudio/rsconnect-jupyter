@@ -1,0 +1,15 @@
+-r requirements.txt
+black==22.3.0
+click>=7.0.0
+coverage
+flake8
+importlib-metadata
+ipython
+pytest
+pytest-cov
+setuptools_scm
+toml
+twine
+wheel
+# https://github.com/rstudio/rsconnect-jupyter/issues/316
+traitlets>=5.1.1

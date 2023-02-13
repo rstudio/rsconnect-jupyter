@@ -16,18 +16,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install pipenv
-        run: |
-          python -m pip install --upgrade pipenv
-
-      - name: Install Pipfile dependencies (as required by Snyk)
-        run: pipenv install
-
       - name: Run Snyk
         uses: snyk/actions/python@master
         with:
           command: monitor
-          args: --file=Pipfile --project-name=python --org=${{ env.SNYK_ORG }}
+          args: --file=requirements-dev.txt --project-name=python --org=${{ env.SNYK_ORG }}
   ui:
     runs-on: ubuntu-latest
     steps:
