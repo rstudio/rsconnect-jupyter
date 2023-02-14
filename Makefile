@@ -69,7 +69,7 @@ run: install
 	jupyter notebook \
 		-y \
 		--log-level=$(JUPYTER_LOG_LEVEL) \
-		--notebook-dir=$(NOTEBOOKS_DIR) \
+		--notebook-dir=./notebooks3 \
 		--ip='0.0.0.0' \
 		--port=9999 \
 		--no-browser \
