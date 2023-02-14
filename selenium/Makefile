@@ -37,7 +37,7 @@ TMP_PIPE=tmp.pipe
 TRE_IMAGE?=rstudio/checkrs-tew:0.4.0
 
 NOTEBOOKS_DIR_MOUNT := /notebooks
-NOTEBOOKS_DIR := $(CURDIR)/../notebooks$(PY_VERSION)
+NOTEBOOKS_DIR := $(CURDIR)/../notebooks3
 
 # Allocate a tty and keep stdin open when running locally
 # Jenkins nodes don't have input tty, so we set this to ""
