@@ -77,6 +77,7 @@ run: install
 
 .PHONY: install
 install: version-frontend
+	jupyter nbextension uninstall rsconnect_jupyter || true
 	jupyter nbextension install --symlink --user --py rsconnect_jupyter
 	jupyter nbextension enable --py rsconnect_jupyter
 	jupyter serverextension enable --py rsconnect_jupyter
