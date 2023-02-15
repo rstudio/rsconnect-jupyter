@@ -39,13 +39,18 @@ You have multiple options in this case, depending on your needs:
 
 ## Publishing options
 
-There are two different publication modes:
+There are three different publication modes:
 
-- If you select **Publish document with source code**, the notebook file and a list of the Python 
-packages installed in your environment will be sent to Posit Connect. This enables Posit 
+- If you select **Publish document with source code**, the notebook file and a list of the Python
+packages installed in your environment will be sent to Posit Connect. This enables Posit
 Connect to recreate the environment and re-run the notebook at a later time.
-- Selecting **Publish finished document only** will 
-publish an HTML snapshot of the notebook to Posit Connect. HTML snapshots are static and 
+- If you select **Publish interactive Voila document with source code**, your notebook will
+be published using the [Voila](https://voila.readthedocs.io/en/stable/) package. When
+visitors view your published notebook, Connect will present it as an interactive
+application. Voila creates a Jupyter kernel for each visitor so they can interact
+with any `ipywidgets` that you have included in your notebook.
+- Selecting **Publish finished document only** will
+publish an HTML snapshot of the notebook to Posit Connect. HTML snapshots are static and
 cannot be scheduled or re-run on the Posit Connect server.
 
 <img class="border" src="../images/rsconnect-jupyter-usage.png" class="block" alt="publish dialog">
@@ -74,7 +79,7 @@ Once enabled, tag each cell where you would like to hide the input code. The tag
 
 ### Additional Files
 
-If your notebook needs some external file to render, add the file using the 
+If your notebook needs some external file to render, add the file using the
 **Select Files...** button. You can select any file within the notebook folder. However,
 these files may not be made available to users after render.
 
@@ -117,7 +122,7 @@ informing you of this fact. If you need to regenerate the files, delete them in 
 
 <img class="border" src="../images/git-backed.png" class="block" alt="Dialog titled "Create Manifest" explaining the manifest creation process with "Cancel" and "Create Manifest" options">
 
-For more information on git publishing, see the 
+For more information on git publishing, see the
 [Posit Connect User Guide](https://docs.rstudio.com/connect/user/git-backed#git-backed-publishing).
 
 ## Handling conflicts
@@ -129,13 +134,13 @@ may choose to overwrite the existing content or create new content.
 
 - Choosing **New location** creates a new document in Posit Connect.
 - You can choose either publication mode:
-    - an HTML snapshot *or* 
+    - an HTML snapshot *or*
     - a document with source code
 
 Updating an existing document will not change its publication mode.
 
 Upon successful publishing of the document, a notification will be
-shown in the toolbar. 
+shown in the toolbar.
 
 Clicking the notification will open the published
 document in the Posit Connect server you selected in the previous
