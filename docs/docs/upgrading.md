@@ -6,4 +6,4 @@ Follow the procedures below to upgrade `rsconnect-jupyter`.
     --8<-- "snippets/uninstall.md"
 
 - Then, reinstall it.
-    --8<-- "snippets/python_pkg.md"
+    --8<-- "snippets/install.md"
