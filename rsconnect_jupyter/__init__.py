@@ -1,4 +1,5 @@
 import hashlib
+import inspect
 import json
 import os
 import sys
@@ -73,7 +74,7 @@ def md5(s):
 # https://github.com/jupyter/notebook/blob/master/notebook/base/handlers.py
 class EndpointHandler(APIHandler):
     @web.authenticated
-    def post(self, action):
+    async def post(self, action):
         data = self.get_json_body()
 
         if action == "verify_server":
@@ -161,6 +162,11 @@ class EndpointHandler(APIHandler):
             hide_tagged_input = data.get("hide_tagged_input", False)
 
             model = self.contents_manager.get(path=nb_path)
+            if inspect.isawaitable(model):
+                # The default ContentsManager is now async,
+                # but we handle both cases.
+                model = await model
+
             if model["type"] != "notebook":
                 # not a notebook
                 raise web.HTTPError(400, "Not a notebook: %s" % nb_path)
