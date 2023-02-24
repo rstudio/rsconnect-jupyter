@@ -1,0 +1,7 @@
+PORT := "8000"
+
+build:
+  docker build -t jupyterhub:rsconnect-jupyter .
+
+start:
+  docker run --rm -p {{PORT}}:8000 --name jupyterhub jupyterhub:rsconnect-jupyter
