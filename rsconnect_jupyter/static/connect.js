@@ -1033,6 +1033,11 @@ define([
         $subdirsBox.prop('checked', false);
       }
       $subdirsBox.parent().toggleClass('rsc-text-light', !canIncludeSubdirs);
+
+      // Disable hide code cells options in Voila mode, since Voila always hides them.
+      var isVoila = (appMode === 'jupyter-voila');
+      $('#hide_all_input').prop('disabled', isVoila);
+      $('#hide_tagged_input').prop('disabled', isVoila);
     }
 
     var publishModal = Dialog.modal({
