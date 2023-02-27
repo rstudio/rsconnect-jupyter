@@ -1,5 +1,4 @@
 import hashlib
-import inspect
 import json
 import os
 import sys
@@ -29,6 +28,8 @@ from rsconnect.environment import Environment
 from rsconnect.http_support import CookieJar
 
 from ssl import SSLError
+
+from rsconnect_jupyter.managers import get_model
 
 try:
     from rsconnect_jupyter.version import version as __version__  # noqa
@@ -161,11 +162,7 @@ class EndpointHandler(APIHandler):
             hide_all_input = data.get("hide_all_input", False)
             hide_tagged_input = data.get("hide_tagged_input", False)
 
-            model = self.contents_manager.get(path=nb_path)
-            if inspect.isawaitable(model):
-                # The default ContentsManager is now async,
-                # but we handle both cases.
-                model = await model
+            model = await get_model(self.contents_manager, nb_path)
 
             if model["type"] != "notebook":
                 # not a notebook
