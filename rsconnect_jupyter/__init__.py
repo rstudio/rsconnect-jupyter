@@ -202,8 +202,8 @@ class EndpointHandler(APIHandler):
 
                 try:
                     bundle = make_voila_bundle(
-                        dirname(os_path),
-                        basename(os_path),
+                        os_path,
+                        None,
                         extra_files,
                         [],  # excludes
                         False,  # force_generate
