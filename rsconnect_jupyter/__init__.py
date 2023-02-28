@@ -4,7 +4,7 @@ import os
 import sys
 
 from six.moves.urllib.parse import unquote_plus
-from os.path import basename, dirname
+from os.path import dirname
 
 from notebook.base.handlers import APIHandler
 from notebook.utils import url_path_join
