@@ -1,6 +1,6 @@
 # Contributing Guidelines
 
-This documentation covers common tasks releated to development.
+This documentation covers common tasks related to development.
 
 For installation and usage instructions see [README.md](./README.md).
 
@@ -20,16 +20,11 @@ For installation and usage instructions see [README.md](./README.md).
 
 <!-- markdown-toc end -->
 
-
 # Development
 
 Need to run this after checkout and when modifying the docker images
 
     make images
-
-Launch jupyter in a python 2 environment
-
-    make notebook2
 
 Launch jupyter in a python 3 environment
 
@@ -37,8 +32,7 @@ Launch jupyter in a python 3 environment
 
 ## Trying out notebooks
 
-> Note: notebooks in the `notebooks2` and `notebooks3` directories will be
-> available in respective python environments.
+> Note: notebooks in the `notebooks3` directories will be available in respective python environments.
 
 Sample notebooks can be obtained from:
 
@@ -101,5 +95,5 @@ Updating the package requires a fork of the repository and a push request [examp
 
 ### Adding yourself as a rsconnect-jupyter conda-forge maintainer
 
-Add your github username under recipe-maintainers in the [meta.yaml](https://github.com/conda-forge/rsconnect-jupyter-feedstock/blob/master/recipe/meta.yaml) file.
+Add your GitHub username under recipe-maintainers in the [meta.yaml](https://github.com/conda-forge/rsconnect-jupyter-feedstock/blob/master/recipe/meta.yaml) file.
 
