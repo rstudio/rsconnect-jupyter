@@ -124,9 +124,6 @@ try {
 
       stage('Docker build and test') {
         parallel(
-          'python2.7': {
-            buildAndTest("2.7")
-          },
           'python3.5': {
             img = buildAndTest("3.5")
           },
