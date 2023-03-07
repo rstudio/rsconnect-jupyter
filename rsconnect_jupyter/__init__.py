@@ -30,6 +30,8 @@ from rsconnect.http_support import CookieJar
 
 from ssl import SSLError
 
+from rsconnect_jupyter.managers import get_model
+
 try:
     from rsconnect_jupyter.version import version as __version__  # noqa
 except ImportError:
@@ -74,7 +76,7 @@ def md5(s):
 # https://github.com/jupyter/notebook/blob/master/notebook/base/handlers.py
 class EndpointHandler(APIHandler):
     @web.authenticated
-    def post(self, action):
+    async def post(self, action):
         data = self.get_json_body()
 
         if action == "verify_server":
@@ -161,7 +163,8 @@ class EndpointHandler(APIHandler):
             hide_all_input = data.get("hide_all_input", False)
             hide_tagged_input = data.get("hide_tagged_input", False)
 
-            model = self.contents_manager.get(path=nb_path)
+            model = await get_model(self.contents_manager, nb_path)
+
             if model["type"] != "notebook":
                 # not a notebook
                 raise web.HTTPError(400, "Not a notebook: %s" % nb_path)
