@@ -1,5 +1,5 @@
 from unittest import TestCase
-from unittest.mock import Mock, MagicMock, AsyncMock
+from asyncmock import Mock, MagicMock, AsyncMock
 
 from rsconnect_jupyter.managers import ContentsManager, get_model, isawaitable
 

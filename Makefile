@@ -5,7 +5,7 @@ IMAGE := rstudio/rsconnect-jupyter-py
 NOTEBOOKS_DIR := /notebooks
 PORT := $(shell printenv PORT || echo 9999)
 S3_PREFIX := s3://rstudio-connect-downloads/connect/rsconnect-jupyter
-VERSION := $(shell pipenv run python setup.py --version 2>/dev/null || echo 'NOTSET')
+VERSION := $(shell python setup.py --version 2>/dev/null || echo 'NOTSET')
 
 BDIST_WHEEL := dist/rsconnect_jupyter-$(VERSION)-py2.py3-none-any.whl
 JUPYTER_LOG_LEVEL ?= INFO
@@ -17,16 +17,14 @@ export SOURCE_DATE_EPOCH
 PYTHONPATH ?= $(CURDIR)
 export PYTHONPATH
 
-
 .PHONY: prereqs
 prereqs:
 	pip install -U pip
-	pip install -U pipenv
-
+	pip install -r requirements-dev.txt
 
 .PHONY: install-latest-rsconnect-python
 install-latest-rsconnect-python:
-	pipenv run pip install -U https://cdn.rstudio.com/connect/rsconnect-python/latest/rsconnect_python-latest-py2.py3-none-any.whl
+	pip install -U https://cdn.rstudio.com/connect/rsconnect-python/latest/rsconnect_python-latest-py2.py3-none-any.whl
 
 .PHONY: clean
 clean:
@@ -45,12 +43,8 @@ image%:
 		--build-arg PY_VERSION=$* \
 		.
 
-.PHONY: all-tests
-all-tests: test3.7 test3.8 test3.9 test3.10 test3.11
-
-.PHONY: test
 test: version-frontend
-	pipenv run pytest -vv --cov=rsconnect_jupyter tests/
+	pytest -vv --cov=rsconnect_jupyter tests/
 
 .PHONY: test-selenium
 test-selenium:
@@ -64,36 +58,29 @@ test-selenium:
 # exported as a point of reference instead.
 .PHONY: dist
 dist: version-frontend
-	pipenv run python setup.py bdist_wheel
-	pipenv run twine check $(BDIST_WHEEL)
+	rm -vf dist/*.whl
+	python setup.py bdist_wheel
+	twine check $(BDIST_WHEEL)
 	rm -vf dist/*.egg
 	@echo "::set-output name=whl::$(BDIST_WHEEL)"
 	@echo "::set-output name=whl_basename::$(notdir $(BDIST_WHEEL))"
 
-.PHONY: run
 run: install
-	mkdir -p $(NOTEBOOKS_DIR)
-	pipenv run jupyter notebook \
+	jupyter notebook \
 		-y \
 		--log-level=$(JUPYTER_LOG_LEVEL) \
-		--notebook-dir=$(NOTEBOOKS_DIR) \
+		--notebook-dir=./notebooks3 \
 		--ip='0.0.0.0' \
 		--port=9999 \
 		--no-browser \
 		--NotebookApp.token=''
 
-.PHONY: run-local
-run-local: NOTEBOOKS_DIR := $(CURDIR)/notebooks3.8
-run-local: run
-
 .PHONY: install
-install: yarn
-	pipenv install --dev
-	$(MAKE) install-latest-rsconnect-python
-	$(MAKE) version-frontend
-	pipenv run jupyter nbextension install --symlink --user --py rsconnect_jupyter
-	pipenv run jupyter nbextension enable --py rsconnect_jupyter
-	pipenv run jupyter serverextension enable --py rsconnect_jupyter
+install: version-frontend
+	jupyter nbextension uninstall rsconnect_jupyter || true
+	jupyter nbextension install --symlink --user --py rsconnect_jupyter
+	jupyter nbextension enable --py rsconnect_jupyter
+	jupyter serverextension enable --py rsconnect_jupyter
 
 build/mock-connect/bin/flask:
 	bash -c '\
@@ -121,12 +108,12 @@ lint-js:
 
 .PHONY: lint-py
 lint-py:
-	pipenv run black --check --diff ./rsconnect_jupyter
-	pipenv run flake8 ./rsconnect_jupyter
+	black --check --diff ./rsconnect_jupyter
+	flake8 ./rsconnect_jupyter
 
 .PHONY: fmt
 fmt:
-	pipenv run black ./rsconnect_jupyter
+	black ./rsconnect_jupyter
 
 ## Specify that Docker runs with the calling user's uid/gid to avoid file
 ## permission issues on Linux dev hosts.

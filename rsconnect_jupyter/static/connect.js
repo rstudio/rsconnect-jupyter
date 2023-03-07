@@ -818,7 +818,7 @@ define([
    * @param userEditedTitle {String} title as edited by user
    * @param selectedDeployLocation {DeploymentLocation.Canceled|DeploymentLocation.New|String} whether this is a new
    * deployment, a canceled deployment, or has an app id
-   * @param selectedAppMode {'jupyter-static'|'static'|null} App mode
+   * @param selectedAppMode {'jupyter-static'|'static'|'jupyter-voila'|null} App mode
    * @param environmentOptions {null|"use-existing-conda"|"use-existing-pip"|"generate-new-pip"|"generate-new-conda"}
    *        Selected environment option
    */
@@ -1014,7 +1014,7 @@ define([
     }
 
     function updateCheckboxStates() {
-      var publishingWithSource = (appMode === 'jupyter-static');
+      var publishingWithSource = (appMode === 'jupyter-static' || appMode === 'jupyter-voila');
       var serverSelected = !!selectedEntryId;
       var $filesBox = $('#include-files');
       var includingFiles = $filesBox.prop('checked');
@@ -1033,6 +1033,11 @@ define([
         $subdirsBox.prop('checked', false);
       }
       $subdirsBox.parent().toggleClass('rsc-text-light', !canIncludeSubdirs);
+
+      // Disable hide code cells options in Voila mode, since Voila always hides them.
+      var isVoila = (appMode === 'jupyter-voila');
+      $('#hide_all_input').prop('disabled', isVoila);
+      $('#hide_tagged_input').prop('disabled', isVoila);
     }
 
     var publishModal = Dialog.modal({
@@ -1063,6 +1068,13 @@ define([
         'nbextensions/rsconnect_jupyter/images/publishDocWithSource.png" class="rsc-image">',
         '                <span class="rsc-label">Publish document with source code</span><br/>',
         '                <span class="rsc-text-light">Choose this option if you want to create a scheduled report or rebuild your document on the server</span>',
+        '            </a>',
+        '            <a href="#" id="rsc-publish-voila" class="list-group-item rsc-appmode" data-appmode="jupyter-voila">',
+        '                <img src="' +
+        Jupyter.notebook.base_url +
+        'nbextensions/rsconnect_jupyter/images/publishDocVoila.png" class="rsc-image">',
+        '                <span class="rsc-label">Publish interactive Voila document with source code</span><br/>',
+        '                <span class="rsc-text-light">Choose this option if you want to publish an interactive notebook with widgets</span>',
         '            </a>',
         '            <a href="#" id="rsc-publish-without-source" class="list-group-item rsc-appmode" data-appmode="static">',
         '                <img src="' +
@@ -1121,6 +1133,7 @@ define([
         var hasEnvironmentYml = false;
         var isCondaEnvironment = false;
 
+        publishModal.css('overflow-y', 'auto');
         publishModal.find('#version-info').html(
           'rsconnect-jupyter server extension version: ' +
           rsconnectVersionInfo.rsconnect_jupyter_server_extension + '<br />' +
@@ -1677,7 +1690,7 @@ define([
    * @param serverId {String} Server Unique Identifier
    * @param title {String} App title
    * @param appId {Number} App ID
-   * @param appMode {'static'|'jupyter-static'} App mode
+   * @param appMode {'static'|'jupyter-static'|'jupyter-voila'} App mode
    * @param files {Array<String>} list of file paths that will be included
    * @param environmentOptions {null|"use-existing-conda"|"use-existing-pip"|"generate-new"}
    *        What the selected environment options are
@@ -1696,6 +1709,8 @@ define([
         return '[document]';
       } else if (mode === 'jupyter-static' || mode === 7) {
         return '[document with source code]';
+      } else if (mode === 'jupyter-voila' || mode === 16) {
+        return '[interactive Voila document with source code]';
       } else {
         return '[unknown type]';
       }
@@ -1734,7 +1749,7 @@ define([
       return div;
     }
     var newLocationRadio = $(
-      '<div class="radio"><label><input type="radio" name="location" value="new"><span id="new-location"</span></label></div>'
+      '<div class="radio"><label><input data-appmode="' + appMode + '" type="radio" name="location" value="new"><span id="new-location"</span></label></div>'
     );
 
     var divider = $('<p>Or update:</p>');
