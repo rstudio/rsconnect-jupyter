@@ -7,4 +7,4 @@ Pygments>=2.7.4
 jinja2>=2.11.3
 bleach>=3.3.0
 cryptography>=3.2
-git+https://github.com/rstudio/rsconnect-python.git@bcwu-voila#egg=rsconnect-python
+git+https://github.com/rstudio/rsconnect-python.git@master#egg=rsconnect-python
