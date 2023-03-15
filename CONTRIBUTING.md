@@ -78,8 +78,8 @@ Releases are accomplished through GitHub Actions.
 
 To initiate a release, create a manual tag use the following steps. The `<MAJOR>.<MINOR>.<PATCH>` values **MUST** follow semantic versioning.
 
-    git tag v<MAJOR>.<MINOR>.<PATCH>
-    git push origin v<MAJOR>.<MINOR>.<PATCH>
+    git tag <MAJOR>.<MINOR>.<PATCH>
+    git push origin <MAJOR>.<MINOR>.<PATCH>
 
 Once pushed, a GitHub Action will be trigged. This action with publish the release to [PyPi](https://pypi.org/project/rsconnect-jupyter/) using the specified version.
 
