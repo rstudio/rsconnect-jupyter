@@ -7,4 +7,4 @@ Pygments>=2.7.4
 jinja2>=2.11.3
 bleach>=3.3.0
 cryptography>=3.2
-rsconnect-python>=1.15.0b1
+rsconnect-python>=1.15.0
