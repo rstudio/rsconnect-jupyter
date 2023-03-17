@@ -1,33 +1,41 @@
-{% set analytics = config.google_analytics %}
+{% set property = config.google_analytics %}
+<!-- Google Analytics 4 (G-XXXXXXXXXX) -->
 <script>
- /* Use GA when hosted by our public docs site, not when installed. */
- if (location.href.indexOf("docs.rstudio.com") >= 0) {
-     window.ga = window.ga || function() {
-         (ga.q = ga.q || []).push(arguments)
-     }
-     ga.l = +new Date
+    /* Use GA when hosted by our public docs site, not when installed. */
+    if (location.href.indexOf("docs.posit.co") >= 0) {
+        window.dataLayer = window.dataLayer || []
+        function gtag() { dataLayer.push(arguments) }
+        /* Set up integration and send page view */
+        gtag("js", new Date())
+        gtag("config", "{{ property[0] }}")
 
-     /* Setup integration and send page view */
-     ga("create", "{{ analytics[0] }}", "{{ analytics[1] }}")
-     ga("set", "anonymizeIp", true)
-     ga("send", "pageview")
+        /* Register virtual event handlers */
+        document.addEventListener("DOMContentLoaded", function () {
+            if (document.forms.search) {
+                var query = document.forms.search.query
+                query.addEventListener("blur", function () {
+                    if (this.value) {
+                        gtag("event", "search", { search_term: this.value })
+                    }
+                })
+            }
 
-     /* Register handler to log search on blur */
-     document.addEventListener("DOMContentLoaded", function() {
-         if (document.forms.search) {
-             var query = document.forms.search.query
-             query.addEventListener("blur", function() {
-                 if (this.value) {
-                     var path = document.location.pathname;
-                     ga("send", "pageview", path + "?q=" + this.value)
-                 }
-             })
-         }
-     })
-     var s = document.createElement("script")
-     s.type = "text/javascript"
-     s.src = "https://www.google-analytics.com/analytics.js"
-     s.async = true
-     document.getElementsByTagName('head')[0].appendChild(s)
- }
+            /* Send page view on location change */
+            if (typeof location$ !== "undefined")
+                location$.subscribe(function (url) {
+                    gtag("config", "{{ property[0] }}", {
+                        page_path: url.pathname
+                    })
+                })
+        })
+        /* Create script tag */
+        var script = document.createElement("script")
+        script.async = true
+        script.src = "https://www.googletagmanager.com/gtag/js?id={{ property[0] }}"
+
+        /* Inject script tag */
+        var container = document.getElementsByTagName("head")[0]
+        var firstChild = container.firstChild
+        container.insertBefore(script, firstChild)
+    }
 </script>
