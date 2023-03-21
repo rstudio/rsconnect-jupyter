@@ -6,4 +6,4 @@ content location to publish to if the notebook title is the same.
 
 Additionally, you may share notebooks if appropriate.
 
-For additional information, please see the [Collaboration](https://docs.rstudio.com/connect/user/publishing/#publishing-collaboration) section of the Posit Connect User Guide.
+For additional information, please see the [Collaboration](https://docs.posit.co/connect/user/publishing/#publishing-collaboration) section of the Posit Connect User Guide.
