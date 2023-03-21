@@ -3,7 +3,7 @@
 User Guide resources:
 
 - [API Keys](http://docs.posit.co/connect/user/api-keys)
-- [Jupyter Notebooks](https://docs.posit.co/connect/user/#jupyter-notebooks)
+- [Jupyter Notebooks](https://docs.posit.co/connect/user/publishing-notebook/)
 - [Publishing for the first time](https://docs.posit.co/connect/user/git-backed/#git-backed-publishing)
 
 How-to Guide:
