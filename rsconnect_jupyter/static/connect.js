@@ -75,7 +75,7 @@ define([
                   'The javascript extension version reports ' + info.js_version + ' but the server ' +
                   'extension reports ' + info.rsconnect_jupyter_server_extension + '.<br />' +
                   '<ul>' +
-                  '<li>Refer to the <a href="https://docs.rstudio.com/rsconnect-jupyter/#installation">' +
+                  '<li>Refer to the <a href="https://docs.posit.co/rsconnect-jupyter/#installation">' +
                   'installation instructions</a> for more information.</li>' +
                   '<li>Try completely uninstalling every version of the plugin and reinstalling. ' +
                   'Your server information will be saved.</li>' +
@@ -1419,7 +1419,7 @@ define([
         // setup hide input help icon
         (function () {
           var msg =
-            'Hiding input code cells results in rendering only the output of code cells on publication. <br> <a href="https://docs.rstudio.com/rsconnect-jupyter/usage/#hide-input" target="_blank">Hide Input Documentation</a>';
+            'Hiding input code cells results in rendering only the output of code cells on publication. <br> <a href="https://docs.posit.co/rsconnect-jupyter/usage/#hide-input" target="_blank">Hide Input Documentation</a>';
 
           var helpIcon = $(
             [
@@ -1494,7 +1494,7 @@ define([
               xhr.match(/No module named .*rsconnect.*/) !== null
             ) {
               msg = 'The rsconnect-python package is not installed in your current notebook kernel.<br />' +
-                'See the <a href="https://docs.rstudio.com/rsconnect-jupyter/#installation" target="_blank">' +
+                'See the <a href="https://docs.posit.co/rsconnect-jupyter/#installation" target="_blank">' +
                 'Installation Section of the rsconnect-jupyter documentation</a> for more information.';
             } else if (typeof xhr === 'string') {
               msg = 'An unexpected error occurred: ' + xhr;
@@ -2104,7 +2104,7 @@ define([
               ) {
                 $status.html(
                   'The rsconnect-python package is not installed in your current notebook kernel.<br />' +
-                  'See the <a href="https://docs.rstudio.com/rsconnect-jupyter/#installation" target="_blank">' +
+                  'See the <a href="https://docs.posit.co/rsconnect-jupyter/#installation" target="_blank">' +
                   'Installation Section of the rsconnect-jupyter documentation</a> for more information.'
                 );
               } else if (typeof response === 'string') {

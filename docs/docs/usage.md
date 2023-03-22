@@ -16,7 +16,7 @@ to publish the current notebook to Posit Connect.
 - If this is your first time publishing a notebook, you will be
 prompted to enter the location and a nickname for the Posit Connect server.
 - You will also be prompted to enter your API Key. See the [Posit Connect User
-Guide](http://docs.rstudio.com/connect/user/api-keys) for
+Guide](http://docs.posit.co/connect/user/api-keys) for
 instructions on generating API Keys for your user.
 - When you click the **Add Server** button, `rsconnect-jupyter` will send a request to the Posit Connect server to verify that it can be reached via the requested URL and that the API key is valid.
 
@@ -123,7 +123,7 @@ informing you of this fact. If you need to regenerate the files, delete them in 
 <img class="border" src="../images/git-backed.png" class="block" alt="Dialog titled "Create Manifest" explaining the manifest creation process with "Cancel" and "Create Manifest" options">
 
 For more information on git publishing, see the
-[Posit Connect User Guide](https://docs.rstudio.com/connect/user/git-backed#git-backed-publishing).
+[Posit Connect User Guide](https://docs.posit.co/connect/user/git-backed#git-backed-publishing).
 
 ## Handling conflicts
 
