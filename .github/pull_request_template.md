@@ -1,21 +1,27 @@
-### Description
+<!-- Provide a general summary of your changes in the title. -->
+<!-- Examples: Updates pull request template -->
 
-> Include a brief description of the problem being solved and why this
-> approach was chosen. Mention risks or shortcomings with this solution.
-> Provide relevant background information such as the associated issue, links
-> to design documents, screenshots, and performance measurements.
->
-> Even small changes deserve a little attention to detail. Put your change in
-> context.
+## Intent
+<!-- Describe what problem you are addressing in this pull request. -->
+<!-- If this change is associated with an open issue, please link to it here. -->
+<!-- Example: "Resolves #24" -->
+<!-- See https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue -->
 
-Connected to #
+## Type of Change
+<!-- What types of changes does your code introduce? Put an `x` in all the boxes that apply. -->
+<!-- If you check more than one box, you may need to refactor this change into separate pull requests -->
 
-### Testing Notes / Validation Steps
+- [ ] Bug Fix           <!-- A change which fixes an existing issue --> 
+- [ ] New Feature       <!-- A change which adds additional functionality -->
+- [ ] Breaking Change   <!-- A breaking change which causes existing functionality to change -->
 
-> Explain how this change has been tested and what cases/conditions are
-> covered. Enumerate the steps someone might take to manually exercise this
-> change. Detail is important!
->
-> You can recommend one-time manual testing when someone validates your
-> changes. Rely on automation when trying to verify that a change remains in
-> place. Automated tests should be included in this PR.
+## Approach
+<!-- Describe how you solved this problem and any trade-offs you encountered. -->
+<!-- Link any additional documentation associated with this change here -->
+
+## Automated Tests
+<!-- Describe the automated tests associated with this change. -->
+<!-- If automated tests are not included in this change, please state why. -->
+
+## Directions for Reviewers
+<!-- Provide steps for reviewers to validate this change manually. -->
