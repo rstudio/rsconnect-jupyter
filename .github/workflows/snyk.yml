@@ -20,7 +20,7 @@ jobs:
         uses: snyk/actions/python@master
         with:
           command: monitor
-          args: --file=requirements-dev.txt --project-name=rsconnect-jupyter --org=${{ env.SNYK_ORG }}
+          args: --file=requirements-dev.txt --package-manager=pip --project-name=rsconnect-jupyter --org=${{ env.SNYK_ORG }}
   ui:
     runs-on: ubuntu-latest
     steps:
