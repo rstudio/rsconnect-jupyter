@@ -20,7 +20,7 @@ jobs:
         uses: snyk/actions/python@master
         with:
           command: monitor
-          args: --file=requirements-dev.txt --project-name=rsconnect-jupyter --org=${{ env.SNYK_ORG }}
+          args: --file=requirements-dev.txt --project-name=python --org=${{ env.SNYK_ORG }}
   ui:
     runs-on: ubuntu-latest
     steps:
@@ -32,4 +32,4 @@ jobs:
         uses: snyk/actions/node@master
         with:
           command: monitor
-          args: --file=yarn.lock --project-name=rsconnect-jupyter --org=${{ env.SNYK_ORG }}
+          args: --file=yarn.lock --project-name=ui --org=${{ env.SNYK_ORG }}
