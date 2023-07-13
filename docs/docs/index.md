@@ -78,7 +78,7 @@ The following example shows how to launch a Docker container running _JupyterHub
 
 !!! Warning
 
-    This configuration is **NOT** intended for production usage. This is a minmal working configuration designed to highlight `rsconnect-jupyter` configuration.
+    This configuration is **NOT** intended for production usage. This is a minimal working configuration designed to highlight `rsconnect-jupyter` configuration.
 
 !!! Example "Docker Example"
 
