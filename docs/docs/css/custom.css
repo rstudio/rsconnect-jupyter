@@ -27,7 +27,7 @@
 }
 
 .md-tabs__item {
-  height: 1.75rem !important;
+  height: unset;
 }
 
 /* Search bar
