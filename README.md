@@ -16,4 +16,4 @@ Connect](https://www.posit.co/products/enterprise/connect/).
 
 # Documentation
 
-See the documentation [on GitHub](docs/docs/index.md) or on [docs.posit.co](https://docs.posit.co/rsconnect-jupyter/).
+See the documentation on [docs.posit.co](https://docs.posit.co/rsconnect-jupyter/).
