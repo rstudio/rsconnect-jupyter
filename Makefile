@@ -31,7 +31,7 @@ clean:
 	rm -rf build/ dist/ docs/out/ rsconnect_jupyter.egg-info/
 
 .PHONY: all-images
-all-images: image3.8 image3.9 image3.10 image3.11 image3.12
+all-images: image3.8 image3.9 image3.10 image3.11
 
 image%:
 	docker build \
