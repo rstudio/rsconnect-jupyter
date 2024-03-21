@@ -559,14 +559,14 @@ make test-env-up PROJECT=rscnet2
 
 ##### PY_VERSION
 
-Version of Python to use when launching the Jupyter server. Valid version include 2, 3.6, 3.7
+Version of Python to use when launching the Jupyter server. Valid version include 3.8, 3.9
 
 Default Value: `2`
 
 Example usage:
 ```
-make jupyter-up PY_VERSION=2
-make test PY_VERSION=2
+make jupyter-up PY_VERSION=3.9
+make test PY_VERSION=3.9
 ```
 
 ##### PYTESTLOG

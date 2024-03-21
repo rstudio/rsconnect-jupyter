@@ -4,7 +4,7 @@ The `rsconnect-jupyter` package is a _Jupyter Notebook_ extension (i.e., `nbexte
 
 ## Requirements
 
-- [Python >=3.7](https://www.python.org/downloads/)
+- [Python >=3.8](https://www.python.org/downloads/)
 - [Jupyter](https://pypi.org/project/jupyter)
 - [Notebook >=5,7](https://pypi.org/project/notebook/)
 - [Posit Connect](https://www.posit.co/download/posit-connect/) ([supported versions](https://posit.co/support/#supported-connect-versions))
