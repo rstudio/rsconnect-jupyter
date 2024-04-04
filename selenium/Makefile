@@ -147,19 +147,19 @@ grid-up: network-up
 	NETWORK=${NETWORK} \
 	GRID_TIMEOUT=${GRID_TIMEOUT} \
 	SELENIUM_VERSION=${SELENIUM_VERSION} \
-	docker-compose -f ${DCYML_GRID} -p ${PROJECT} up -d --scale firefox=${SCALE_FIREFOX} --scale chrome=${SCALE_CHROME}
+	docker compose -f ${DCYML_GRID} -p ${PROJECT} up -d --scale firefox=${SCALE_FIREFOX} --scale chrome=${SCALE_CHROME}
 
 grid-down:
 	NETWORK=${NETWORK} \
 	GRID_TIMEOUT=${GRID_TIMEOUT} \
 	SELENIUM_VERSION=${SELENIUM_VERSION} \
-	docker-compose -f ${DCYML_GRID} -p ${PROJECT} down
+	docker compose -f ${DCYML_GRID} -p ${PROJECT} down
 
 grid-restart:
 	NETWORK=${NETWORK} \
 	GRID_TIMEOUT=${GRID_TIMEOUT} \
 	SELENIUM_VERSION=${SELENIUM_VERSION} \
-	docker-compose -f ${DCYML_GRID} -p ${PROJECT} restart
+	docker compose -f ${DCYML_GRID} -p ${PROJECT} restart
 
 network-up:
 	$(eval NETWORK_EXISTS=$(shell docker network inspect ${NETWORK} > /dev/null 2>&1 && echo 0 || echo 1))
