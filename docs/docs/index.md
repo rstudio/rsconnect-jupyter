@@ -1,3 +1,7 @@
+# The `rsconnect-jupyter` package is deprecated
+
+Please use [`rsconnect-python`](https://github.com/posit-dev/rsconnect-python) to publish content to [Posit Connect](https://docs.posit.co/connect).
+
 # `rsconnect-jupyter` User Guide
 
 The `rsconnect-jupyter` package is a _Jupyter Notebook_ extension (i.e., `nbextension`) that provides publishing compatibility with [Posit Connect](https://docs.posit.co/connect).
@@ -6,7 +10,7 @@ The `rsconnect-jupyter` package is a _Jupyter Notebook_ extension (i.e., `nbexte
 
 - [Python >=3.8](https://www.python.org/downloads/)
 - [Jupyter](https://pypi.org/project/jupyter)
-- [Notebook >=5,7](https://pypi.org/project/notebook/)
+- [Notebook >=5,<7](https://pypi.org/project/notebook/)
 - [Posit Connect](https://www.posit.co/download/posit-connect/) ([supported versions](https://posit.co/support/#supported-connect-versions))
 
 !!! Warning
