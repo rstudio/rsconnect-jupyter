@@ -1,3 +1,7 @@
+## The `rsconnect-jupyter` package is deprecated
+
+Please use [`rsconnect-python`](https://github.com/posit-dev/rsconnect-python) to publish content to [Posit Connect](https://docs.posit.co/connect).
+
 # rsconnect-jupyter
 
 [rsconnect-jupyter](https://www.github.com/rstudio/rsconnect-jupyter/) is a
